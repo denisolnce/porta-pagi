@@ -185,24 +185,31 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		return off
 	}
 	anchor := func(day int, on string, ahead bool) int { return dayOf(demoWhen{Day: day, On: on, Ahead: ahead}) }
-	// span resolves an away's two ends as one thing: the near end by its
-	// anchor, the far end by the span's length, so a span that has already
-	// begun is not thrown a year ahead by its own start date.
+	// span resolves an away's two ends as one thing: one end by its anchor,
+	// the other in that end's year, so a span that has already begun is not
+	// thrown a year ahead by its own start date. For a span, "ahead" means
+	// not yet over (the far end anchors), else already begun (the near end).
 	span := func(from, to int, onFrom, onTo string, ahead bool) (int, int) {
-		if onFrom == "" || onTo == "" {
+		if onFrom == "" && onTo == "" {
 			return from, to
 		}
-		a, b := parse(onFrom, 2025), parse(onTo, 2025)
-		if b.Before(a) {
-			b = b.AddDate(1, 0, 0)
+		if onFrom == "" || onTo == "" {
+			panic("demo seed: an away anchors both ends or neither")
 		}
-		length := int(b.Sub(a).Hours()/24 + 0.5)
 		if ahead {
 			t := anchor(0, onTo, true)
-			return t - length, t
+			f := parse(onFrom, today.AddDate(0, 0, t).Year())
+			if daysFrom(f) > t {
+				f = f.AddDate(-1, 0, 0)
+			}
+			return daysFrom(f), t
 		}
 		f := anchor(0, onFrom, false)
-		return f, f + length
+		t := parse(onTo, today.AddDate(0, 0, f).Year())
+		if daysFrom(t) < f {
+			t = t.AddDate(1, 0, 0)
+		}
+		return f, daysFrom(t)
 	}
 	// Two clocks: a wall-clock string for what a villager typed, a UTC stamp
 	// with a space for what the database would have written itself.
