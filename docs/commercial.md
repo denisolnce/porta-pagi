@@ -245,7 +245,7 @@ rules the portal itself follows, because the buyer will check.
 
 **The rule this page must not break.** A screenshot of the real village with
 crests on parcels *is* a published who-lives-where map — the house-by-house
-fact `CLAUDE.md` § Working rules keeps out of even this repo, and the thing the
+fact `CLAUDE.md` § Working rules keeps out of even the village's repo, and the thing the
 anonymous away-push exists to protect. §4 already forbids real parcels in the
 demo for that reason; the hero is the same picture with more traffic. So:
 **every screenshot on the page comes from the demo village.** If the real one is
@@ -687,7 +687,7 @@ slice deployed and verified there — then the history pushed to `porta-pagi`
 and the village's repo cut down to `deploy/`. Forking first would have meant
 two diverging copies of the same code for the whole of Phase 2.
 
-**History.** The product repo starts from this repo's history, not from a
+**History.** The product repo started from the village repo's history, not from a
 snapshot: blame survives, and the working rule that history is not rewritten
 (owner, 2026-09-09) carries over. The village's name is in that history and
 stays; the repo was public all along.
@@ -741,7 +741,7 @@ From `grep` on 2026-09-23. Each becomes config, a default, or a neutral name:
 | `mcp.go` | the `potok_` key prefix (`serverInfo.name` is `porta-pagi` since `f747351`) | `pagi_` — only keys minted after change; old ones keep working, the hash is what is checked |
 | `store.go` | `potok.db`, `potok-YYYY-MM-DD.db` backups | `pagi.db`, `pagi-YYYY-MM-DD.db`. Renaming this village's live DB file is one step in `deploy/infra-log.md` — or the filename stays configurable and this village keeps its name |
 | `server.go` | the export's `potok-export-*.json` filename | Same |
-| `Taskfile.yml` | the `vm:*` tasks name the village's host and container | Stay: they are this repo's, and this repo stays the village's. The Go comments are neutral since `f747351` |
+| `Taskfile.yml` | the `vm:*` tasks name the village's host and container | Stayed in the village's repo, which is theirs; the product's Taskfile has none |
 | `index.html`, `App.tsx`, `manifest.webmanifest`, `backdrop.jpg` | ~~the village's name, language and picture in the shell~~ | **Done 2026-09-23**: `static.go` fills `{{VILLAGE_NAME}}`, `{{LANGUAGES}}` and `{{LANG}}` into the shell and the manifest at serve time; the manifest's description is neutral. The backdrop is every village's default until a village imports its own (`site_files`, `e0ea25d`). The castle icon stays for now (owner, 2026-09-23) |
 | `i18n.tsx`, `when.go`, `push.ts` | ~~`sl` or `en` on both sides, Slovenian first~~ | **Done 2026-09-23** (`474a00e`, `fd32af8`): `LANGUAGES` env lists a village's languages, first is default; one dictionary per language in `backend/internal/httpapi/i18n/`, embedded by Go and imported by Vite, keyed by the English phrase; a test keeps every entry in its key's shape. Portuguese is one file, `pt.json`. `Weather.tsx` still parses ARSO's icon names — row 7 |
 | `019_codex.sql`, `003_push_lang.sql` | ~~the codex bilingual by column, push language defaulting to `sl`~~ | **Done 2026-09-23** (`e6d74d8`, `097f018`): `codex_texts`, one row per language, migrated on the village's database; a phone subscribes in a language the village speaks or gets its first |
