@@ -12,16 +12,18 @@ Additional Use Grant: You may make production use of the Licensed Work,
                       community - a village, a hamlet, a cohousing
                       project, an ecovillage or the like - and holds no
                       more than ten (10) house accounts at any one time,
-                      and (b) you do not offer the Licensed Work, or a
-                      service substantially made of it, to third parties
-                      as a hosted or managed service. Any other
-                      production use requires a commercial license from
-                      the Licensor.
+                      where a house account is an account a household
+                      signs in with, and common places and devices are
+                      not counted; and (b) you do not offer the Licensed
+                      Work to third parties as a hosted or managed
+                      service for a fee. Any other production use
+                      requires a commercial license from the Licensor.
 
 Change Date:          Four years from the date the Licensed Work is
                       published.
 
-Change License:       Apache License, Version 2.0
+Change License:       GNU Affero General Public License, version 3.0 or
+                      any later version
 
 For information about alternative licensing arrangements for the Licensed
 Work, please contact the Licensor through this repository.

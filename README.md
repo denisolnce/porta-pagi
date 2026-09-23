@@ -13,5 +13,5 @@ village that built it; until then there is the licence and nothing to run.
 ## Licence
 
 Business Source License 1.1 - see `LICENSE`. Free to self-host for one
-community of up to ten houses. Above that, or to host it for others, a
-commercial licence. Each version becomes Apache 2.0 four years after release.
+community of up to ten houses. Above that, or to host it for others for a fee,
+a commercial licence. Each version becomes AGPL four years after release.
