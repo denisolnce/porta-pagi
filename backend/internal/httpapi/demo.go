@@ -155,6 +155,19 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		return nil, fmt.Errorf("demo/seed.json: %w", err)
 	}
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	// Calendar days between two dates, counted in UTC so a clock change
+	// between them is not a day lost or gained.
+	daysFrom := func(t time.Time) int {
+		u := func(x time.Time) time.Time { return time.Date(x.Year(), x.Month(), x.Day(), 0, 0, 0, 0, time.UTC) }
+		return int(u(t).Sub(u(today)).Hours() / 24)
+	}
+	parse := func(on string, year int) time.Time {
+		t, err := time.ParseInLocation("2006-01-02", fmt.Sprintf("%d-%s", year, on), now.Location())
+		if err != nil {
+			panic("demo seed: bad anchor " + on)
+		}
+		return t
+	}
 	// dayOf resolves a row's date to an offset from today: the anchor's most
 	// recent occurrence (or its next, when the row is ahead), the plain offset
 	// when it has none.
@@ -162,19 +175,35 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		if w.On == "" {
 			return w.Day
 		}
-		t, err := time.ParseInLocation("2006-01-02", fmt.Sprintf("%d-%s", now.Year(), w.On), now.Location())
-		if err != nil {
-			panic("demo seed: bad anchor " + w.On)
-		}
-		off := int(t.Sub(today).Hours() / 24)
+		t := parse(w.On, now.Year())
+		off := daysFrom(t)
 		if w.Ahead && off < 0 {
-			off = int(t.AddDate(1, 0, 0).Sub(today).Hours() / 24)
+			off = daysFrom(t.AddDate(1, 0, 0))
 		} else if !w.Ahead && off > 0 {
-			off = int(t.AddDate(-1, 0, 0).Sub(today).Hours() / 24)
+			off = daysFrom(t.AddDate(-1, 0, 0))
 		}
 		return off
 	}
 	anchor := func(day int, on string, ahead bool) int { return dayOf(demoWhen{Day: day, On: on, Ahead: ahead}) }
+	// span resolves an away's two ends as one thing: the near end by its
+	// anchor, the far end by the span's length, so a span that has already
+	// begun is not thrown a year ahead by its own start date.
+	span := func(from, to int, onFrom, onTo string, ahead bool) (int, int) {
+		if onFrom == "" || onTo == "" {
+			return from, to
+		}
+		a, b := parse(onFrom, 2025), parse(onTo, 2025)
+		if b.Before(a) {
+			b = b.AddDate(1, 0, 0)
+		}
+		length := int(b.Sub(a).Hours()/24 + 0.5)
+		if ahead {
+			t := anchor(0, onTo, true)
+			return t - length, t
+		}
+		f := anchor(0, onFrom, false)
+		return f, f + length
+	}
 	// Two clocks: a wall-clock string for what a villager typed, a UTC stamp
 	// with a space for what the database would have written itself.
 	wall := func(day int, clock string) string {
@@ -345,10 +374,7 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		counts["offers"]++
 	}
 	for _, a := range seed.Away {
-		from, to := anchor(a.From, a.OnFrom, a.Ahead), anchor(a.To, a.OnTo, a.Ahead)
-		if to < from { // an anchored span that wrapped the year end
-			to += 365
-		}
+		from, to := span(a.From, a.To, a.OnFrom, a.OnTo, a.Ahead)
 		aid, err := tx.Exec(ctx, `INSERT INTO away(house_id, from_date, to_date, notes, watcher, created_at) VALUES (?,?,?,?,?,?)`, id(a.House), date(from), date(to), a.Notes, id(a.Watcher), stamp(from-5, "20:30"))
 		if err != nil {
 			return nil, err

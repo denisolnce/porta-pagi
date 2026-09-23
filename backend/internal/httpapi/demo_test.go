@@ -20,7 +20,13 @@ func TestDemoSeed(t *testing.T) {
 	}
 	defer st.Close()
 	srv := New(st, config.Config{Languages: []string{"pt", "en"}, VillageName: "Sobreiro Torto"})
-	now := time.Date(2026, 9, 23, 10, 0, 0, 0, time.Local)
+	// Lisbon: a clock change sits between September and the winter anchors,
+	// which is how an hour became a day once.
+	lisbon, err := time.LoadLocation("Europe/Lisbon")
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Date(2026, 9, 23, 10, 0, 0, 0, lisbon)
 	if err := srv.SeedDemo(now); err != nil {
 		t.Fatal(err)
 	}
@@ -54,6 +60,34 @@ func TestDemoSeed(t *testing.T) {
 	if row, _ := st.One(t.Context(), `SELECT count(*) AS n FROM houses WHERE kind='common'`); row["n"].(int64) != 1 {
 		t.Fatal("the demo needs its square")
 	}
+	// Anchors land on their calendar day whatever the clock did in between:
+	// the pruning last January, the vindima ahead this September, the olive
+	// house's absence ahead in October.
+	for _, c := range []struct{ q, want string }{
+		{`SELECT starts_at AS v FROM events WHERE title LIKE 'Poda%'`, "2026-01-17T08:30"},
+		{`SELECT starts_at AS v FROM events WHERE title='Vindima'`, "2026-09-27T08:00"},
+		{`SELECT starts_at AS v FROM events WHERE title LIKE 'Magusto%'`, "2025-11-08T17:30"},
+		{`SELECT from_date AS v FROM away WHERE notes LIKE 'Lisboa%'`, "2026-10-13"},
+		{`SELECT to_date AS v FROM away WHERE notes LIKE 'Lisboa%'`, "2026-11-09"},
+	} {
+		if row, _ := st.One(t.Context(), c.q); row == nil || row["v"] != c.want {
+			t.Errorf("%s: got %v, want %s", c.q, row, c.want)
+		}
+	}
+	// Seeded a week into that absence, the span has begun — not jumped a year.
+	st2, err := store.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st2.Close()
+	srv2 := New(st2, config.Config{Languages: []string{"pt", "en"}, VillageName: "Sobreiro Torto"})
+	if err := srv2.SeedDemo(time.Date(2026, 10, 20, 10, 0, 0, 0, lisbon)); err != nil {
+		t.Fatal(err)
+	}
+	if row, _ := st2.One(t.Context(), `SELECT from_date, to_date FROM away WHERE notes LIKE 'Lisboa%'`); row == nil || row["from_date"] != "2026-10-13" || row["to_date"] != "2026-11-09" {
+		t.Fatalf("an absence that has begun: %v", row)
+	}
+
 	// The rooms answer through the API as for any village.
 	rec := httptest.NewRecorder()
 	srv.Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/api/status", nil))

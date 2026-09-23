@@ -94,6 +94,9 @@ func (s *Server) RunDemoReset(ctx context.Context) {
 // as one transaction: no request lands on an empty village in between. The
 // table list comes from the schema itself, so a table added tomorrow is
 // wiped too; only the migrations ledger and settings (the VAPID keys) stay.
+// Every foreign key in the schema cascades or nulls on delete, so the order
+// is safe today; deferring the checks is a fence for a key that one day is
+// not.
 func (s *Server) ResetDemo() error {
 	ctx := context.Background()
 	tables, err := s.st.Rows(ctx, `SELECT name FROM sqlite_master WHERE type='table' AND name NOT IN ('schema_migrations', 'settings') AND name NOT LIKE 'sqlite_%'`)

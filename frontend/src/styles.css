@@ -450,5 +450,6 @@ a.card:hover { background: #fff8e4; }
 
 /* The demo's house switcher sits where the house link sits; the select wears the parchment. */
 .demo-switch select { font: inherit; background: var(--parch, #f1e4c6); color: inherit; border: 1px solid #7a5a3a; border-radius: 6px; padding: .1rem .3rem; max-width: 12rem; }
-.demo-doors { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
-.demo-doors button { display: inline-flex; align-items: center; gap: .4rem; }
+/* One column of full-width doors: on a phone a ragged wrap of ten widths is harder to hit. */
+.demo-doors { display: grid; gap: .5rem; margin-top: .8rem; }
+.demo-doors button { display: flex; align-items: center; gap: .5rem; justify-content: flex-start; }

@@ -331,7 +331,8 @@ function DemoSwitch({ me }: { me: Me | null }) {
 function DemoGate() {
   const { t } = useT();
   const [houses, setHouses] = useState<{ id: number; name: string; crest: string; color: string; is_steward: number }[]>([]);
-  useEffect(() => { api<typeof houses>("/demo/houses").then(setHouses).catch(() => {}); }, []);
+  const [err, setErr] = useState(false);
+  useEffect(() => { api<typeof houses>("/demo/houses").then(setHouses).catch(() => setErr(true)); }, []);
   const enter = async (id: number) => {
     const r = await api<{ token: string }>("/demo/enter", { method: "POST", body: { id } });
     setToken(r.token); location.reload();
@@ -340,9 +341,11 @@ function DemoGate() {
     <div className="parchment gate">
       <h2>🏰 {t("Enter the village")}</h2>
       <p className="small">{t("This is a demo village. Nobody lives here; pick a house and walk in as them.")} {t("Everything you change is wiped on the hour.")}</p>
+      {err && <div className="err">{t("Something went wrong")}</div>}
+      {/* Ten equal doors: none is the one action, so none is primary. */}
       <div className="demo-doors">
         {houses.map((h) => (
-          <button key={h.id} className="primary" onClick={() => enter(h.id)}>
+          <button key={h.id} onClick={() => enter(h.id)}>
             <span className="crest" style={{ backgroundColor: h.color }}>{h.crest}</span> {h.name}{h.is_steward ? ` (${t("Steward").toLowerCase()})` : ""}
           </button>
         ))}
