@@ -69,6 +69,9 @@ func TestDemoSeed(t *testing.T) {
 		{`SELECT starts_at AS v FROM events WHERE title LIKE 'Magusto%'`, "2025-11-08T17:30"},
 		{`SELECT from_date AS v FROM away WHERE notes LIKE 'Lisboa%'`, "2026-10-13"},
 		{`SELECT to_date AS v FROM away WHERE notes LIKE 'Lisboa%'`, "2026-11-09"},
+		// Two spans across the year end: the holiday ahead and last New Year.
+		{`SELECT from_date || '..' || to_date AS v FROM away WHERE notes LIKE 'France%'`, "2026-12-20..2027-01-10"},
+		{`SELECT from_date || '..' || to_date AS v FROM away WHERE notes LIKE 'Scotland%'`, "2025-12-27..2026-01-04"},
 	} {
 		if row, _ := st.One(t.Context(), c.q); row == nil || row["v"] != c.want {
 			t.Errorf("%s: got %v, want %s", c.q, row, c.want)
@@ -86,6 +89,25 @@ func TestDemoSeed(t *testing.T) {
 	}
 	if row, _ := st2.One(t.Context(), `SELECT from_date, to_date FROM away WHERE notes LIKE 'Lisboa%'`); row == nil || row["from_date"] != "2026-10-13" || row["to_date"] != "2026-11-09" {
 		t.Fatalf("an absence that has begun: %v", row)
+	}
+	// Seeded inside the holiday span, past the year end: the span ahead has
+	// begun and last New Year's has just ended, neither thrown a year off.
+	st3, err := store.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st3.Close()
+	srv3 := New(st3, config.Config{Languages: []string{"pt", "en"}, VillageName: "Sobreiro Torto"})
+	if err := srv3.SeedDemo(time.Date(2027, 1, 5, 10, 0, 0, 0, lisbon)); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct{ q, want string }{
+		{`SELECT from_date || '..' || to_date AS v FROM away WHERE notes LIKE 'France%'`, "2026-12-20..2027-01-10"},
+		{`SELECT from_date || '..' || to_date AS v FROM away WHERE notes LIKE 'Scotland%'`, "2026-12-27..2027-01-04"},
+	} {
+		if row, _ := st3.One(t.Context(), c.q); row == nil || row["v"] != c.want {
+			t.Errorf("seeded 2027-01-05, %s: got %v, want %s", c.q, row, c.want)
+		}
 	}
 
 	// The rooms answer through the API as for any village.

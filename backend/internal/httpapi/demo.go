@@ -190,9 +190,8 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 	// thrown a year ahead by its own start date. For a span, "ahead" means
 	// not yet over (the far end anchors), else already begun (the near end).
 	// The one-year step covers a span across the year end in either
-	// direction (traced: 12-20..01-10 seeded on 12-28 and on 01-05); no seed
-	// row crosses a year end, so the tests do not run those branches. A
-	// 02-29 anchor panics in a non-leap year; none is used.
+	// direction; the two holiday absences in the seed cross it, and
+	// TestDemoSeed pins them from September and from inside the span.
 	span := func(from, to int, onFrom, onTo string, ahead bool) (int, int) {
 		if onFrom == "" && onTo == "" {
 			return from, to

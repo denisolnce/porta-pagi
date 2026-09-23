@@ -799,8 +799,16 @@
       "house": "nova",
       "notes": "France for the holidays. Nothing to feed.",
       "watcher": "eira",
-      "onFrom": "03-01",
-      "onTo": "03-20"
+      "onFrom": "12-20",
+      "onTo": "01-10",
+      "ahead": true
+    },
+    {
+      "house": "moinho",
+      "notes": "Scotland over New Year. The mill door does not lock properly, an eye on it now and then please.",
+      "watcher": "pedra",
+      "onFrom": "12-27",
+      "onTo": "01-04"
     },
     {
       "house": "ribeira",
