@@ -95,7 +95,7 @@ Tavern asking the houses what they miss, and then four weeks of listening.
 
 | Decision | Who answers | Recorded where once decided |
 | --- | --- | --- |
-| GURS open-data licence string for `parcels.geojson` | The owner, from the GURS terms | `CLAUDE.md` § Cadastre, `village.md` § Map data |
+| GURS open-data licence string for `parcels.geojson` | The owner, from the GURS terms | `CLAUDE.md` § Cadastre, the village's context file § Map data |
 | Provenance of `backdrop.jpg` | The owner | the village's context file § Deliberately not here |
 | Treasurer, and who camp money is handed *to* | The collective | `CLAUDE.md` § Campground |
 | The one-page privacy note, with a line about campers, **and a line about agents**: an away-notice can be read by a neighbour's assistant, as it can by a neighbour's phone. The village was never told, and the argument for putting the Watchtower on the agent surface only works if it is. Since 2026-09-10 the same note owes **a line about the phone book**: the contacts room holds the numbers of people *outside* the village — a well-driller, a vet, an office — who never joined the portal and cannot switch anything off, and an agent reads those too. Nobody in the village can answer for them, which is the argument for keeping the room to numbers a tradesman hands out anyway, and against it ever growing a field about a person | The collective's board, a lawyer confirms | A new `docs/privacy.md` |
