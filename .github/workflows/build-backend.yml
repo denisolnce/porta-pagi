@@ -1,9 +1,10 @@
-name: Build backend image
+name: Build image
 
-# Builds backend/Dockerfile, pushes to GHCR, then rolls BE_TAG in .doco-cd.yml so
-# the VM's doco-cd reconciles the new image. Copied from gaias-choice. The GHCR
-# package must be public for the VM to pull anonymously (Package settings →
-# Change visibility — one-time, after the first push).
+# Builds backend/Dockerfile (which builds the frontend too) and pushes it to
+# GHCR as sha-<commit> and latest. Nothing deploys from here: a village rolls
+# the tag in its own deploy repo. The GHCR package must be public for a village
+# to pull anonymously (Package settings → Change visibility — one-time, after
+# the first push).
 on:
   push:
     branches: [main]
@@ -15,7 +16,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   packages: write
 
 jobs:
@@ -46,7 +47,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/dennislapchenko/mokri-potok-portal-be
+          images: ghcr.io/dennislapchenko/porta-pagi
           tags: |
             type=sha,format=long
             type=raw,value=latest
@@ -62,17 +63,3 @@ jobs:
           provenance: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-      - name: Roll BE_TAG for doco-cd
-        run: |
-          set -euo pipefail
-          tag="sha-${GITHUB_SHA}"
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch --quiet origin main
-          git checkout -B main origin/main
-          sed -E -i "s|^(  BE_TAG: ).*|\1${tag}|" .doco-cd.yml
-          grep -q "^  BE_TAG: ${tag}\$" .doco-cd.yml
-          if git diff --quiet -- .doco-cd.yml; then echo "already ${tag}"; exit 0; fi
-          git add .doco-cd.yml
-          git commit -m "deploy: roll backend image to ${tag} [skip ci]"
-          git push origin main

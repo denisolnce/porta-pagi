@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dennislapchenko/mokri-potok-portal/backend/internal/config"
-	"github.com/dennislapchenko/mokri-potok-portal/backend/internal/store"
+	"github.com/dennislapchenko/porta-pagi/backend/internal/config"
+	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
 )
 
 // TestNotificationBanners pins the exact two lines a villager sees on the lock

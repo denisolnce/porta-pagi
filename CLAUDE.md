@@ -7,11 +7,15 @@
 
 ## What this is
 
-The village portal for a small Slovenian collective — see `README.md` for the
-stack and `.claude/context/village.md` for who uses it and why the rooms are
-shaped the way they are. It is a **social tool for a handful of houses**, not
-a product: every feature must beat "scroll up in the WhatsApp group" or it
-does not ship.
+Porta Pagi: the village portal one small Slovenian collective built for
+itself and now offers to others — see `README.md` for the stack and how a
+village runs it. The collective that built it runs it from its own deploy repo
+(`mokri-potok-portal`), which holds that village's config, map seed and VM
+notes; the decisions below were taken there, in that village's words, and
+still hold here. It is a **social tool for a handful of houses**: every
+feature must beat "scroll up in the WhatsApp group" or it does not ship, and
+what a paying village may switch on is a per-village switch, off by default —
+never the default.
 
 ## Invariants
 
@@ -157,7 +161,7 @@ does not ship.
   nothing else knows about it. A village with no `water` row draws none and
   says nothing: the water is this village's model, a map is its parcels.
 - **Cadastre is a view, not a source.** The `parcels` row of `map_files` is
-  public GURS data, entered once from `deploy/map/parcels.geojson` by
+  public GURS data for the village that built this, entered once from a file by
   `/server map-import` (`maps.go`) — **in the database like the photos, so the
   backup is the whole village and one image serves any village**; served only
   to a token, with an ETag so a phone holding it gets a 304. The import refuses
@@ -574,23 +578,21 @@ docs/               design docs the owner and the assistant decide on together (
                     and `design-mcp.md` — the API as MCP tools for agents: built, with the options rejected and their costs);
                     `later.md` = the one home for what is brainstormed, designed-and-set-aside, or still undecided
 docs/diagrams/      hand-drawn SVG sketches belonging to those docs
-deploy/map/         parcels.geojson (cadastre), water.json (the modelled watercourses) — this village's seed for the
-                    map_files rows, imported once by task vm:map; backend/internal/httpapi/maps.go serves and imports them
-deploy/app/         compose for the VM stack; deploy/infra-log.md = what was done by hand
-.doco-cd.yml        deploy config the VM's doco-cd polls; BE_TAG rolled by CI
-.github/workflows/  build-backend (GHCR + roll tag)
+.github/workflows/  build-backend: the image to GHCR (ghcr.io/dennislapchenko/porta-pagi), sha-<commit> and latest; nothing deploys from here
+backend/internal/httpapi/maps.go   serves and imports the map rows; a village's seed files live in its deploy repo
 ```
 
 ## Docs stay current, in the same change
 
 - **One fact, one home.** Architecture and invariants: this file. Stack and
-  commands: `README.md`. Manual VM steps, in order: `deploy/infra-log.md`
-  (the one place allowed to be a changelog). Village context: `.claude/context/village.md`.
+  commands: `README.md`. A village's manual VM steps and its context live in
+  that village's deploy repo, not here.
 - A change to the API shape, a table, the deploy path or a workflow updates the
   doc that owns it **in the same commit**. Docs describe current state — when
   something becomes history, delete it rather than framing it as a change.
-- A new room or a new table gets one line in `village.md` saying which
-  villager job it serves. If that line cannot be written, the feature is not needed.
+- A new room or a new table has to answer which villager job it serves, in one
+  line, in the design doc that proposes it. If that line cannot be written,
+  the feature is not needed.
 - `.claude/launch.json` starts the dev frontend or the backend; `task be:run`
   is the same backend from a terminal. Checking the CSP against a real page:
   `README.md`.
@@ -619,8 +621,8 @@ skipped. The reviewer edits nothing.
 
 ## Working rules
 
-- **This repo is public.** The village name and the public GURS and ARSO
-  data are the only specifics in it. Nothing that identifies a person or
+- **This repo is public, or will be.** The name of the village that built it
+  and the public GURS and ARSO data are the only specifics in it. Nothing that identifies a person or
   describes a household comes in here: no names of people, no phone numbers,
   no house-by-house facts, no quotes from the owner's private homestead notes
   about people or tenure. Pointing at a file in that repo by path is fine, its
@@ -629,7 +631,7 @@ skipped. The reviewer edits nothing.
   house names. History is not rewritten for a name that slipped in (owner's
   decision 2026-09-09): fix HEAD, no force-push.
 - Work on `main`. One person owns this repo; a side branch and a pull request
-  only put a gate between a verified change and the village. Commit to `main`
+  only put a gate between a verified change and the villages. Commit to `main`
   and push (owner's rule 2026-09-07).
 - Run `task check` before every commit. CI runs the same.
 - Migrations are append-only files in `backend/internal/store/migrations/`;
@@ -639,12 +641,11 @@ skipped. The reviewer edits nothing.
   Adding one is a decision to write down here.
 - Commits: lowercase, succinct, say what changed and why. No AI trailers, no
   backticks in subjects (they break the Telegram deploy ping).
-- Push to `main` deploys, frontend and backend together: the image carries
-  both (`backend/Dockerfile` builds the frontend), CI pushes it to GHCR and
-  rolls `BE_TAG`, and the VM's doco-cd reconciles within ~2 min of that roll
-  commit. Verify with `task vm:logs`, not by assumption. Only `backend/**`,
-  `frontend/**` and the workflow itself trigger it — a docs-only commit builds
-  nothing.
-- The VM is shared with gaias-choice: Caddy and the controller belong to that
-  repo. A portal change that needs a new route or a new poll entry is a change
-  **there** — see `deploy/infra-log.md`.
+- Push to `main` builds the image, frontend and backend together
+  (`backend/Dockerfile` builds the frontend), and CI pushes it to GHCR as
+  `sha-<commit>`. **Nothing deploys from here**: a village rolls the tag in
+  its own deploy repo, and verifies there. Only `backend/**`, `frontend/**`
+  and the workflow itself trigger a build — a docs-only commit builds nothing.
+- A change that a village's deploy needs — an env variable, a migration a
+  village must rehearse, a CLI a village must run — is announced in the commit
+  subject: that line is what the village's changelog panel prints.

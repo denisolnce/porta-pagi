@@ -1,7 +1,7 @@
 version: "3"
 
-# Host toolchain is fine here (go, node); the gaias-choice containers-only rule
-# is not copied — this is a small hobby stack and the CI is the gate.
+# Host toolchain (go, node); CI is the gate. A village's own tasks — logs, codes,
+# imports on its VM — live in that village's deploy repo, not here.
 tasks:
   default:
     cmds: [task --list]
@@ -17,7 +17,7 @@ tasks:
     cmds: [go run .]
   be:image:
     desc: build the backend image locally
-    cmds: [docker build -t mokri-potok-portal-be:local backend]
+    cmds: [docker build -f backend/Dockerfile -t porta-pagi:local .]
   fe:dev:
     desc: vite dev server on :5173, proxies /api to the backend on :8788
     dir: frontend
@@ -29,26 +29,3 @@ tasks:
   check:
     desc: everything CI runs
     cmds: [task be:test, task fe:build]
-  vm:logs:
-    desc: tail the backend on the VM (bootstrap code shows here on first boot)
-    cmds: ["ssh -p 13337 -i ~/.ssh/gaia root@gaias-choice.gardenofatlantis.com 'docker logs --tail 100 -f mokri-potok-potok-api-1'"]
-  vm:code:
-    desc: 'fresh invite link for a house on the VM (no name lists the houses): task vm:code -- "<house>"'
-    cmds:
-      - ssh -p 13337 -i ~/.ssh/gaia root@gaias-choice.gardenofatlantis.com 'docker exec mokri-potok-potok-api-1 /server code "{{.CLI_ARGS}}"'
-  vm:codex:
-    desc: 'import the adopted codex once, from a JSON file: task vm:codex -- codex.json (see codex.go for the shape)'
-    cmds:
-      - ssh -p 13337 -i ~/.ssh/gaia root@gaias-choice.gardenofatlantis.com 'docker exec -i mokri-potok-potok-api-1 /server codex-import' < "{{.CLI_ARGS}}"
-  vm:map:
-    desc: 'import the map data from deploy/map into the village database: task vm:map (parcels with source and snapshot date, then water)'
-    cmds:
-      - ssh -p 13337 -i ~/.ssh/gaia root@gaias-choice.gardenofatlantis.com 'docker exec -i mokri-potok-potok-api-1 /server map-import parcels GURS 2026-08-15' < deploy/map/parcels.geojson
-      - ssh -p 13337 -i ~/.ssh/gaia root@gaias-choice.gardenofatlantis.com 'docker exec -i mokri-potok-potok-api-1 /server map-import water' < deploy/map/water.json
-  vm:backdrop:
-    desc: 'the picture behind the gate, from a file: task vm:backdrop -- picture.jpg (jpeg, png or webp, under 2 MB)'
-    cmds:
-      - ssh -p 13337 -i ~/.ssh/gaia root@gaias-choice.gardenofatlantis.com 'docker exec -i mokri-potok-potok-api-1 /server site-import backdrop' < "{{.CLI_ARGS}}"
-  vm:backup:
-    desc: copy the latest SQLite backup from the VM to ./backups/
-    cmds: ["mkdir -p backups && scp -P 13337 -i ~/.ssh/gaia 'root@gaias-choice.gardenofatlantis.com:/srv/mokri-potok/data/backups/*.db' backups/"]

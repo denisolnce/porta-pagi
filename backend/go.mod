@@ -1,4 +1,4 @@
-module github.com/dennislapchenko/mokri-potok-portal/backend
+module github.com/dennislapchenko/porta-pagi/backend
 
 go 1.24.0
 

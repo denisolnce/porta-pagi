@@ -17,9 +17,9 @@ import (
 	// Set TZ in the compose file to pick it up.
 	_ "time/tzdata"
 
-	"github.com/dennislapchenko/mokri-potok-portal/backend/internal/config"
-	"github.com/dennislapchenko/mokri-potok-portal/backend/internal/httpapi"
-	"github.com/dennislapchenko/mokri-potok-portal/backend/internal/store"
+	"github.com/dennislapchenko/porta-pagi/backend/internal/config"
+	"github.com/dennislapchenko/porta-pagi/backend/internal/httpapi"
+	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
 )
 
 func main() {
