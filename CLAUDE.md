@@ -13,9 +13,7 @@ village runs it. The collective that built it runs it from its own deploy repo
 (`mokri-potok-portal`), which holds that village's config, map seed and VM
 notes; the decisions below were taken there, in that village's words, and
 still hold here. It is a **social tool for a handful of houses**: every
-feature must beat "scroll up in the WhatsApp group" or it does not ship, and
-what a paying village may switch on is a per-village switch, off by default —
-never the default.
+feature must beat "scroll up in the WhatsApp group" or it does not ship.
 
 ## Invariants
 
@@ -92,7 +90,7 @@ never the default.
   everything `'self'`, inline styles allowed because React paints house colours
   into style attributes, `blob:` images for photos and the export. The Go
   server sets it, not Caddy, so it ships and is tested with the frontend it
-  describes; the gaias-choice Caddyfile sets none for this host on purpose.
+  describes; a village's edge proxy sets none on purpose.
   **A house colour is `#rrggbb` and nothing else** — CSS `background` also
   takes `url(...)`, so an unchecked colour is a beacon fired from every
   villager's browser; the backend answers anything else with a 400.
@@ -102,8 +100,8 @@ never the default.
   for on 2026-09-06 and refused for that reason. The one public image
   is `backdrop.jpg` behind the gate — the owner chose it knowing the repo is
   public; provenance `TBD`. It is every village's default; a village replaces
-  it with its own by `/server site-import backdrop < picture` (`site.go`,
-  `task vm:backdrop`), a row in `site_files` served in the built-in file's
+  it with its own by `/server site-import backdrop < picture` (`site.go`), a
+  row in `site_files` served in the built-in file's
   place, still without a token because the gate is before any login. Away-notices are
   burglary information: they never leave the logged-in app (no digests, no feeds).
   **An MCP key is the logged-in house** (owner's decision 2026-09-09): the
@@ -394,7 +392,7 @@ never the default.
   so the nudge lands in the morning. A nudge is not news.
 - **The way back in.** When nobody holds a session — a steward's phone wiped,
   the origin changed — `docker exec <container> /server code "<house>"` on the
-  VM rotates that house's invite and prints the link (`cli.go`, `task vm:code`).
+  VM rotates that house's invite and prints the link (`cli.go`).
   SSH to the machine is the credential; there is no in-app password to reset
   and no email to send. Keep it that way.
 - **A door for agents: `POST /api/mcp`, and a key that is a device.** The
@@ -519,8 +517,8 @@ never the default.
   outlives the house that edited it (`ON DELETE SET NULL`), like a project
   picture. **Nothing pushes**: a changed codex is announced in the Tavern by
   the house that changed it, in its own words. The adopted text enters once,
-  by `/server codex-import < codex.json` on the VM (`codex.go` has the shape;
-  `task vm:codex -- codex.json`), stamped with the adoption date and no house;
+  by `/server codex-import < codex.json` on the VM (`codex.go` has the shape),
+  stamped with the adoption date and no house;
   it refuses a codex that already has sections. The repo is public and the
   document is the collective's, so the seed file stays off the repo. The
   export carries the table. Bodies are plain text with two habits and no

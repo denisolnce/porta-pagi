@@ -37,7 +37,7 @@ speak with one voice:
    invoking prompt gives you both.
 2. Run `git diff` and `git status --short` yourself. Read the changed files
    where the diff alone is not enough. Read `CLAUDE.md` and
-   `.claude/context/village.md` when a change touches a room, a table, a
+   the village's context file (`.claude/context/village.md` in a village's deploy repo) when a change touches a room, a table, a
    notification or a doc.
 3. Check the public-repo line: the first item of `CLAUDE.md` § Working rules.
    Anything that identifies a person or leaks the owner's private notes is

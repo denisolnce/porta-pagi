@@ -14,7 +14,7 @@ do it through the portal's own API, **as that house** — the same rows, the
 same pushes, the same rules. A house that runs no agent loses nothing: no room
 changes, no bar changes.
 
-The villager job, in `village.md`: *"tell my assistant, and it is in the
+The villager job, in the village's context file: *"tell my assistant, and it is in the
 portal."*
 
 ## Answer first

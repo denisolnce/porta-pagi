@@ -4,7 +4,7 @@ Recorded 2026-09-07, four days after the first commit. This file is the one
 home for everything the portal does **not** do yet: rooms that were
 brainstormed, variants that were designed and set aside, decisions still open,
 and ideas pondered for a tight-living community. What *is* built lives in
-`README.md` (rooms and stack), `.claude/context/village.md` (the villager job
+`README.md` (rooms and stack), the village's context file in its deploy repo (the villager job
 each room serves) and `CLAUDE.md` (the invariants). Nothing here is a promise.
 
 **The rule that governs this whole file**: no room ships before the houses ask
@@ -96,15 +96,15 @@ Tavern asking the houses what they miss, and then four weeks of listening.
 | Decision | Who answers | Recorded where once decided |
 | --- | --- | --- |
 | GURS open-data licence string for `parcels.geojson` | The owner, from the GURS terms | `CLAUDE.md` § Cadastre, `village.md` § Map data |
-| Provenance of `backdrop.jpg` | The owner | `village.md` § Deliberately not here |
+| Provenance of `backdrop.jpg` | The owner | the village's context file § Deliberately not here |
 | Treasurer, and who camp money is handed *to* | The collective | `CLAUDE.md` § Campground |
 | The one-page privacy note, with a line about campers, **and a line about agents**: an away-notice can be read by a neighbour's assistant, as it can by a neighbour's phone. The village was never told, and the argument for putting the Watchtower on the agent surface only works if it is. Since 2026-09-10 the same note owes **a line about the phone book**: the contacts room holds the numbers of people *outside* the village — a well-driller, a vet, an office — who never joined the portal and cannot switch anything off, and an agent reads those too. Nobody in the village can answer for them, which is the argument for keeping the room to numbers a tradesman hands out anyway, and against it ever growing a field about a person | The collective's board, a lawyer confirms | A new `docs/privacy.md` |
 | A Slovenian-speaking house checks the room names, the Houses subtitle and the MCP key box (`design-mcp.md` § The Houses room) | Any house | `i18n.tsx` |
 | Stewardship on an MCP key. None today: an agent has no confirm dialog and the steward routes are the ones a confirm dialog guards. The owner left it open — "later key might carry stewardship". One line in `requireHouse` | The owner, when an agent needs to export or create a house | `CLAUDE.md` § A door for agents, `design-mcp.md` § Decisions |
 | OAuth for MCP clients that demand it (claude.ai connectors). A static key in a header is the whole auth story today | The owner, if a house uses claude.ai and not Claude Code | `design-mcp.md` § Decisions |
 | Deletes through MCP. None today: a phone gets a confirm first. Would come as one `delete_*` per table with the route's own owner-or-steward check | The owner, if an agent ever needs one | `design-mcp.md` § The tool surface |
-| The all-kinds-on push default once more houses join | Every house, after a week | `village.md` § Notifications |
-| A second steward | The village | `village.md` § People and roles |
+| The all-kinds-on push default once more houses join | Every house, after a week | the village's context file § Notifications |
+| A second steward | The village | the village's context file § People and roles |
 | What a household without land calls itself | The household, when the first one joins | `design-membership.md` |
 | Whether editing the Codex in the app *amends* the adopted text or *proposes* an amendment for the council. Today any house edits and the section names it; the first edit replaces the council's wording with no copy kept but the nightly backup. A proposal state, or a section history, waits for the village to say it wants one | The collective | `CLAUDE.md` § Codex |
 | Reordering codex sections in the app. New sections append; the order the import set is the document's | Any house, if a new section ever belongs in the middle | `Codex.tsx`, one `ord` field |
