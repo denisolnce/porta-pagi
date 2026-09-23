@@ -8,7 +8,8 @@ tasks:
   be:test:
     desc: vet + test the backend
     dir: backend
-    cmds: [go vet ./..., go test ./...]
+    # Twice: the demo tag changes New() and /api/status for every test, so the whole suite runs under it too.
+    cmds: [go vet ./..., go test ./..., go vet -tags demo ./..., go test -tags demo ./...]
   be:run:
     desc: run the backend locally on 127.0.0.1:8788 with ./data
     dir: backend

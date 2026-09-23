@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
 )
 
 // The door with no code, compiled into the demo image only (-tags demo). A
@@ -56,6 +58,12 @@ func (s *Server) demoEnter(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 404, "no such house")
 		return
 	}
+	// A public door mints rows; the same cap /api/join has keeps a loop from
+	// filling the table before the hour resets it.
+	if !s.tries.allow(clientIP(r), 60, 10*time.Minute) {
+		writeErr(w, 429, "slow down")
+		return
+	}
 	tok, err := s.newDevice(r.Context(), row["id"].(int64), "visitor")
 	if err != nil {
 		fail(w, err)
@@ -72,7 +80,7 @@ func (s *Server) RunDemoReset(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(time.Until(next)):
+		case <-time.After(next.Sub(now)):
 		}
 		if err := s.ResetDemo(); err != nil {
 			log.Printf("demo reset failed: %v", err)
@@ -82,18 +90,33 @@ func (s *Server) RunDemoReset(ctx context.Context) {
 	}
 }
 
-// ResetDemo empties every table the village writes and seeds the demo again.
-// Migrations, settings (the VAPID keys) and the tables the seed fills are
-// the whole list; a table nobody wrote stays as it is.
+// ResetDemo empties every table the village writes and seeds the demo again,
+// as one transaction: no request lands on an empty village in between. The
+// table list comes from the schema itself, so a table added tomorrow is
+// wiped too; only the migrations ledger and settings (the VAPID keys) stay.
 func (s *Server) ResetDemo() error {
 	ctx := context.Background()
-	for _, t := range []string{"comments", "wish_options", "wish_wants", "wishes", "project_tasks", "project_photos", "events", "projects", "camp_takings", "contacts", "codex_texts", "codex_sections", "needs", "runs", "offers", "away", "tools", "posts", "push_subscriptions", "notify_off", "notify_off_global", "pairings", "invites", "devices", "house_homes", "house_parcels", "map_files", "site_files", "houses"} {
-		if _, err := s.st.Exec(ctx, `DELETE FROM `+t); err != nil {
+	tables, err := s.st.Rows(ctx, `SELECT name FROM sqlite_master WHERE type='table' AND name NOT IN ('schema_migrations', 'settings') AND name NOT LIKE 'sqlite_%'`)
+	if err != nil {
+		return err
+	}
+	err = s.st.Tx(ctx, func(tx *store.Store) error {
+		if _, err := tx.Exec(ctx, `PRAGMA defer_foreign_keys = ON`); err != nil {
 			return err
 		}
+		for _, t := range tables {
+			if _, err := tx.Exec(ctx, `DELETE FROM "`+t["name"].(string)+`"`); err != nil {
+				return err
+			}
+		}
+		_, err := seedDemo(ctx, tx, s.now())
+		return err
+	})
+	if err != nil {
+		return err
 	}
 	wcache.mu.Lock()
 	wcache.body = nil
 	wcache.mu.Unlock()
-	return s.SeedDemo(s.now())
+	return nil
 }

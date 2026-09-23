@@ -28,6 +28,11 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   const text = await res.text();
   let data: any = null;
   try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+  if (res.status === 401 && tok && !path.startsWith("/join") && !path.startsWith("/bootstrap") && !path.startsWith("/demo/")) {
+    // The token is dead — a phone a steward removed, or the demo's hourly
+    // reset. Fall to the gate instead of to a page of errors.
+    setToken(null); location.reload();
+  }
   if (!res.ok) throw new ApiError(res.status, (data && data.error) || res.statusText);
   return data as T;
 }

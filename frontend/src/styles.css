@@ -450,3 +450,5 @@ a.card:hover { background: #fff8e4; }
 
 /* The demo's house switcher sits where the house link sits; the select wears the parchment. */
 .demo-switch select { font: inherit; background: var(--parch, #f1e4c6); color: inherit; border: 1px solid #7a5a3a; border-radius: 6px; padding: .1rem .3rem; max-width: 12rem; }
+.demo-doors { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+.demo-doors button { display: inline-flex; align-items: center; gap: .4rem; }

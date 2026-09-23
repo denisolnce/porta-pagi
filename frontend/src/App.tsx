@@ -197,7 +197,7 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
 
 // Gate: join with an invite code (from the link or typed), or found the village.
 function Gate({ onJoined }: { onJoined: () => Promise<void> }) {
-  const { t } = useT();
+  const { t, demo } = useT();
   const { code: urlCode } = useParams();
   const nav = useNavigate();
   const [code, setCode] = useState(urlCode || "");
@@ -221,6 +221,7 @@ function Gate({ onJoined }: { onJoined: () => Promise<void> }) {
       setErr(s === 404 || s === 403 ? t("Unknown code") : s === 410 ? t("Code expired — ask the steward for a new link") : s === 429 ? t("Too many attempts. Wait a few minutes.") : t("Something went wrong"));
     }
   };
+  if (demo) return <DemoGate />;
   return (
     <div className="parchment gate">
       <h2>🏰 {t("Enter the village")}</h2>
@@ -312,15 +313,40 @@ function DemoSwitch({ me }: { me: Me | null }) {
   useEffect(() => { api<typeof houses>("/demo/houses").then(setHouses).catch(() => {}); }, []);
   const enter = async (id: number) => {
     const r = await api<{ token: string }>("/demo/enter", { method: "POST", body: { id } });
-    setToken(r.token); location.hash = "#/"; location.reload();
+    setToken(r.token); location.reload(); // the same page, as the other house
   };
   return (
     <label className="house demo-switch">
       {me ? <span className="crest" style={{ backgroundColor: me.color }}>{me.crest}</span> : "🚪"}{" "}
       <select value={me?.id ?? ""} onChange={(e) => enter(Number(e.target.value))}>
         {!me && <option value="">{t("Enter as a house")}</option>}
-        {houses.map((h) => <option key={h.id} value={h.id}>{h.crest} {h.name}{h.is_steward ? " 🗝️" : ""}</option>)}
+        {houses.map((h) => <option key={h.id} value={h.id}>{h.crest} {h.name}{h.is_steward ? ` (${t("Steward").toLowerCase()})` : ""}</option>)}
       </select>
     </label>
+  );
+}
+
+
+// The demo's gate: no code to type. The houses are the doors.
+function DemoGate() {
+  const { t } = useT();
+  const [houses, setHouses] = useState<{ id: number; name: string; crest: string; color: string; is_steward: number }[]>([]);
+  useEffect(() => { api<typeof houses>("/demo/houses").then(setHouses).catch(() => {}); }, []);
+  const enter = async (id: number) => {
+    const r = await api<{ token: string }>("/demo/enter", { method: "POST", body: { id } });
+    setToken(r.token); location.reload();
+  };
+  return (
+    <div className="parchment gate">
+      <h2>🏰 {t("Enter the village")}</h2>
+      <p className="small">{t("This is a demo village. Nobody lives here; pick a house and walk in as them.")} {t("Everything you change is wiped on the hour.")}</p>
+      <div className="demo-doors">
+        {houses.map((h) => (
+          <button key={h.id} className="primary" onClick={() => enter(h.id)}>
+            <span className="crest" style={{ backgroundColor: h.color }}>{h.crest}</span> {h.name}{h.is_steward ? ` (${t("Steward").toLowerCase()})` : ""}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

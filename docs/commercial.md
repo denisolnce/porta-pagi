@@ -311,7 +311,10 @@ a year, pt-PT and English, argued over by a prose reviewer and rewritten
 once — seasons, codex voice, replies before their posts, lines that toured
 features), the synthetic cadastre, `pt.json`, the build-tagged door, the
 hourly reset, the house switcher. Not built: pictures on the projects, and
-the demo site as a running thing.
+the demo site as a running thing. **When it runs, it runs on its own host,
+never beside a village**: a visitor holds a steward's powers for up to an
+hour — posts, an export, a backdrop upload, push endpoints the server will
+POST to — and the reset is the only thing that bounds it.
 
 ## 5. How it is offered
 
