@@ -17,10 +17,12 @@ is in the block below; every other line is an argument, not a promise.
   the code only makes the honest path the easy one. See §13.
 - **The product is Porta Pagi** — Latin, "the village's gate" — and the repo
   is `porta-pagi` (owner, 2026-09-23).
-- **The product moves to its own repo, now**, and becomes the source of truth.
-  This repo keeps the village: its deployment, its config, and nothing the
-  product owns. Shape of the split, and what has to be pulled out of the code
-  before it can be a product: §13.
+- **The product moved to its own repo on 2026-09-23** — this one, `porta-pagi`
+  (`f6b9c24` merged the village repo's history, `1fbbe4d` renamed the module
+  and took the deploy files out) — and is the source of truth. The village's
+  repo, `mokri-potok-portal`, keeps the village: its deployment, its config,
+  and nothing the product owns. The shape, and what was pulled out of the
+  code first: §13.
 - **The demo village speaks English and Portuguese.** Its year of life is
   drafted by the assistant, read against real community writing first, and
   argued over by a reviewer whose one job is to catch the sentence no villager
@@ -29,8 +31,11 @@ is in the block below; every other line is an argument, not a promise.
 - **Support: everything answered within 48 hours.** The owner can bring in
   other people when needed. Who, and for what, is not decided.
 - **The collective's portal goes nowhere if the business stops.** It is
-  self-hosted already, pinned to an image by digest, and the split makes that
-  literal: this repo keeps enough to run it with no product repo at all.
+  self-hosted already, pinned to an image by tag (`sha-<commit>`, which the
+  registry could still lose with the package), and the split made that
+  nearly literal: the village's repo keeps enough to run it with no product
+  repo at all — except the image itself, which is still only on GHCR
+  (`later.md`).
 - **Cadastre is the village's choice.** No second country is planned. A
   village brings its own map data, or pays for the map service (§5), and until
   then the map button says what is needed and how to get help with it.
@@ -39,7 +44,10 @@ is in the block below; every other line is an argument, not a promise.
   deployment of the product image.
 - **The licence is BSL 1.1** with the ten-house grant (§13). Written and
   pushed on 2026-09-23 as `LICENSE` in `dennislapchenko/porta-pagi`, private
-  until the code lands there. Two parameters in it are the assistant's picks,
+  and the code landed there on 2026-09-23; the package
+  `ghcr.io/dennislapchenko/porta-pagi` is public since that day so a village
+  pulls it, the source repo stays private until the two licence parameters
+  are settled. Two parameters in it are the assistant's picks,
   changeable until the repo goes public. The **Change License is AGPL 3.0 or
   later**: the BSL covenant takes any licence compatible with GPL 2.0 *or a
   later version*, and AGPL 3 is compatible with GPL 3 by its own section 13 —
@@ -667,17 +675,17 @@ Decided 2026-09-23 in outline; the argument for the shape, and the inventory.
 | --- | --- | --- | --- |
 | **`porta-pagi`**, the product | Public, under the licence below | Go backend, React frontend, Dockerfile, migrations, self-host compose and quickstart, the demo seed and the build-tagged demo door (§4), `CLAUDE.md` and the design docs that describe the product | It is what the licence licenses. The demo lives here because its door is a build tag on this code and its seed follows these migrations — a demo repo would break on every schema change |
 | **`porta-pagi-cloud`** (landing page + control plane; name is the assistant's suggestion) | Private | The static landing page (§3), and the service behind it: accounts and magic links (§7), provisioning, subdomains, TLS, rolling, off-box backups, billing (§6, §11 rows 12–14) | Billing code and customer records are not for publishing. The page is static and could be public, but the owner wants it to *become* the control plane, and a page that grows into a service should start in the service's repo |
-| **this one** (`mokri-potok-portal`) | As it is | `deploy/`, `.doco-cd.yml`, `infra-log.md`, the village's own data files (`parcels.geojson`, `water.json`, the codex seed off-repo), and a licence notice | The village. It pulls the product image by digest and carries nothing the product owns. "Runs with the product repo gone" is only literal if the image is on the box too: a `docker save` tarball beside the nightly backups, refreshed by the same cron, because a digest pin still needs the registry to answer |
+| **the village's** (`mokri-potok-portal`) | Public, as it was | `deploy/`, `.doco-cd.yml`, `infra-log.md`, the village's own data files (`deploy/map/`, the codex seed off-repo), who the village is | The village. It pulls the product image by tag and carries nothing the product owns (done 2026-09-23, `4897c64`). "Runs with the product repo gone" is only literal if the image is on the box too: a `docker save` tarball beside the nightly backups — **not built**, in `later.md` |
 
 One repo for all of it was considered and refused: it would make the private
 part gate the public part's licence, and put the customers' billing code in
 the archive every self-hoster downloads.
 
-**Order.** De-village-ify in place, on this repo, behind config with this
-village's values as the deploy's env — deploy that, verify the village on the
-same image — and only then push the history to `porta-pagi` and cut this repo
-down to `deploy/`. Forking first and de-village-ifying there means two
-diverging copies of the same code for the whole of Phase 2.
+**Order, as done on 2026-09-23.** De-village-ified in place on the village's
+repo, behind config with that village's values as the deploy's env, each
+slice deployed and verified there — then the history pushed to `porta-pagi`
+and the village's repo cut down to `deploy/`. Forking first would have meant
+two diverging copies of the same code for the whole of Phase 2.
 
 **History.** The product repo starts from this repo's history, not from a
 snapshot: blame survives, and the working rule that history is not rewritten
@@ -728,7 +736,7 @@ From `grep` on 2026-09-23. Each becomes config, a default, or a neutral name:
 | Where | What | Becomes |
 | --- | --- | --- |
 | `config.go` | ~~defaults naming the village's domain and town~~ | **Done 2026-09-23** (`f747351` on `main`): `VILLAGE_NAME`, `PUBLIC_URL`, `PUSH_SUBJECT` required, no defaults; `WEATHER_LOCATION` unset = panel off; `PAGI_BOOTSTRAP_CODE` |
-| `go.mod` | the module path carries the village and the account | `github.com/<account>/porta-pagi/backend`, one `sed` over every import |
+| `go.mod` | ~~the module path carried the village~~ | **Done 2026-09-23** (`1fbbe4d`): `github.com/dennislapchenko/porta-pagi/backend` |
 | `weather.go` | ~~ARSO the only provider~~ | **Done 2026-09-23** (`eaad841`, `793d191`): `WEATHER_PROVIDER` is `open-meteo` (any `WEATHER_COORDS`, the default) or `arso` (this village); one panel shape with neutral icon keys, the page knows no provider |
 | `mcp.go` | the `potok_` key prefix (`serverInfo.name` is `porta-pagi` since `f747351`) | `pagi_` — only keys minted after change; old ones keep working, the hash is what is checked |
 | `store.go` | `potok.db`, `potok-YYYY-MM-DD.db` backups | `pagi.db`, `pagi-YYYY-MM-DD.db`. Renaming this village's live DB file is one step in `deploy/infra-log.md` — or the filename stays configurable and this village keeps its name |
