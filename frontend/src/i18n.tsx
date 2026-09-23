@@ -19,8 +19,10 @@ export const localeOf = (lang: string) => (lang === "en" ? "en-GB" : lang);
 // The browser knows it; a browser that does not shows the tag.
 export const langName = (lang: string) => { try { return new Intl.DisplayNames([lang], { type: "language" }).of(lang) || lang; } catch { return lang; } };
 
-type T = { lang: string; t: (s: string) => string; setLang: (l: string) => void; languages: string[]; village: string };
-const Ctx = createContext<T>({ lang: "en", t: (s) => s, setLang: () => {}, languages: [], village: "" });
+type T = { lang: string; t: (s: string) => string; setLang: (l: string) => void; languages: string[]; village: string; demo: boolean };
+const Ctx = createContext<T>({ lang: "en", t: (s) => s, setLang: () => {}, languages: [], village: "", demo: false });
+// The demo build says so in a meta tag; a village's page carries an empty one.
+const isDemo = () => served(document.querySelector('meta[name="demo"]')?.getAttribute("content")) === "1";
 
 // The server writes the village's name into <title> and its language list
 // into a meta tag, so both are known before anything is fetched. The Vite dev
@@ -57,7 +59,7 @@ export function I18n({ children }: { children: ReactNode }) {
   const setLang = (l: string) => { setLangState(l); try { localStorage.setItem("potok.lang", l); } catch { /* ignore */ } };
   const t = (s: string) => dicts[lang]?.[s] ?? s;
   useEffect(() => { if (village) document.title = `${village} · ${t("Village portal")}`; }, [village, lang]); // eslint-disable-line react-hooks/exhaustive-deps
-  return <Ctx.Provider value={{ lang, t, setLang, languages, village }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ lang, t, setLang, languages, village, demo: isDemo() }}>{children}</Ctx.Provider>;
 }
 
 export const useT = () => useContext(Ctx);

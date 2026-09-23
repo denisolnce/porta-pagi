@@ -447,3 +447,6 @@ a.card:hover { background: #fff8e4; }
 /* The last row makes a type rather than choosing one, so it is set apart and
    in the smaller face — a button all the same, because it acts. */
 .tp-new { margin-top: .15rem; border-top: 1px dashed var(--parch3); border-radius: 0 0 4px 4px; font-size: .9rem; color: var(--ink2); }
+
+/* The demo's house switcher sits where the house link sits; the select wears the parchment. */
+.demo-switch select { font: inherit; background: var(--parch, #f1e4c6); color: inherit; border: 1px solid #7a5a3a; border-radius: 6px; padding: .1rem .3rem; max-width: 12rem; }

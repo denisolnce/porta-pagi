@@ -111,6 +111,9 @@ func main() {
 	defer stop()
 	go st.RunNightlyBackups(ctx)
 	go srv.RunToolReminders(ctx)
+	if httpapi.DemoStart != nil { // the demo build only: the hourly reset
+		go httpapi.DemoStart(ctx, srv)
+	}
 
 	// BIND=127.0.0.1 in dev: a loopback listener never triggers the macOS
 	// "accept incoming connections?" prompt, which `go run` otherwise raises on

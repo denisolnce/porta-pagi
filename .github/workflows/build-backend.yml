@@ -63,3 +63,16 @@ jobs:
           provenance: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+      - name: Build and push the demo image
+        # The same source with the demo door compiled in (-tags demo): a
+        # separate image name, so no village can pull the door by mistake.
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          provenance: false
+          build-args: TAGS=demo
+          tags: |
+            ghcr.io/dennislapchenko/porta-pagi-demo:sha-${{ github.sha }}
+            ghcr.io/dennislapchenko/porta-pagi-demo:latest

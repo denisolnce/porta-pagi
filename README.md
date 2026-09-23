@@ -78,9 +78,12 @@ codex.json` (shape in `backend/internal/httpapi/codex.go`).
 `/server demo-seed` fills an **empty** database with an invented collective —
 *Vale do Sobreiro Torto*, ten houses, a year of their life in Portuguese and
 English — dated off the day it runs. Run it with `LANGUAGES=pt,en` and
-`VILLAGE_NAME="Sobreiro Torto"`; then `/server code "Casa da Eira"` prints
-the steward house's invite link. Nothing in it is real: the land is a
-synthetic mesh, the numbers are `000` patterns.
+`VILLAGE_NAME="Sobreiro Torto"`. Nothing in it is real: the land is a
+synthetic mesh, the numbers are `000` patterns. The demo image —
+`ghcr.io/dennislapchenko/porta-pagi-demo`, built with `-tags demo` — adds
+the door with no code: a visitor picks a house in the top bar and is in as
+that house, and the village resets on the hour. A village's image has no
+such door; `/server code "<house>"` is the way in there.
 
 ## For agents (MCP)
 

@@ -25,6 +25,7 @@ const nameToken = "{{VILLAGE_NAME}}"
 const langToken = "{{LANGUAGES}}"
 const defaultLangToken = "{{LANG}}"        // the village's first language: <html lang> and the manifest's
 const descriptionToken = "{{DESCRIPTION}}" // the manifest's one line, in that language
+const demoToken = "{{DEMO}}"               // "1" in the demo build, so the page shows the house switcher
 
 const csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 
@@ -86,7 +87,7 @@ func (s *Server) staticHandler() http.Handler {
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			}
 			out := strings.NewReplacer(nameToken, s.cfg.VillageName, langToken, strings.Join(s.cfg.Languages, ","), defaultLangToken, s.cfg.Default(),
-				descriptionToken, tr(s.cfg.Default(), "The village on one page.")).Replace(string(b))
+				descriptionToken, tr(s.cfg.Default(), "The village on one page."), demoToken, map[bool]string{true: "1", false: ""}[DemoMode]).Replace(string(b))
 			w.Write([]byte(out))
 			return
 		}

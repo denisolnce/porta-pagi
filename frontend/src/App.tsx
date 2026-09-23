@@ -35,7 +35,7 @@ export const ROOMS = [
 ];
 
 export default function App() {
-  const { t, lang, setLang, languages, village } = useT();
+  const { t, lang, setLang, languages, village, demo } = useT();
   const [me, setMe] = useState<Me | null>(null);
   const [houses, setHouses] = useState<House[]>([]);
   const [state, setState] = useState<"loading" | "gate" | "in">(getToken() ? "loading" : "gate");
@@ -59,7 +59,7 @@ export default function App() {
       <header className="topbar">
         <div className="inner">
           <h1><Link to="/">🏰 {village}</Link> <span className="small" style={{ color: "var(--parch2)" }}>· {t("Village portal")}</span></h1>
-          {me && <Link className="house" to="/houses"><span className="crest" style={{ backgroundColor: me.color }}>{me.crest}</span> {me.name}</Link>}
+          {demo ? <DemoSwitch me={me} /> : me && <Link className="house" to="/houses"><span className="crest" style={{ backgroundColor: me.color }}>{me.crest}</span> {me.name}</Link>}
           <span className="lang">
             {/* The village's languages, in its order; the buttons are the codes. */}
             {languages.map((l) => <span key={l}><button className={lang === l ? "primary" : ""} onClick={() => setLang(l)}>{l.toUpperCase()}</button>{" "}</span>)}
@@ -301,5 +301,26 @@ function HallPeek() {
       ))}
       {posts.length === 0 && events.length === 0 && <p className="small muted" style={{ fontStyle: "italic" }}>{t("Nothing pinned, nothing planned.")}</p>}
     </div>
+  );
+}
+
+// The demo village's door: pick a house, be that house. Only the demo build
+// serves the route behind it; a village's page never renders this.
+function DemoSwitch({ me }: { me: Me | null }) {
+  const { t } = useT();
+  const [houses, setHouses] = useState<{ id: number; name: string; crest: string; is_steward: number }[]>([]);
+  useEffect(() => { api<typeof houses>("/demo/houses").then(setHouses).catch(() => {}); }, []);
+  const enter = async (id: number) => {
+    const r = await api<{ token: string }>("/demo/enter", { method: "POST", body: { id } });
+    setToken(r.token); location.hash = "#/"; location.reload();
+  };
+  return (
+    <label className="house demo-switch">
+      {me ? <span className="crest" style={{ backgroundColor: me.color }}>{me.crest}</span> : "🚪"}{" "}
+      <select value={me?.id ?? ""} onChange={(e) => enter(Number(e.target.value))}>
+        {!me && <option value="">{t("Enter as a house")}</option>}
+        {houses.map((h) => <option key={h.id} value={h.id}>{h.crest} {h.name}{h.is_steward ? " 🗝️" : ""}</option>)}
+      </select>
+    </label>
   );
 }

@@ -548,9 +548,15 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   the writing job: houses write in European Portuguese or English as they
   would in a WhatsApp group, each with a voice; a line that reads like
   software is a bug. The demo's languages are `pt,en` (`pt.json` is the
-  dictionary that came with it). What is not built yet: the door with no
-  code (a build-tagged route, absent from every village's binary), the hourly
-  reset, the house switcher, project pictures — `docs/commercial.md` §4.
+  dictionary that came with it). **The door with no code exists only in the
+  demo build** (`demodoor.go`, `//go:build demo`): `GET /api/demo/houses` and
+  `POST /api/demo/enter` hand a visitor a device token for any house, the
+  page's `{{DEMO}}` meta tag turns the house link into a switcher, and the
+  village is wiped and seeded again on the hour. In every village's binary
+  that file is not compiled — `demodoor_test.go` pins the 404 — and CI ships
+  the demo as its own image, `ghcr.io/dennislapchenko/porta-pagi-demo`, so no
+  village can pull the door by mistake. Not built: project pictures, and the
+  demo site itself (a deployment of that image — the cloud repo's job).
 - **The changelog is the git log, filtered, written at build time.**
   `frontend/scripts/changelog.mjs` writes `public/changelog.json` before every
   build and dev start — `built` is HEAD's date, `entries` are the last **90

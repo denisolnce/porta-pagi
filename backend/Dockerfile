@@ -18,8 +18,10 @@ COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 COPY backend/ ./
 COPY --from=web /web/dist ./internal/httpapi/web
-# CGO_ENABLED=0 keeps it static (modernc.org/sqlite is pure Go).
-RUN CGO_ENABLED=0 GOFLAGS=-buildvcs=false go build -o /server .
+# CGO_ENABLED=0 keeps it static (modernc.org/sqlite is pure Go). TAGS=demo
+# builds the demo image: the door with no code compiled in (demodoor.go).
+ARG TAGS=""
+RUN CGO_ENABLED=0 GOFLAGS=-buildvcs=false go build -tags "$TAGS" -o /server .
 
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /server /server

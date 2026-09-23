@@ -6,6 +6,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -33,8 +34,22 @@ type Server struct {
 func New(st *store.Store, cfg config.Config) *Server {
 	s := &Server{st: st, cfg: cfg, mux: http.NewServeMux(), now: time.Now, tries: newLimiter(), misses: &counter{}}
 	s.routes()
+	if demoRoutes != nil {
+		demoRoutes(s)
+	}
 	return s
 }
+
+// demoRoutes is set only by the demo build tag (demodoor.go): the door with
+// no code that lets a visitor into the demo village. In every village's
+// binary it is nil, so the door is absent by compilation, not by config.
+var demoRoutes func(*Server)
+
+// DemoMode is true only in the demo build; /api/status and the page's meta
+// tag say so, and the page shows the house switcher on it. DemoStart is the
+// hourly reset, started by main in that build.
+var DemoMode bool
+var DemoStart func(context.Context, *Server)
 
 func (s *Server) Handler() http.Handler {
 	return logRequests(s.mux)
@@ -272,7 +287,7 @@ func (s *Server) status(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	writeJSON(w, 200, map[string]any{"name": s.cfg.VillageName, "languages": s.cfg.Languages, "houses": row["n"], "bootstrap_needed": row["n"].(int64) == 0})
+	writeJSON(w, 200, map[string]any{"name": s.cfg.VillageName, "languages": s.cfg.Languages, "houses": row["n"], "bootstrap_needed": row["n"].(int64) == 0, "demo": DemoMode})
 }
 
 // BootstrapCode returns the code that creates the first steward house. Fixed

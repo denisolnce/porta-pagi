@@ -306,6 +306,13 @@ Requirements:
 
 Cost: **4–6 days**, most of it writing the village's year.
 
+**Built 2026-09-23** (`porta-pagi`): the seed (`demo/seed.json`, ten houses,
+a year, pt-PT and English, argued over by a prose reviewer and rewritten
+once — seasons, codex voice, replies before their posts, lines that toured
+features), the synthetic cadastre, `pt.json`, the build-tagged door, the
+hourly reset, the house switcher. Not built: pictures on the projects, and
+the demo site as a running thing.
+
 ## 5. How it is offered
 
 Three doors, one binary behind all of them.
@@ -612,7 +619,7 @@ anything else.**
 | # | Work | Days |
 | --- | --- | --- |
 | 1 | **LICENSE.** BSL 1.1 with the ten-house grant, per §13 — the owner chose a cap, and no OSI licence carries one. Until this exists, nobody may legally run the code — the repo is all-rights-reserved today | 0.5 |
-| 2 | **Demo village**: `demo-seed`, the no-code door behind a build tag with a test pinning its absence (§4), hourly reset, house switcher, a written year of village life | 5 |
+| 2 | ~~Demo village~~ Built 2026-09-23 except the pictures (§4); what remains is deploying the demo image somewhere with a name | 1 |
 | 3 | **Landing page**, per §3, static, self-hosted fonts, no trackers | 3 |
 | 4 | **Thirty emails** to the directories in §10 | 2 |
 | 5 | Resolve `backdrop.jpg` provenance — replace it if the licence cannot be established | 0.5 |
