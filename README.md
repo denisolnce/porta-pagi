@@ -73,6 +73,15 @@ a village imports its own (`/server site-import backdrop < picture.jpg`, a row
 in `site_files`). The founding text enters once with `/server codex-import <
 codex.json` (shape in `backend/internal/httpapi/codex.go`).
 
+## The demo village
+
+`/server demo-seed` fills an **empty** database with an invented collective —
+*Vale do Sobreiro Torto*, ten houses, a year of their life in Portuguese and
+English — dated off the day it runs. Run it with `LANGUAGES=pt,en` and
+`VILLAGE_NAME="Sobreiro Torto"`; then `/server code "Casa da Eira"` prints
+the steward house's invite link. Nothing in it is real: the land is a
+synthetic mesh, the numbers are `000` patterns.
+
 ## For agents (MCP)
 
 The portal's API as MCP tools: an agent acts **as your house** — same rows,

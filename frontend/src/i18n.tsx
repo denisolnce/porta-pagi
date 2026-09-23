@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { api } from "./api";
 import sl from "@i18n/sl.json";
+import pt from "@i18n/pt.json";
 
 // The village's language first. Keys are English phrases so a missing
 // translation still reads; the dictionaries are the backend's
@@ -8,7 +9,7 @@ import sl from "@i18n/sl.json";
 // one file per language that the notifications and the page share. Which
 // languages a village speaks, and which comes first, is LANGUAGES on the
 // server and arrives with /api/status.
-const dicts: Record<string, Record<string, string>> = { sl };
+const dicts: Record<string, Record<string, string>> = { sl, pt };
 
 // The tag for the browser's date formatting. English is pinned to en-GB —
 // day before month, as the village reads it — a bare "en" would give US

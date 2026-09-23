@@ -1,0 +1,223 @@
+{
+  "houses": [
+    {"key": "eira", "name": "Casa da Eira", "crest": "🌾", "color": "#b5651d", "steward": true, "parcels": ["121", "122"]},
+    {"key": "forno", "name": "Casa do Forno", "crest": "🍞", "color": "#a83a2f", "parcels": ["108", "109"]},
+    {"key": "moinho", "name": "O Moinho", "crest": "🌀", "color": "#3b6e8f", "parcels": ["141", "142", "143"]},
+    {"key": "amarela", "name": "Casa Amarela", "crest": "🌻", "color": "#d8a020", "parcels": ["130"]},
+    {"key": "ribeira", "name": "Casa da Ribeira", "crest": "🐸", "color": "#2f7a4e", "parcels": ["127", "128"]},
+    {"key": "barraca", "name": "Barraca Verde", "crest": "🌿", "color": "#5a8f3a", "homes": ["141"]},
+    {"key": "pedra", "name": "Casa da Pedra", "crest": "🪨", "color": "#6b6b6b", "parcels": ["155", "156"]},
+    {"key": "horta", "name": "Quinta da Horta", "crest": "🥬", "color": "#4f8a2e", "parcels": ["111", "112", "113"]},
+    {"key": "nova", "name": "Casa Nova", "crest": "🔑", "color": "#8a4f8a", "parcels": ["162"]},
+    {"key": "oliveiras", "name": "Casa das Oliveiras", "crest": "🫒", "color": "#556b2f", "parcels": ["149", "150"]},
+    {"key": "largo", "name": "Largo", "crest": "🎪", "color": "#9a8f7a", "kind": "common", "parcels": ["135"]}
+  ],
+
+  "codex": {
+    "adopted": 610,
+    "sections": [
+      {"texts": {
+        "pt": {"title": "Quem somos", "body": "Somos as casas do Vale do Sobreiro Torto. Ninguém veio para cá para ficar sozinho.\n\nCada casa é uma casa: a família, o casal, a pessoa que aluga a barraca. Uma casa, uma voz no conselho. Quem chega fica um ano antes de comprar terra, e nesse ano é uma casa como as outras."},
+        "en": {"title": "Who we are", "body": "We are the houses of the Vale do Sobreiro Torto. Nobody came here to be alone.\n\nEach house is a house: the family, the couple, the person renting the hut. One house, one voice at the council. Whoever arrives stays a year before buying land, and in that year they are a house like the others."}
+      }},
+      {"texts": {
+        "pt": {"title": "A água", "body": "A água é de todos e é pouca em agosto.\n\n- Rega: de noite, nunca ao meio-dia. Se o depósito do alto está abaixo de meio, avisa-se e rega-se só a horta.\n- Furo: quem ouvir a bomba a trabalhar em vazio desliga-a e avisa. Não se espera pelo dono.\n- Ribeira: não se lava nada na ribeira. Nem carros, nem tintas, nem os cães depois do veterinário."},
+        "en": {"title": "Water", "body": "The water is everybody's and there is little of it in August.\n\n- Watering: at night, never at noon. If the top tank is below half, say so and water only the vegetable garden.\n- Borehole: whoever hears the pump running dry switches it off and says so. Nobody waits for the owner.\n- Stream: nothing gets washed in the stream. Not cars, not paint, not the dogs after the vet."}
+      }},
+      {"texts": {
+        "pt": {"title": "Barulho e animais", "body": "- Máquinas: das 8 às 13 e das 15 às 19. Ao domingo só se for para apagar um fogo.\n- Cães: presos ou connosco. Um cão solto entre as galinhas é um cão que a aldeia manda embora, e já aconteceu.\n- Galos: cada casa aguenta os seus. Quem não aguenta, diz ao conselho e não ao galo."},
+        "en": {"title": "Noise and animals", "body": "- Machines: 8 to 13 and 15 to 19. On Sunday only to put out a fire.\n- Dogs: tied or with us. A dog loose among the chickens is a dog the village sends away, and it has happened.\n- Roosters: each house puts up with its own. Whoever cannot tells the council, not the rooster."}
+      }},
+      {"texts": {
+        "pt": {"title": "O trabalho em comum", "body": "Um dia de trabalho por mês, marcado no calendário com uma semana de avanço. Quem não pode vir, diz. Quem não diz, veio.\n\nNão se contam dias. Não há lista de quem fez mais. Quem estiver doente ou com um bebé fica em casa e ninguém repara em voz alta."},
+        "en": {"title": "Work in common", "body": "One work day a month, on the calendar a week ahead. Whoever cannot come says so. Whoever says nothing came.\n\nWe do not count days. There is no list of who did more. Whoever is ill or has a baby stays home and nobody notices out loud."}
+      }},
+      {"texts": {
+        "pt": {"title": "Como falamos", "body": "Português na aldeia, mas ninguém fica de fora por não o falar ainda. Repete-se em inglês quando é preciso, sem revirar os olhos.\n\nO que se diz à mesa fica à mesa. O que se decide, escreve-se aqui."},
+        "en": {"title": "How we speak", "body": "Portuguese in the village, but nobody is left out for not speaking it yet. It gets repeated in English when needed, without rolling eyes.\n\nWhat is said at the table stays at the table. What is decided gets written here."}
+      }}
+    ]
+  },
+
+  "posts": [
+    {"house": "eira", "day": -355, "time": "08:12", "pinned": true, "body": "Regras do forno grande: quem acende avisa aqui de manhã, e a lenha é a da pilha do lado da parede, não a do Zé. Deixem sempre a porta encostada, não fechada, senão fica com cheiro."},
+    {"house": "moinho", "day": -348, "time": "19:40", "body": "Someone left a blue bucket at the mill gate, full of figs. Thank you, whoever. We made jam, there is a jar for each house on the wall by our door, take yours.",
+      "replies": [
+        {"house": "horta", "day": -348, "time": "20:02", "body": "foram as figueiras do 112, estavam a cair todas. bom proveito!"},
+        {"house": "barraca", "day": -349, "time": "21:15", "body": "got mine. it's very good. the fig tree behind the hut has more if anyone wants them, I can't eat all that"}
+      ]},
+    {"house": "forno", "day": -320, "time": "13:05", "body": "Alguém viu uma cabra castanha com uma corda ao pescoço? Não é nossa. Está no 128 a comer as couves da Ribeira e ninguém a reclama.",
+      "replies": [
+        {"house": "ribeira", "day": -320, "time": "13:30", "body": "It is eating our cabbages right now, yes. Can confirm."},
+        {"house": "pedra", "day": -320, "time": "14:48", "body": "é do Manel de baixo. já lhe liguei, vem buscá-la."}
+      ]},
+    {"house": "amarela", "day": -290, "time": "21:55", "body": "obrigada a quem me ajudou com o telhado ontem, não sei quem foi todo mas sei que foram muitos. dormi seca pela primeira vez esta semana."},
+    {"house": "nova", "day": -270, "time": "10:20", "author": "Camille", "body": "Hello everyone, we are the new house at the top (Casa Nova). We arrived Tuesday with too many boxes. If you see two people looking lost near the water tank, that is us. We have a car and go to Ourique on Thursdays if anyone needs something."},
+    {"house": "eira", "day": -268, "time": "07:50", "body": "Bem-vindos! A carrinha da Camille já foi apontada para as quintas-feiras. Casa Nova, o vosso contador de água é o segundo a contar da esquerda, o primeiro é da Pedra."},
+    {"house": "pedra", "day": -240, "time": "06:30", "body": "geada esta noite. quem tem tomateiros fora, tape."},
+    {"house": "horta", "day": -215, "time": "18:10", "body": "temos mudas a mais: alface, couve galega, dois tabuleiros de cebola. estão na estufa, levem sem perguntar."},
+    {"house": "moinho", "day": -190, "time": "22:00", "body": "The mill wheel turned for the first time in 40 years tonight, for about six seconds, then something inside made a noise I did not like. Still. Six seconds.",
+      "replies": [
+        {"house": "forno", "day": -190, "time": "22:14", "body": "🎉 amanhã vou ver esse barulho contigo"},
+        {"house": "amarela", "day": -191, "time": "07:03", "body": "seis segundos é seis segundos mais do que em 40 anos"}
+      ]},
+    {"house": "ribeira", "day": -160, "time": "16:45", "body": "The stream is very low for the season. We measured 8 cm at the stone bridge, last year same week it was 20. Just so everybody knows before August."},
+    {"house": "oliveiras", "day": -140, "time": "12:30", "body": "Sábado fazemos o azeite novo na cooperativa de Aljustrel, quem quiser mandar azeitona junta na Eira até sexta à noite. Levamos tudo na carrinha."},
+    {"house": "barraca", "day": -120, "time": "09:15", "body": "does anyone have a ladder longer than 4 m? the hut roof has a loose sheet and the wind is coming friday",
+      "replies": [
+        {"house": "pedra", "day": -120, "time": "09:31", "body": "tenho uma de 6. está no barracão, a chave está onde sempre."},
+        {"house": "barraca", "day": -120, "time": "09:40", "body": "you are a saint. I'll bring it back same day"}
+      ]},
+    {"house": "eira", "day": -95, "time": "20:20", "pinned": true, "body": "O contentor do lixo da estrada só é levantado à terça e à sexta. Não deixem sacos ao lado, os javalis abrem tudo e depois somos nós a apanhar."},
+    {"house": "forno", "day": -80, "time": "14:00", "body": "pão amanhã às 7. quem quiser, deixa a massa no forno hoje até às 22h, com o nome no pano."},
+    {"house": "horta", "day": -62, "time": "19:25", "body": "a bomba do furo esteve a trabalhar em vazio esta tarde, uma hora pelo menos. desligámos. alguém deixou a torneira do 113 aberta, não fomos nós, e não interessa quem foi, mas atenção.",
+      "replies": [
+        {"house": "nova", "day": -62, "time": "19:50", "author": "Camille", "body": "It was us, sorry. We did not understand the tap by the wall was the main one. Won't happen again."},
+        {"house": "horta", "day": -62, "time": "19:58", "body": "tudo bem, agora sabem. a bomba está boa."}
+      ]},
+    {"house": "amarela", "day": -45, "time": "23:10", "body": "há uma coruja no celeiro do Largo, se forem lá de noite não acendam a luz grande"},
+    {"house": "moinho", "day": -30, "time": "18:30", "body": "Beja run tomorrow, see the market. Also: whoever borrowed our long extension cable (orange, 25 m), we need it back for the wheel work. No drama, just bring it."},
+    {"house": "pedra", "day": -21, "time": "07:10", "body": "vi a raposa outra vez ao pé do galinheiro novo. a vedação aguentou. bom trabalho."},
+    {"house": "ribeira", "day": -12, "time": "20:05", "body": "We are away from next week for 12 days (see the watchtower). Eira has the key and feeds the cats. The grey one bites, it is not personal."},
+    {"house": "eira", "day": -4, "time": "12:40", "body": "Vindima este sábado a partir das 8, quem tem tesouras traz tesouras. Almoço no Largo, cada casa leva um prato. Vejam o calendário e digam se vêm."},
+    {"house": "nova", "day": -1, "time": "17:22", "author": "Camille", "body": "The film night was lovely, thank you Amarela for the projector. Next one we bring the popcorn machine we found in the boxes (yes we have one, don't ask)."}
+  ],
+
+  "events": [
+    {"house": "eira", "kind": "work", "title": "Limpeza da ribeira", "day": -340, "start": "09:00", "end": "13:00", "place": "Ponte de pedra", "notes": "Luvas e botas. Sacos há.",
+      "answers": {"forno": "yes", "moinho": "yes", "horta": "yes", "pedra": "yes", "amarela": "maybe", "ribeira": "yes"},
+      "comments": [{"house": "moinho", "day": -339, "time": "17:00", "body": "Three bags of plastic, one tyre, one shoe. The shoe is on the bridge if it is yours."}]},
+    {"house": "forno", "kind": "event", "title": "Magusto no Largo", "day": -300, "start": "17:30", "place": "Largo", "notes": "Castanhas são nossas, a jeropiga é de quem trouxer.",
+      "answers": {"eira": "yes", "moinho": "yes", "horta": "yes", "pedra": "yes", "amarela": "yes", "ribeira": "maybe", "oliveiras": "yes", "barraca": "yes"}},
+    {"house": "oliveiras", "kind": "work", "title": "Poda das oliveiras do 149", "day": -250, "start": "08:30", "end": "12:30", "place": "Oliveiras", "notes": "Quem tem serrote de poda, traz. Nós temos duas escadas.",
+      "answers": {"eira": "yes", "pedra": "yes", "horta": "maybe", "nova": "yes"},
+      "comments": [{"house": "nova", "day": -250, "time": "14:20", "author": "Camille", "body": "Our first pruning ever. Thank you for the patience. My arms are gone."}]},
+    {"house": "eira", "kind": "event", "title": "Jantar de inverno", "day": -200, "start": "19:30", "place": "Celeiro do Largo", "notes": "Sopa é da Eira. O resto, cada casa.",
+      "answers": {"forno": "yes", "moinho": "yes", "horta": "yes", "pedra": "no", "amarela": "yes", "ribeira": "yes", "barraca": "yes", "oliveiras": "yes"}},
+    {"house": "horta", "kind": "work", "title": "Galinheiro: postes e rede", "day": -150, "start": "09:00", "end": "14:00", "place": "Quinta da Horta", "notes": "Dia 1. Abrir buracos, pôr postes.", "project": "galinheiro",
+      "answers": {"eira": "yes", "forno": "yes", "pedra": "yes", "barraca": "yes", "nova": "maybe"},
+      "comments": [{"house": "pedra", "day": -150, "time": "15:10", "body": "os buracos estão feitos. o chão ali é pedra a 40 cm, avisem quem vier no dia 2."}]},
+    {"house": "horta", "kind": "work", "title": "Galinheiro: porta e tecto", "day": -143, "start": "09:00", "end": "13:00", "place": "Quinta da Horta", "notes": "Dia 2. Quem tem aparafusadora traz.", "project": "galinheiro",
+      "answers": {"eira": "yes", "forno": "yes", "pedra": "yes", "moinho": "yes"}},
+    {"house": "amarela", "kind": "event", "title": "Festa da Primavera", "day": -100, "start": "16:00", "place": "Largo", "notes": "Música é a que houver. Crianças bem-vindas, cães presos.",
+      "answers": {"eira": "yes", "forno": "yes", "moinho": "yes", "horta": "yes", "pedra": "maybe", "ribeira": "yes", "barraca": "yes", "nova": "yes", "oliveiras": "yes"}},
+    {"house": "eira", "kind": "work", "title": "Rega: abrir as valas", "day": -60, "start": "08:00", "end": "12:00", "place": "Do depósito à horta", "notes": "Enxadas. Cedo, que depois é calor.", "project": "rega",
+      "answers": {"horta": "yes", "pedra": "yes", "moinho": "yes", "forno": "maybe", "nova": "yes"},
+      "comments": [
+        {"house": "moinho", "day": -60, "time": "13:30", "body": "120 m of trench, roughly. The last 20 are through roots, we stopped there."},
+        {"house": "eira", "day": -60, "time": "14:05", "body": "Chega para o primeiro tubo. As raízes ficam para o dia dos tubos."}
+      ]},
+    {"house": "eira", "kind": "work", "title": "Rega: colocar os tubos", "day": -20, "start": "08:00", "end": "12:30", "place": "Do depósito à horta", "notes": "Tubo já está comprado (Moinho trouxe de Beja).", "project": "rega",
+      "answers": {"horta": "yes", "pedra": "yes", "moinho": "yes", "barraca": "yes"}},
+    {"house": "amarela", "kind": "event", "title": "Cinema no celeiro", "day": -6, "start": "21:00", "place": "Celeiro do Largo", "notes": "Filme português, legendas em inglês. Levem manta.",
+      "answers": {"eira": "yes", "nova": "yes", "barraca": "yes", "moinho": "maybe", "horta": "yes"}},
+    {"house": "eira", "kind": "work", "title": "Vindima", "day": 4, "start": "08:00", "end": "14:00", "place": "Vinha da Eira", "notes": "Tesouras, chapéu, água. Almoço no Largo, cada casa um prato.",
+      "answers": {"forno": "yes", "horta": "yes", "pedra": "yes", "moinho": "yes", "nova": "maybe", "barraca": "yes"},
+      "comments": [{"house": "forno", "day": -3, "time": "21:40", "body": "levamos pão e o presunto que sobrou do batizado"}]},
+    {"house": "eira", "kind": "event", "title": "Conselho de outono", "day": 11, "start": "18:00", "end": "20:00", "place": "Celeiro do Largo", "notes": "Ordem: forno comunitário (sítio e dinheiro), a água de agosto, as datas do inverno.",
+      "answers": {"forno": "yes", "moinho": "yes", "horta": "yes", "amarela": "yes"}},
+    {"house": "forno", "kind": "work", "title": "Forno comunitário: escolher o sítio", "day": 18, "start": "10:00", "end": "12:00", "place": "Largo", "notes": "Andar, olhar, decidir. Fita métrica e o desenho do Pedro.", "project": "forno",
+      "answers": {"eira": "yes", "pedra": "yes"}},
+    {"house": "amarela", "kind": "event", "title": "Aniversário da aldeia — 3 anos", "day": 27, "start": "13:00", "place": "Largo", "notes": "Almoço grande. Convidem quem quiserem, mas digam quantos.",
+      "answers": {"eira": "yes", "forno": "yes", "horta": "yes"}}
+  ],
+
+  "runs": [
+    {"house": "moinho", "destination": "Beja (Leroy Merlin + Continente)", "day": -29, "time": "09:00", "notes": "Van, so bulky things are ok.",
+      "needs": [
+        {"house": "eira", "text": "2 sacos de cimento", "state": "done", "takenBy": "moinho", "day": -30},
+        {"house": "amarela", "text": "lâmpadas E27 quentes, 4", "state": "done", "takenBy": "moinho", "day": -30},
+        {"house": "barraca", "text": "a roll of that thick black plastic for the roof", "state": "done", "takenBy": "moinho", "day": -29}
+      ]},
+    {"house": "forno", "destination": "Ourique — feira e farmácia", "day": 2, "time": "08:30", "notes": "Volto ao meio-dia.",
+      "needs": [
+        {"house": "pedra", "text": "receita na farmácia, está lá em nome dele", "day": 0},
+        {"house": "horta", "text": "3 kg de sal grosso", "day": -1}
+      ]}
+  ],
+
+  "needs": [
+    {"house": "nova", "text": "someone with a trailer for one load of gravel from the quarry, we pay the gravel", "day": -8},
+    {"house": "oliveiras", "text": "quem tem sementes de fava do ano passado?", "day": -14, "state": "done", "takenBy": "horta"},
+    {"house": "barraca", "text": "a lift to the train in Ourique on the 3rd, morning", "day": -2}
+  ],
+
+  "offers": [
+    {"house": "pedra", "text": "lenha de azinho, meia carrinha, já seca", "day": -25},
+    {"house": "horta", "text": "mudas de tomate coração de boi, uns 30", "day": -70, "state": "done", "claimedBy": "nova"},
+    {"house": "moinho", "text": "six wooden chairs, sturdy, ugly, free", "day": -9},
+    {"house": "amarela", "text": "empresto: máquina de costura, Singer velha mas boa", "tag": "lend", "day": -50}
+  ],
+
+  "away": [
+    {"house": "nova", "from": -205, "to": -186, "notes": "France for the holidays. Nothing to feed.", "watcher": "eira"},
+    {"house": "ribeira", "from": -3, "to": 9, "notes": "Gatos: ração de manhã, a taça está na varanda. A chave da casa está debaixo da pedra ao pé da porta. Regar só as vasos da entrada.", "watcher": "eira",
+      "comments": [
+        {"house": "eira", "day": -2, "time": "08:40", "body": "Gatos alimentados. O cinzento mordeu-me, como prometido."},
+        {"house": "eira", "day": 0, "time": "08:35", "body": "Tudo bem por cá. Chave de volta debaixo da pedra."}
+      ]},
+    {"house": "oliveiras", "from": 20, "to": 121, "notes": "Inverno em Lisboa como sempre. As oliveiras ficam, obviamente. Se cair alguma árvore em cima da casa, liguem.", "watcher": "horta"}
+  ],
+
+  "tools": [
+    {"house": "pedra", "name": "Escada de 6 m", "notes": "Alumínio, extensível. Pesada, vão dois.", "category": "other"},
+    {"house": "pedra", "name": "Roçadora Stihl", "notes": "Mistura 1:50, está na garrafa ao lado. Fio novo há.", "category": "power", "heldBy": "barraca", "heldDays": 9},
+    {"house": "moinho", "name": "Extension cable 25 m", "notes": "Orange. Please roll it properly.", "category": "power", "heldBy": "nova", "heldDays": 1},
+    {"house": "eira", "name": "Betoneira pequena", "notes": "Emprestada da Eira. Lavar depois, senão fica um tijolo.", "category": "power"},
+    {"house": "horta", "name": "Enxadas (4)", "notes": "Duas largas, duas estreitas.", "category": "garden"},
+    {"house": "forno", "name": "Aparafusadora Makita + brocas", "notes": "Duas baterias. Carregador fica em casa.", "category": "power"},
+    {"house": "amarela", "name": "Projector + tela", "notes": "HDMI. A tela é um lençol, sejam honestos.", "category": "other"},
+    {"house": "ribeira", "name": "Wheelbarrow, the good one", "notes": "The one with the full tyre.", "category": "garden"},
+    {"house": "oliveiras", "name": "Serrotes de poda (3)", "notes": "Afiados em janeiro.", "category": "garden"},
+    {"house": "moinho", "name": "Ladder 4 m", "notes": "Wooden, fine for the hut.", "category": "other"}
+  ],
+
+  "wishes": [
+    {"house": "forno", "text": "Betoneira grande, para o forno e para o que vier", "day": -40, "wants": ["eira", "pedra", "nova"],
+      "options": [
+        {"house": "pedra", "text": "OLX, uma de 160 l em Castro Verde, 180€, o homem diz que funciona", "url": ""},
+        {"house": "moinho", "text": "Leroy has a new one at 349, warranty. I'd rather that than a mystery.", "url": ""}
+      ],
+      "comments": [{"house": "eira", "day": -38, "time": "21:00", "body": "Falamos no conselho. A nossa pequena não aguenta o forno."}]},
+    {"house": "oliveiras", "text": "Prensa de azeite pequena, para não depender da cooperativa nas azeitonas de mesa", "day": -130, "wants": ["horta", "eira"],
+      "options": [{"house": "horta", "text": "há uma manual italiana, 60 kg/h, vi num vídeo, uns 900€", "url": ""}]}
+  ],
+
+  "projects": [
+    {"key": "galinheiro", "house": "horta", "title": "Vedação do galinheiro", "notes": "Rede de 2 m à volta do galinheiro da Horta, com fio eléctrico em baixo por causa da raposa. A Horta paga a rede, a aldeia põe os braços.", "state": "done", "day": -170, "doneDay": -140,
+      "tasks": [
+        {"house": "horta", "title": "Comprar rede e postes", "state": "done", "day": -170, "doneDay": -160, "closingNote": "Comprado em Beja, 50 m de rede, 22 postes. Ficou em 310€."},
+        {"house": "horta", "title": "Abrir os buracos dos postes", "state": "done", "day": -170, "doneDay": -150, "closingNote": "Feito no dia 1. Pedra a 40 cm em metade deles."},
+        {"house": "eira", "title": "Porta com fecho que a raposa não abra", "state": "done", "day": -165, "doneDay": -143, "closingNote": "Fecho de trinco com mola. O Pedro fez."},
+        {"house": "horta", "title": "Fio eléctrico em baixo", "state": "done", "day": -165, "doneDay": -141, "closingNote": "Electrificador a pilhas. Testado com a mão, não recomendo."}
+      ]},
+    {"key": "rega", "house": "eira", "title": "Rega gota-a-gota da horta comum", "notes": "Do depósito do alto até à horta do 111, com tubo enterrado. Objectivo: regar de noite sem ninguém acordar.", "state": "open", "day": -75,
+      "tasks": [
+        {"house": "eira", "title": "Abrir a vala (120 m)", "state": "done", "day": -75, "doneDay": -60, "closingNote": "100 m feitos, os últimos 20 são raízes."},
+        {"house": "moinho", "title": "Buy pipe and fittings in Beja", "state": "done", "day": -70, "doneDay": -29, "closingNote": "32 mm PE, 150 m, plus the valves. Receipt is with Eira."},
+        {"house": "eira", "title": "Passar as raízes e fechar a vala", "notes": "Precisa da roçadora e de paciência.", "assignedTo": "pedra", "day": -20},
+        {"house": "eira", "title": "Temporizador na torneira do depósito", "notes": "Um de pilhas chega.", "day": -20}
+      ]},
+    {"key": "forno", "house": "forno", "title": "Forno comunitário no Largo", "notes": "Um forno de lenha que dê para a aldeia toda ao domingo. Tijolo refractário, cúpula. O sítio ainda não está decidido.", "state": "planned", "day": -10,
+      "tasks": [
+        {"house": "forno", "title": "Decidir o sítio", "notes": "Longe do celeiro, perto da água.", "day": -10},
+        {"house": "forno", "title": "Orçamento do tijolo refractário", "day": -10}
+      ]}
+  ],
+
+  "camp": [
+    {"house": "forno", "fromWho": "carrinha branca, casal francês", "day": -30, "notes": "Duas noites.", "state": "handed"},
+    {"house": "eira", "fromWho": "autocaravana grande, holandeses", "day": -9, "state": "held", "heldBy": "forno"},
+    {"house": "amarela", "fromWho": "van azul, um rapaz sozinho", "day": -1, "notes": "Disse que fica até domingo.", "state": "arrived"}
+  ],
+
+  "contacts": [
+    {"house": "eira", "name": "Junta de Freguesia", "phone": "286 000 000", "notes": "Terça e quinta de manhã. Perguntar pela Dona Fátima.", "type": "junta"},
+    {"house": "pedra", "name": "Sr. Anselmo — furos e bombas", "phone": "960 000 000", "notes": "Foi ele que abriu o furo. Vem no mesmo dia se for a bomba.", "type": "furo"},
+    {"house": "horta", "name": "Veterinária de Ourique", "phone": "286 000 001", "notes": "Fecha à sexta à tarde. Para as cabras é a Dra. Inês.", "type": "veterinário"},
+    {"house": "forno", "name": "Electricista (o Rui)", "phone": "910 000 000", "notes": "Fez a ligação do forno. Demora mas faz bem.", "type": "electricista"},
+    {"house": "eira", "name": "Bombeiros de Ourique", "phone": "286 000 002", "notes": "Para fogo é 112. Este número é para o resto.", "type": "bombeiros"},
+    {"house": "moinho", "name": "Cooperativa de Aljustrel (azeite)", "phone": "284 000 000", "notes": "Marcar dia antes. Levam de 100 kg para cima.", "type": "cooperativa"},
+    {"house": "amarela", "name": "Sucata do Silva", "phone": "960 000 001", "notes": "Leva ferro velho de graça se for muito.", "type": "sucata"}
+  ]
+}
