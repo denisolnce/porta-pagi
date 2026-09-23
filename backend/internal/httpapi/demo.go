@@ -191,7 +191,7 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 	// not yet over (the far end anchors), else already begun (the near end).
 	// The one-year step covers a span across the year end in either
 	// direction; the two holiday absences in the seed cross it, and
-	// TestDemoSeed pins them from September and from inside the span.
+	// TestDemoSeed pins them from September and from the week after the year end.
 	span := func(from, to int, onFrom, onTo string, ahead bool) (int, int) {
 		if onFrom == "" && onTo == "" {
 			return from, to
