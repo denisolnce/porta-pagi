@@ -560,7 +560,8 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   that file is not compiled — `demodoor_test.go` pins the 404 — and CI ships
   the demo as its own image, `ghcr.io/dennislapchenko/porta-pagi-demo`, so no
   village can pull the door by mistake. Not built: project pictures, and the
-  demo site itself (a deployment of that image — the cloud repo's job).
+  demo site itself (a deployment of that image on the owner's VM, beside
+  the landing — `docs/commercial.md` § Decided).
 - **The changelog is the git log, filtered, written at build time.**
   `frontend/scripts/changelog.mjs` writes `public/changelog.json` before every
   build and dev start — `built` is HEAD's date, `entries` are the last **90

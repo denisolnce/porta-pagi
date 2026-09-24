@@ -64,6 +64,26 @@ is in the block below; every other line is an argument, not a promise.
   account for one household, however many phones use it; accounts that stand
   for shared land or places are not house accounts.
 - **`porta-pagi` lives under the owner's own GitHub account** for now.
+- **The two licence parameters stand** (owner, 2026-09-24): AGPL 3.0 or
+  later as the Change License, and the grant's clause against hosting for
+  third parties for a fee. §12 q1 is closed. The source repo goes public when
+  the landing does, because the landing says "the source under BSL 1.1".
+- **The cloud repo exists** (owner's yes, 2026-09-24): `porta-pagi-cloud`,
+  private, under the owner's account. It holds the landing page (§3) and
+  ships it as an image, `ghcr.io/dennislapchenko/porta-pagi-site`, from its
+  own CI. The control plane grows there later (§13).
+- **The landing and the demo run on the gaias-choice VM** (owner,
+  2026-09-24), bundled with that stack for now:
+  `porta-pagi.gardenofatlantis.com` is the landing,
+  `pp-demo.gardenofatlantis.com` the demo; the owner makes the two A records.
+  Both are services in that stack's own compose, not a third poll entry: that
+  stack owns Caddy, its poll entry exists, and a private repo's entry would
+  need a token in the VM's secrets and a hand step in `/opt/doco-cd/poll.yaml`.
+  The cloud repo ships images, the VM runs them. **This puts the demo beside
+  a village, which §4 says never to do.** The owner chose it knowingly, for
+  now; the demo's `/data` is a size-capped tmpfs and the container has a
+  memory cap, so the worst a visitor can do is kill the demo, not fill the
+  village's disk. It moves to its own host before the first paying village.
 - **The demo's Portuguese is Portugal's** (pt-PT).
 - **Outside patches: none for now, a CLA when the first real one arrives.**
   `CONTRIBUTING.md` in `porta-pagi` says so.
