@@ -236,7 +236,7 @@ rules the portal itself follows, because the buyer will check.
 | 2 | The problem | Three lines of a fake WhatsApp group scrolling past: "Is anyone going to town?" … 40 messages … "sorry what was the answer". Then: "It was said once. Then it was gone." |
 | 3 | The nine rooms | One scroll, one screenshot each, one sentence each — lifted from `village.md`'s job table, which is already written in exactly the right voice |
 | 4 | **What this will never do, and what is yours to switch on** | Two lists. Never: ads, trackers, third-party scripts, public pages, anything sold inside the portal — the price is for the hosting, and it is on this page, not in the rooms. Off unless your village turns it on: a dues ledger, a duty roster with counts. The default is the village that built it. **This section is the differentiator and should be the longest on the page** |
-| 5 | The map | "We draw your village from your country's public cadastre." The list of countries we can do today, and an honest "ask us" for the rest |
+| 5 | The map | "Your village, drawn from your country's public cadastre — bring the file, or we draw it for you." One country today (§5, the Decided block: no second country is planned). No list of countries, an honest "ask us" |
 | 6 | Your data | Nightly backups, one-click full JSON export, the source under BSL 1.1 (§13), "leave whenever and take everything" |
 | 7 | Price | Two columns: **Self-host, free forever** (docker run, the docs, no support) and **Hosted, €15/month** (your subdomain, your map drawn for you, backups, updates, a person to email). One-time map setup fee stated plainly |
 | 8 | The village that made it | Why each room exists, told by the builder, illustrated from the **demo** village. The reason is the asset; the neighbours' parcels are not |
@@ -621,7 +621,7 @@ anything else.**
 
 | # | Work | Days |
 | --- | --- | --- |
-| 1 | **LICENSE.** BSL 1.1 with the ten-house grant, per §13 — the owner chose a cap, and no OSI licence carries one. Until this exists, nobody may legally run the code — the repo is all-rights-reserved today | 0.5 |
+| 1 | ~~LICENSE~~ Written 2026-09-23, BSL 1.1 with the ten-house grant (the Decided block, §13). The two parameters in it stay the assistant's picks until the repo goes public (§12), and the landing's rows 6 and 7 ("the source under BSL 1.1", "self-host, free forever") are only true once it has | — |
 | 2 | ~~Demo village~~ Built 2026-09-23 except the pictures (§4); what remains is deploying the demo image somewhere with a name | 1 |
 | 3 | **Landing page**, per §3, static, self-hosted fonts, no trackers | 3 |
 | 4 | **Thirty emails** to the directories in §10 | 2 |
@@ -633,11 +633,11 @@ anything else.**
 
 | # | Work | Days |
 | --- | --- | --- |
-| 6 | **De-village-ify config**: village name, `PUSH_SUBJECT`, `PUBLIC_URL`, the ARSO contact URL — all env, no defaults naming one village | 2 |
+| 6 | ~~De-village-ify config~~ Done 2026-09-23 (`f747351`, §13): `VILLAGE_NAME`, `PUBLIC_URL`, `PUSH_SUBJECT` required, ARSO one provider among two | — |
 | 7 | ~~Weather provider interface + Open-Meteo adapter~~ Done 2026-09-23 (§13) | — |
 | 8 | ~~Map data out of the frontend build~~ Done 2026-09-23, in the database (§13) | — |
-| 9 | **Cadastre import CLI**: bbox + country adapter → geojson. France (étalab) and Spain (Catastro) first — both free, national, good quality. Then NL, CZ, DK, SI | 8 (first two), 3 each after |
-| 9b | **Licence review, once per country.** "Free to download" is not "free to redistribute inside a paid hosted product", and the terms differ by country. This repo's own GURS attribution string is still `TBD` and §1 calls that a blocker — this is the same blocker six times over, and it gates shipping each country, not just documenting it | 1–2 each, plus legal time on any that are unclear |
+| 9 | ~~Cadastre import CLI~~ Superseded by the Decided block: cadastre is the village's choice, no second country is planned. A village brings its own geojson, or pays for the map service (§5). Comes back only if a paying village's country asks for it | — |
+| 9b | ~~Licence review, once per country~~ Superseded with row 9. What stays: this village's own GURS attribution string is still `TBD` and §1 calls that a blocker. Was: "Free to download" is not "free to redistribute inside a paid hosted product", and the terms differ by country. This repo's own GURS attribution string is still `TBD` and §1 calls that a blocker — this is the same blocker six times over, and it gates shipping each country, not just documenting it | 1–2 each, plus legal time on any that are unclear |
 | 10 | **i18n**: ~~the engineering~~ done 2026-09-23 (§13); what remains is translation — `pt.json` for the demo, then DE, FR, ES, NL, IT as villages ask | 1 per language |
 | 11 | **iOS install coach** in `Install.tsx`, gating the push toggle until installed | 2 |
 
