@@ -107,15 +107,12 @@ func main() {
 				log.Fatalf("demo seed: %v", err)
 			}
 			log.Print("demo village seeded on boot")
-		}
-	}
-	if row, _ := st.One(context.Background(), `SELECT count(*) AS n FROM houses`); row != nil && row["n"].(int64) == 0 {
-		code, err := srv.BootstrapCode()
-		if err != nil {
+		} else if code, err := srv.BootstrapCode(); err != nil {
 			log.Fatalf("bootstrap code: %v", err)
+		} else {
+			// Printed once per boot while the village is empty. Read with docker logs.
+			log.Printf("no houses yet — bootstrap the first steward house with code: %s", code)
 		}
-		// Printed once per boot while the village is empty. Read with docker logs.
-		log.Printf("no houses yet — bootstrap the first steward house with code: %s", code)
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
