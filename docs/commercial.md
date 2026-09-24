@@ -332,7 +332,7 @@ a year, pt-PT and English, argued over by a prose reviewer and rewritten
 once — seasons, codex voice, replies before their posts, lines that toured
 features), the synthetic cadastre, `pt.json`, the build-tagged door, the
 hourly reset, the house switcher. Not built: pictures on the projects. The
-demo site is wired on the owner's VM (§11 row 2), waiting on a package flip. **The rule: it runs on its own host,
+demo site runs on the owner's VM since 2026-09-24 (§11 row 2). **The rule: it runs on its own host,
 never beside a village**, because a visitor holds a steward's powers for up
 to an hour — posts, an export, a backdrop upload, push endpoints the server
 will POST to — and the reset is the only thing that bounds it. The owner
@@ -645,8 +645,8 @@ anything else.**
 | # | Work | Days |
 | --- | --- | --- |
 | 1 | ~~LICENSE~~ Written 2026-09-23, BSL 1.1 with the ten-house grant (the Decided block, §13). The two parameters in it stay the assistant's picks until the repo goes public (§12), and the landing's rows 6 and 7 ("the source under BSL 1.1", "self-host, free forever") are only true once it has | — |
-| 2 | ~~Demo village~~ Built 2026-09-23 except the pictures (§4). Deployment wired 2026-09-24 in gaias-choice (`cb88cbf`, a service on a tmpfs beside the landing; the demo build seeds itself on an empty ground since `9136318`), **held unpushed until the owner makes `porta-pagi-demo` public** and the `pp-demo` A record exists | — |
-| 3 | ~~Landing page~~ Built 2026-09-24 in `porta-pagi-cloud` (`98127b5`): one HTML file, one stylesheet, the portal's fonts, no script tag; nine phone-width shots of the demo; the §3 sections in order, §5's prices, the village told and not named (§12 q2). Ships as `ghcr.io/dennislapchenko/porta-pagi-site`, **private until the owner flips it**. Three things the owner still owes: the footer's email (a placeholder `hello@porta-pagi.example` is on the page); the FAQ's "written terms are being finished with a lawyer", which is a promise the page makes for row 15; and §12 q2 — the page tells the builder's reasons in the first person and names no anecdote, but it still says which valley, and the collective has not said yes | — |
+| 2 | ~~Demo village~~ Built 2026-09-23 except the pictures (§4). **Live 2026-09-24 at `pp-demo.gardenofatlantis.com`**: a service in the gaias-choice stack (`58ed96f`) on a size-capped tmpfs with memory, CPU and process caps, beside the landing; the demo build seeds itself on an empty ground (`9136318`). Verified on the VM: seeded on boot, healthy, the village's container untouched | — |
+| 3 | ~~Landing page~~ Built 2026-09-24 in `porta-pagi-cloud` (`98127b5`): one HTML file, one stylesheet, the portal's fonts, no script tag; nine phone-width shots of the demo; the §3 sections in order, §5's prices, the village told and not named (§12 q2). Ships as `ghcr.io/dennislapchenko/porta-pagi-site`, **live 2026-09-24 at `porta-pagi.gardenofatlantis.com`** (a test address; the real domain is not chosen). Three things the owner still owes: the footer's email (a placeholder `hello@porta-pagi.example` is on the page); the FAQ's "written terms are being finished with a lawyer", which is a promise the page makes for row 15; and §12 q2 — the page tells the builder's reasons in the first person and names no anecdote, but it still says which valley, and the collective has not said yes | — |
 | 4 | **Thirty emails** to the directories in §10 | 2 |
 | 5 | Resolve `backdrop.jpg` provenance — replace it if the licence cannot be established | 0.5 |
 
