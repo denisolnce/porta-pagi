@@ -99,6 +99,17 @@ func main() {
 		return
 	}
 	if row, _ := st.One(context.Background(), `SELECT count(*) AS n FROM houses`); row != nil && row["n"].(int64) == 0 {
+		// The demo build seeds itself on an empty ground: its data dir is a
+		// tmpfs on the host, so every restart starts empty and nobody runs
+		// demo-seed by hand. A village's build prints its code instead.
+		if httpapi.DemoMode {
+			if err := srv.SeedDemo(time.Now()); err != nil {
+				log.Fatalf("demo seed: %v", err)
+			}
+			log.Print("demo village seeded on boot")
+		}
+	}
+	if row, _ := st.One(context.Background(), `SELECT count(*) AS n FROM houses`); row != nil && row["n"].(int64) == 0 {
 		code, err := srv.BootstrapCode()
 		if err != nil {
 			log.Fatalf("bootstrap code: %v", err)
