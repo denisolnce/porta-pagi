@@ -556,7 +556,8 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   demo build** (`demodoor.go`, `//go:build demo`): `GET /api/demo/houses` and
   `POST /api/demo/enter` hand a visitor a device token for any house, the
   page's `{{DEMO}}` meta tag turns the house link into a switcher, and the
-  village is wiped and seeded again on the hour. In every village's binary
+  village is wiped and seeded again on the hour, and the demo build seeds
+  itself on boot when the ground is empty (its data dir is a tmpfs). In every village's binary
   that file is not compiled — `demodoor_test.go` pins the 404 — and CI ships
   the demo as its own image, `ghcr.io/dennislapchenko/porta-pagi-demo`, so no
   village can pull the door by mistake. Not built: project pictures, and the
