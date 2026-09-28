@@ -2898,10 +2898,10 @@
     {
       "day": -90,
       "house": "barraca",
-      "name": "Oficina do Zé (Ourique)",
+      "name": "Oficina (mecânico)",
       "phone": "960 000 002",
       "type": "mecânico",
-      "notes": "car mechanic by the roundabout in Ourique. speaks a little english"
+      "notes": "car mechanic in town, the one the others use. speaks a little english"
     },
     {
       "day": -60,
