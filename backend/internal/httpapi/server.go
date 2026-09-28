@@ -178,6 +178,13 @@ func (s *Server) routes() {
 	m.HandleFunc("POST /api/roster/duties/{id}/turns", s.requireHouse(s.requireFeature("roster", s.createTurn)))
 	m.HandleFunc("PUT /api/roster/turns/{id}", s.requireHouse(s.requireFeature("roster", s.updateTurn)))
 	m.HandleFunc("DELETE /api/roster/turns/{id}", s.requireHouse(s.requireFeature("roster", s.deleteTurn)))
+	// Dues (dues.go), behind the dues switch: a steward writes a due down,
+	// the house that collects it or a steward marks a house paid.
+	m.HandleFunc("GET /api/dues", s.requireHouse(s.requireFeature("dues", s.listDues)))
+	m.HandleFunc("POST /api/dues", s.requireHouse(s.requireFeature("dues", s.createDue)))
+	m.HandleFunc("PUT /api/dues/{id}", s.requireHouse(s.requireFeature("dues", s.updateDue)))
+	m.HandleFunc("DELETE /api/dues/{id}", s.requireHouse(s.requireFeature("dues", s.deleteDue)))
+	m.HandleFunc("PUT /api/dues/{id}/houses/{house_id}", s.requireHouse(s.requireFeature("dues", s.markDue)))
 	// Exit path: everything as one JSON document (steward only).
 	m.HandleFunc("GET /api/codex", s.requireHouse(s.listCodex))
 	m.HandleFunc("POST /api/codex", s.requireHouse(s.createCodexSection))
@@ -1328,7 +1335,7 @@ func (s *Server) updateAway(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) export(w http.ResponseWriter, r *http.Request) {
 	out := map[string]any{"exported_at": time.Now().UTC().Format(time.RFC3339)}
-	for _, t := range []string{"houses", "house_parcels", "house_homes", "posts", "events", "event_signups", "runs", "needs", "offers", "away", "tools", "wishes", "wish_wants", "wish_options", "comments", "projects", "project_tasks", "project_photos", "camp_takings", "codex_sections", "codex_texts", "contacts", "roster_duties", "roster_turns", "map_files", "site_files", "features"} {
+	for _, t := range []string{"houses", "house_parcels", "house_homes", "posts", "events", "event_signups", "runs", "needs", "offers", "away", "tools", "wishes", "wish_wants", "wish_options", "comments", "projects", "project_tasks", "project_photos", "camp_takings", "dues", "dues_owed", "codex_sections", "codex_texts", "contacts", "roster_duties", "roster_turns", "map_files", "site_files", "features"} {
 		cols := "*"
 		switch t { // photos are bytes, not text — they stay in the SQLite backup
 		case "tools":

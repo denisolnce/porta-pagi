@@ -137,9 +137,9 @@ a state, and an agent that deletes has no confirm), no devices, pairing or
 push (a key must not mint keys), no `PUT /api/houses/{id}` (rename, crest,
 colour, the map mark: a house does that itself, once), no steward route. With
 the fence, this table is not a menu: **what is not here, a key cannot do**.
-49 tools; `TestMCPSurface` pins the count so a change is a visible decision.
+51 tools; `TestMCPSurface` pins the count so a change is a visible decision.
 A tool of a room behind a switch carries its `Feature` (the campground's
-three carry `camp`, the roster's three `roster`): while the switch is off the tool is neither listed nor
+three carry `camp`, the roster's three `roster`, the ledger's two `dues`): while the switch is off the tool is neither listed nor
 callable, as absent as the room's routes, and the count is of the table, not
 of what one village sees.
 
@@ -165,6 +165,7 @@ of what one village sees.
 | `list_codex` · `create_codex_section` · `update_codex_section` | `/api/codex` | Send the `rev` you read; a 409 means another house wrote first |
 | `list_contacts` · `create_contact` · `update_contact` | `/api/contacts` | The village phone book. `type` is a free word, not a fixed list; a spelling differing only in case folds into the one in use. The numbers belong to people outside the village who never agreed to this portal, so the description says to keep them in the conversation, as `list_away`'s does. Nothing here pushes |
 | `list_roster` · `add_turn` · `update_turn` | `GET /api/roster`, `POST /api/roster/duties/{id}/turns`, `PUT /api/roster/turns/{id}` | Behind the `roster` switch. Always your own house's turn: there is no field for another house. A plan is today or later, a done turn today or earlier. `counts` is per house per duty over twelve months, never a sum across duties or a ranking. No tool writes a duty — that is a steward's route |
+| `list_dues` · `mark_due` | `GET /api/dues`, `PUT /api/dues/{id}/houses/{house_id}` | Behind the `dues` switch. Totals are per due, never a house's across dues; only the collecting house marks, so an agent marks only when its house holds the money. Writing a due is a steward's, and a key is never one |
 
 Off the surface, each with its argument:
 
@@ -385,7 +386,7 @@ key last acted).
   `is_steward`, so a steward's key reads 0 while that house's phone reads 1.
 - `TestMCPSurface`: no tool deletes, none reaches devices, pairing, push,
   `/api/me/*`, export, a house write or a steward route; every tool lands on
-  a registered handler (every switch on first); the count is pinned at 49; unknown tool, unknown
+  a registered handler (every switch on first); the count is pinned at 51; unknown tool, unknown
   method, a batch and garbage are refused.
 - `TestMCPKeyLifecycle`: a common place cannot mint, a key cannot mint,
   Remove turns the key into a 401.

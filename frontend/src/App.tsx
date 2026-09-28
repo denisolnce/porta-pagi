@@ -15,6 +15,7 @@ import { Codex } from "./rooms/Codex";
 import { Contacts } from "./rooms/Contacts";
 import { Settings } from "./rooms/Settings";
 import { Roster } from "./rooms/Roster";
+import { Dues } from "./rooms/Dues";
 import { Changelog } from "./Changelog";
 import { Feedback } from "./Feedback";
 import { InstallBanner } from "./Install";
@@ -42,6 +43,7 @@ export const ROOMS: Room[] = [
   { path: "/houses", icon: "🏘️", name: "Houses", short: "Houses", sub: "who lives here", nav: false },
   { path: "/contacts", icon: "📇", name: "Contacts", short: "Contacts", sub: "who to call", nav: false },
   { path: "/roster", icon: "🧹", name: "Duty roster", short: "Roster", sub: "chores and whose turn it was", nav: false, feature: "roster" },
+  { path: "/dues", icon: "🪙", name: "Dues", short: "Dues", sub: "who paid what the village asked", nav: false, feature: "dues" },
 ];
 
 // The rooms this village has: ROOMS without the ones whose switch is off.
@@ -127,6 +129,7 @@ export default function App() {
             <Route path="/houses" element={<Houses me={me} houses={houses} refresh={refresh} logout={logout} />} />
             <Route path="/contacts" element={<Contacts me={me} />} />
             <Route path="/roster" element={<Roster me={me} houses={houses} />} />
+            <Route path="/dues" element={<Dues me={me} houses={houses} />} />
             {/* The codex is a chip on Home; this is its address, for pasting into the Tavern. */}
             <Route path="/codex" element={<Codex me={me} />} />
             {steward && <Route path="/settings" element={<Settings icons={icons} />} />}

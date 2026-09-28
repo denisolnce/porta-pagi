@@ -328,6 +328,24 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   2026-09-09): `list_camp`, `create_camp`, `update_camp` run the same handlers,
   and because the handler refuses no label, the tool description carries the
   rule — one row is one stay, no amount, no total, no plate or nationality.
+- **The dues ledger counts a due, never a house** (behind the `dues` switch,
+  off by default; `docs/design-more-rooms.md` § Dues ledger). A due is a
+  title, an optional amount per house (cents, with the currency as the
+  village writes it), an optional date, and one row per house asked — never
+  a common place. **A steward writes it and names the house that collects
+  it; that house or a steward marks a house paid**, and the row keeps who
+  marked it and when. A house never marks itself. Every house sees every
+  due, who paid, and **the due's totals, collected against expected** —
+  that is the ledger, and the one total besides the roster's. **No sum of a
+  house across dues, no balance a house owes**: the query is one `GROUP BY`
+  away, so the rule lives here. **The portal records, it never moves
+  money**: no payment link, no account-number field; how to pay is the
+  notes, in the village's words. **Nothing pushes** — money should not buzz
+  phones. A house that is deleted takes its unpaid rows and leaves its paid
+  ones without a name (the trigger in `026_dues.sql`), so the collected
+  total never drops under money already in the box; a house that has paid
+  cannot be dropped from a due until it is marked unpaid. `list_dues` and
+  `mark_due` are its agent tools, gone with the switch.
 - **The phone book keeps a number, not a file on a person.** Contacts is a
   name, a phone, a note and a type. **Any house writes one down and any house
   corrects it** — the same provisional footing as editing an event — and the
@@ -477,7 +495,7 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   keeps the hash and cannot show it again. **A key opens `/api/mcp` and
   nothing else**: `requireHouse` answers 403 to an agent device on every other
   route unless the request carries the `viaMCP` context mark the dispatcher
-  sets — so the tool table in `mcp.go` is the whole surface (49 tools, pinned
+  sets — so the tool table in `mcp.go` is the whole surface (51 tools, pinned
   by `TestMCPSurface`: reads and writes in every room, a project picture in,
   **no deletes**, no devices, pairing, push, house row or steward route), and
   the raw REST API is closed to a key on purpose. **And the door takes a key
@@ -685,6 +703,7 @@ backend/internal/httpapi/i18n.go   tr() for push texts and the manifest's line, 
                     i18n_test.go refuses a translation whose verbs, end spaces or leading icon differ from its key
 backend/internal/httpapi/contacts.go  the phone book: four routes, and the one place a type's spelling is settled
 backend/internal/httpapi/roster.go    the duty roster behind its switch: duties (steward), turns (a house's own), the twelve-month count
+backend/internal/httpapi/dues.go   the dues ledger, behind its switch: five routes, the amount parser, the one total besides the roster's
 backend/internal/httpapi/mcp.go    the door for agents: the tool table (the whole surface), the JSON-RPC endpoint, the in-process
                     dispatcher and the key route; the fence that keeps a key on /api/mcp is in auth.go
 backend/internal/httpapi/shed.go   tool photo routes, wishlist; photos.go = how a photo is read and served (≤2 MB, auth) + project pictures; remind.go = return nudges
