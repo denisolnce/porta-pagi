@@ -330,10 +330,20 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   worth more — and a word nobody has used *is* a new type the moment it is
   written. A type therefore exists exactly as long as a row wears it. On the
   card the type is **a pill beside the name**, not a heading over a group
-  (owner's decision 2026-09-10): the list still arrives ordered by type, so
-  like still sits with like, and **one search box narrows it over name and
-  type at once** the same fzf way, because a villager remembers the trade or
-  the name and rarely both. The
+  (owner's decision 2026-09-10). **The book is alphabetical, under its
+  letters** (owner's ask 2026-09-28): the page sorts by name with
+  `Intl.Collator` in the page's language and draws a large, faint letter on a
+  rule over each letter's cards — on the rule, not in a column, so no card
+  gives up width on a phone. The letter is the language's: Á files under A in
+  Portuguese, Č, Š and Ž are letters of their own in Slovenian (ICU's
+  collation, no table of ours), and a name that starts with a digit or a
+  symbol files under "#", last, as a phone's own contacts do. The sort is one
+  function (`sortContacts`), so ordering by date later is one more comparator.
+  **One search box narrows it over name and type at once** the same fzf way,
+  because a villager remembers the trade or the name and rarely both, and the
+  letters are drawn over what survives. Each card carries **one faint date
+  line**: "Added" and the day it was written down, or "Updated", the day and
+  the house that last corrected it. The
   backend folds a spelling that differs only in case into the one already in
   use, because two spellings of one word split the group with nobody deciding
   it. **Nothing in the room pushes** (owner's decision 2026-09-10): a number is
@@ -597,7 +607,7 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
 ```
 backend/            Go: main.go, internal/{config,store,httpapi}; migrations embedded
 frontend/           Vite + React; src/rooms/* one file per room (Projects.tsx holds list + page; Contacts.tsx holds the room, the
-                    fzf-style match and the type picker that is its only user). Hall.tsx = Calendar.tsx + Board.tsx
+                    fzf-style match, the letter shelves and the type picker that is its only user). Hall.tsx = Calendar.tsx + Board.tsx
                     stacked, because the tavern is one door; src/map/VillageMap.tsx; rooms/Codex.tsx = the founding text, from the DB;
                     src/Changelog.tsx reads public/changelog.json, which scripts/changelog.mjs writes from the git log at build
 frontend/public/    manifest.webmanifest, sw.js (push only, no caching), icons, backdrop.jpg (aerial photo behind the gate), fonts/ (self-hosted, OFL)

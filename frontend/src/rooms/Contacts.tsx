@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type Me } from "../api";
-import { useT } from "../i18n";
-import { Empty, canEdit, useList } from "./shared";
+import { localeOf, useT } from "../i18n";
+import { Empty, canEdit, parse, useList } from "./shared";
 import { Thread } from "./Thread";
 
 // Contacts: the village's phone book — the well-driller, the vet, the man with
@@ -16,13 +16,13 @@ import { Thread } from "./Thread";
 
 type Contact = {
   id: number; house_id: number | null; name: string; phone: string; notes: string; type: string;
-  edited_by_name: string | null; comments: number;
+  created_at: string; edited_at: string | null; edited_by_name: string | null; comments: number;
 };
 
 const blank = { name: "", phone: "", notes: "", type: "" };
 
 export function Contacts({ me }: { me: Me }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { items, reload } = useList<Contact>("/contacts");
   const [f, setF] = useState(blank);
   const [q, setQ] = useState("");
@@ -37,12 +37,15 @@ export function Contacts({ me }: { me: Me }) {
   // One box over both fields, because a villager looking for the vet may
   // remember the trade and not the name, or the name and not the trade. The
   // order is left alone: a phone book that reshuffles as you type is harder
-  // to read than one that only gets shorter.
+  // to read than one that only gets shorter. The letters are drawn over what
+  // survives, so a letter with nothing left under it is not drawn at all.
   const shown = useMemo(() => {
     const needle = q.trim();
     if (!needle) return items;
     return items.filter((c) => fuzzy(needle, c.name) !== null || (c.type && fuzzy(needle, c.type) !== null));
   }, [items, q]);
+  const shelves = useMemo(() => byLetter(shown, lang), [shown, lang]);
+  const day = (iso: string) => <time dateTime={iso}>{parse(iso).toLocaleDateString(localeOf(lang), { day: "numeric", month: "short", year: "numeric" })}</time>;
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +69,40 @@ export function Contacts({ me }: { me: Me }) {
     <label>{t("Notes")}<textarea value={v.notes} onChange={(e) => set({ ...v, notes: e.target.value })} maxLength={300} placeholder={t("speaks German, comes on Tuesdays")} /></label>
   </>);
 
+  const card = (c: Contact) => (
+    <div key={c.id} className="card contact">
+      {editing === c.id ? (
+        <form className="inline" onSubmit={(e) => { e.preventDefault(); saveEdit(c.id); }}>{fields(ef, setEf)}
+          <div className="submit"><button type="button" className="ghost" onClick={() => setEditing(null)}>✕</button><button className="primary" type="submit">{t("Save")}</button></div>
+        </form>
+      ) : (<>
+        <div className="head">
+          <strong>{c.name}</strong>
+          {c.type && <span className="tag">{c.type}</span>}
+          {/* A number on a phone is there to be pressed. */}
+          {c.phone && <a className="btn primary tel" href={"tel:" + c.phone.replace(/[^+0-9]/g, "")}>☎ {c.phone}</a>}
+        </div>
+        {c.notes && <div className="body small">{c.notes}</div>}
+        {/* One faint line: when the number was written down, or when it
+            was last corrected and by whom. Who wrote a number down is not
+            worth a name — a number is the village's, not a house's. Who
+            changed one is, because anyone may, and a text anyone may
+            change shows who did. The date outlives the house that set it. */}
+        <div className="small muted">
+          {c.edited_at
+            ? <>{t("Updated")} {day(c.edited_at)}{c.edited_by_name && <> · ✎ {c.edited_by_name}</>}</>
+            : <>{t("Added")} {day(c.created_at)}</>}
+        </div>
+      </>)}
+      <div className="actions">
+        <button className="ghost" onClick={() => setOpenThread(openThread === c.id ? null : c.id)}>💬 {t("Comments")}{c.comments ? ` (${c.comments})` : ""}</button>
+        {editing !== c.id && <button className="ghost" onClick={() => startEdit(c)}>✎ {t("Edit")}</button>}
+        {canEdit(me, c) && <button className="ghost" onClick={() => del(c)}>🗑 {t("Delete")}</button>}
+      </div>
+      {openThread === c.id && <Thread subject="contact" id={c.id} me={me} onChanged={reload} />}
+    </div>
+  );
+
   return (
     <div className="parchment">
       <h2>📇 {t("Contacts")} <span className="sub">{t("who to call")}</span></h2>
@@ -78,32 +115,15 @@ export function Contacts({ me }: { me: Me }) {
       <input className="find" value={q} onChange={(e) => setQ(e.target.value)} placeholder={"🔍 " + t("a name or a type")} aria-label={t("a name or a type")} />
       {items.length === 0 && <Empty text={t("No numbers yet. Write the first one down — the chat will lose it.")} />}
       {items.length > 0 && shown.length === 0 && <Empty text={t("No number matches that.")} />}
-      {shown.map((c) => (
-        <div key={c.id} className="card contact">
-          {editing === c.id ? (
-            <form className="inline" onSubmit={(e) => { e.preventDefault(); saveEdit(c.id); }}>{fields(ef, setEf)}
-              <div className="submit"><button type="button" className="ghost" onClick={() => setEditing(null)}>✕</button><button className="primary" type="submit">{t("Save")}</button></div>
-            </form>
-          ) : (<>
-            <div className="head">
-              <strong>{c.name}</strong>
-              {c.type && <span className="tag">{c.type}</span>}
-              {/* A number on a phone is there to be pressed. */}
-              {c.phone && <a className="btn primary tel" href={"tel:" + c.phone.replace(/[^+0-9]/g, "")}>☎ {c.phone}</a>}
-            </div>
-            {c.notes && <div className="body small">{c.notes}</div>}
-            {/* Who wrote a number down is not worth a line — a number is the
-                village's, not a house's. Who changed one is, because anyone
-                may, and a text anyone may change shows who did. */}
-            {c.edited_by_name && <div className="small muted">✎ {t("last edited by")} {c.edited_by_name}</div>}
-          </>)}
-          <div className="actions">
-            <button className="ghost" onClick={() => setOpenThread(openThread === c.id ? null : c.id)}>💬 {t("Comments")}{c.comments ? ` (${c.comments})` : ""}</button>
-            {editing !== c.id && <button className="ghost" onClick={() => startEdit(c)}>✎ {t("Edit")}</button>}
-            {canEdit(me, c) && <button className="ghost" onClick={() => del(c)}>🗑 {t("Delete")}</button>}
-          </div>
-          {openThread === c.id && <Thread subject="contact" id={c.id} me={me} onChanged={reload} />}
-        </div>
+      {/* A large, faint letter on the rule over its names, the way a paper
+          phone book is thumbed. On the rule and not in a column beside the
+          cards: a column would take its width from every card, and on a
+          phone the three actions under a number already have none to spare. */}
+      {shelves.map((g) => (
+        <section key={g.letter + g.rows[0].id} className="shelf">
+          <h3 className="abc">{g.letter}</h3>
+          {g.rows.map(card)}
+        </section>
       ))}
     </div>
   );
@@ -130,6 +150,49 @@ export function fuzzy(q: string, s: string): number | null {
     prev = j; i++;
   }
   return i === a.length ? score - b.length * 0.01 : null;
+}
+
+// The book's order, and the one function that sets it: by name, the way the
+// page's language sorts — Á files under A in Portuguese, and in Slovenian Č,
+// Š and Ž are letters of their own after C, S and Z (ICU's collation says so;
+// no table here). Equal names keep the order they were written down in. A
+// second order — by the day a number was added or last updated — is a second
+// comparator here, and under it the letters would give way, since a date
+// order has no letters to thumb.
+const collator = (lang: string) => new Intl.Collator(localeOf(lang), { sensitivity: "base" });
+
+export function sortContacts<T extends { id: number; name: string }>(rows: T[], lang: string): T[] {
+  const c = collator(lang);
+  return [...rows].sort((a, b) => c.compare(a.name.trim(), b.name.trim()) || a.id - b.id);
+}
+
+// initial: the letter a name files under, as the language sees it. An accent
+// the language ignores is dropped from the letter shown (Á -> A in pt); one
+// it counts keeps it (Č in sl). A name that starts with a digit or a symbol
+// files under "#".
+export function initial(name: string, c: Intl.Collator): string {
+  const first = [...name.trim().normalize("NFC")][0] ?? "";
+  if (!/\p{L}/u.test(first)) return "#";
+  const up = [...first.toLocaleUpperCase(c.resolvedOptions().locale)][0];
+  const bare = up.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return c.compare(bare, up) === 0 ? bare : up;
+}
+
+// byLetter: whatever survives the search, in the book's order, cut into one
+// shelf per letter. "#" comes last, where a phone's own contacts put it: the
+// book opens on names, and a number saved under "112" is rare enough to look
+// for at the bottom.
+export function byLetter<T extends { id: number; name: string }>(rows: T[], lang: string): { letter: string; rows: T[] }[] {
+  const c = collator(lang), out: { letter: string; rows: T[] }[] = [], rest: T[] = [];
+  for (const r of sortContacts(rows, lang)) {
+    const l = initial(r.name, c);
+    const last = out[out.length - 1];
+    if (l === "#") rest.push(r);
+    else if (last && c.compare(last.letter, l) === 0) last.rows.push(r);
+    else out.push({ letter: l, rows: [r] });
+  }
+  if (rest.length) out.push({ letter: "#", rows: rest });
+  return out;
 }
 
 // TypePicker: one control, not two. The field is a plain text input — whatever

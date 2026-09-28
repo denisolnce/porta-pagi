@@ -1549,6 +1549,20 @@ func TestContacts(t *testing.T) {
 	if got := typeOf(only); got != "Urad" {
 		t.Fatalf("the save handed back the old spelling: %q", got)
 	}
+	// The book arrives by name, not by type: Dimnikar and Vodovodar share a
+	// type and Urad sits between them. A row nobody corrected says when it was
+	// written down and nothing more.
+	_, _, book := volk.do("GET", "/api/contacts", nil)
+	var names []string
+	for _, c := range book {
+		names = append(names, c["name"].(string))
+	}
+	if strings.Join(names, ",") != "Dimnikar,Urad Divača,Vodovodar Ban" {
+		t.Fatalf("the book is not in name order: %v", names)
+	}
+	if book[0]["created_at"] == nil || book[0]["created_at"] == "" || book[0]["edited_at"] != nil {
+		t.Fatalf("an untouched row should carry created_at and no edited_at: %v", book[0])
+	}
 
 	// Any house corrects any number, and the row then names that house.
 	code, _, _ = steward.do("PUT", "/api/contacts/"+itoa(id), map[string]any{"phone": "041 222 222"})
@@ -1558,7 +1572,7 @@ func TestContacts(t *testing.T) {
 	// The corrector is named; the house that wrote the number down is an id and
 	// nothing more, because no card names it and no agent needs it.
 	fixed := row(id)
-	if fixed["phone"] != "041 222 222" || fixed["edited_by_name"] != "S" {
+	if fixed["phone"] != "041 222 222" || fixed["edited_by_name"] != "S" || fixed["edited_at"] == nil {
 		t.Fatalf("correction not recorded: %v", fixed)
 	}
 	if _, leaked := fixed["house_name"]; leaked || fixed["house_id"] == nil {
