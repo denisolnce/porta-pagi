@@ -333,7 +333,13 @@ Cost: **4–6 days**, most of it writing the village's year.
 a year, pt-PT and English, argued over by a prose reviewer and rewritten
 once — seasons, codex voice, replies before their posts, lines that toured
 features), the synthetic cadastre, `pt.json`, the build-tagged door, the
-hourly reset, the house switcher. Not built: pictures on the projects. The
+hourly reset, the house switcher. **Rewritten 2026-09-28**: every room
+bilingual the way an Alentejo village is (Portuguese houses, English-writing
+foreign houses, a mixed one, translations of the key line), every feature
+shown at least once, the contacts with threads and a year of dates, and
+seasons that hold on any day it reseeds — a test seeds it twice a month
+through a year and checks each room. Not built: pictures on the projects
+and the tools, which would have to be fabricated. The
 demo site runs on the owner's VM since 2026-09-24 (§11 row 2). **The rule: it runs on its own host,
 never beside a village**, because a visitor holds a steward's powers for up
 to an hour — posts, an export, a backdrop upload, push endpoints the server
