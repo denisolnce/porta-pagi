@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"log"
 	"net/http"
 )
 
@@ -42,7 +43,13 @@ func (s *Server) feature(ctx context.Context, key string) bool {
 		return false
 	}
 	row, err := s.st.One(ctx, `SELECT enabled FROM features WHERE key=?`, key)
-	if err != nil || row == nil {
+	if err != nil {
+		// Off means absent, so a failed read would silently take a room
+		// away. Say so in the log; the default is still the best answer.
+		log.Printf("feature %s: %v", key, err)
+		return f.Default
+	}
+	if row == nil {
 		return f.Default
 	}
 	return row["enabled"].(int64) == 1
@@ -73,7 +80,9 @@ func (s *Server) offKinds(ctx context.Context) map[string]bool {
 }
 
 // listFeatures: every switch with its state, for any house — the page draws
-// its doors from it. Who flipped a switch, and when, rides along.
+// its doors from it. Who flipped a switch, and when, rides along; both are
+// null on a row nobody flipped (migration 025 carried the campground over
+// for a village that had it before switches), which the page says as such.
 func (s *Server) listFeatures(w http.ResponseWriter, r *http.Request) {
 	rows, err := s.st.Rows(r.Context(), `SELECT f.key, f.enabled, f.set_at, h.name AS set_by FROM features f LEFT JOIN houses h ON h.id = f.set_by`)
 	if err != nil {

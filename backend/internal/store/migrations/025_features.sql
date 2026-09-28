@@ -7,8 +7,9 @@ CREATE TABLE features (
   key     TEXT PRIMARY KEY,
   enabled INTEGER NOT NULL,
   set_by  INTEGER REFERENCES houses(id) ON DELETE SET NULL,
-  set_at  TEXT NOT NULL DEFAULT (datetime('now'))
+  set_at  TEXT
 );
 -- The campground became a switch, off for a new village. A village that
--- existed before switches keeps every room it had.
+-- existed before switches keeps every room it had. That row has no set_by
+-- and no set_at: nobody flipped it, the village had it before switches.
 INSERT INTO features(key, enabled) SELECT 'camp', 1 WHERE EXISTS (SELECT 1 FROM houses);

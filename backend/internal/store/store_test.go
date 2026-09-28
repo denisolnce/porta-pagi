@@ -47,3 +47,34 @@ func TestTx(t *testing.T) {
 		t.Fatalf("a committed write is missing: %v", row)
 	}
 }
+
+// TestFeaturesCarryCamp: migration 025 runs on a village that already has
+// houses — the owner's — and keeps its campground on, with nobody named as
+// having flipped it. A new village gets no row: the default, off.
+func TestFeaturesCarryCamp(t *testing.T) {
+	dir := t.TempDir()
+	st, err := Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	if row, _ := st.One(ctx, `SELECT count(*) AS n FROM features`); row["n"].(int64) != 0 {
+		t.Fatalf("a new village has a switch row: %v", row)
+	}
+	// Back to the moment before 025, with a house in the village.
+	for _, q := range []string{`DROP TABLE features`, `DELETE FROM schema_migrations WHERE version LIKE '025%'`, `INSERT INTO houses(name) VALUES ('Old House')`} {
+		if _, err := st.Exec(ctx, q); err != nil {
+			t.Fatal(q, err)
+		}
+	}
+	st.Close()
+	st, err = Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	row, err := st.One(ctx, `SELECT enabled, set_by, set_at FROM features WHERE key='camp'`)
+	if err != nil || row == nil || row["enabled"].(int64) != 1 || row["set_by"] != nil || row["set_at"] != nil {
+		t.Fatalf("the campground after 025 on a village with houses: %v %v", row, err)
+	}
+}

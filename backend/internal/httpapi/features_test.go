@@ -1,7 +1,6 @@
 package httpapi
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +12,7 @@ import (
 func TestFeatures(t *testing.T) {
 	srv, _, steward, house := newVillage(t)
 	code, _, list := house.do("GET", "/api/features", nil)
-	if code != 200 || fmt.Sprint(list) == "" {
+	if code != 200 || len(list) != len(Features) {
 		t.Fatalf("list: %d %v", code, list)
 	}
 	for _, f := range list {
