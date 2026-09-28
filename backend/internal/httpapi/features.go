@@ -128,7 +128,7 @@ func (s *Server) putFeature(w http.ResponseWriter, r *http.Request) {
 	// The demo is one village for every visitor at once: a switch flipped
 	// by one would take a room from all the others until the hour. The page
 	// greys them out; this is the door behind it.
-	if s.switchesFixed {
+	if s.demoLocked {
 		writeErr(w, 403, "the demo keeps every switch on")
 		return
 	}

@@ -458,6 +458,7 @@ a.card:hover { background: #fff8e4; }
 .tp-new { margin-top: .15rem; border-top: 1px dashed var(--parch3); border-radius: 0 0 4px 4px; font-size: .9rem; color: var(--ink2); }
 
 /* The demo's house switcher sits where the house link sits; the select wears the parchment. */
+.gate-preview { display: block; width: 100%; max-width: 24rem; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 8px; border: 1px solid var(--parch3); margin: .4rem 0; }
 .demo-switch { position: relative; cursor: pointer; }
 .demo-switch .demo-caret { font-size: .8rem; opacity: .8; }
 /* The select covers the whole label and is invisible: tapping the crest or

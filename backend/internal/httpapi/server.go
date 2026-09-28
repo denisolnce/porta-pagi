@@ -33,9 +33,10 @@ type Server struct {
 
 	// the feedback email (feedback.go); nil = Resend, tests inject a fake
 	mail func(context.Context, mailer.Message) error
-	// switchesFixed: the demo build keeps every switch as seeded (features.go);
-	// tests release it to flip switches in both builds.
-	switchesFixed bool
+	// demoLocked: the demo is one village for every visitor at once, so what
+	// one visitor would change for all — the switches (features.go), the gate
+	// picture (site.go) — stays as seeded. Tests release it in both builds.
+	demoLocked bool
 }
 
 func New(st *store.Store, cfg config.Config) *Server {
@@ -75,6 +76,10 @@ func (s *Server) routes() {
 	// Switches (features.go): any house reads them, a steward flips one.
 	m.HandleFunc("GET /api/features", s.requireHouse(s.listFeatures))
 	m.HandleFunc("PUT /api/features/{key}", s.requireSteward(s.putFeature))
+	// The pictures the page wears (site.go): a steward replaces or resets one.
+	m.HandleFunc("GET /api/site", s.requireHouse(s.listSite))
+	m.HandleFunc("PUT /api/site/{name}", s.requireSteward(s.putSite))
+	m.HandleFunc("DELETE /api/site/{name}", s.requireSteward(s.deleteSite))
 	m.HandleFunc("GET /api/devices", s.requireHouse(s.listDevices))
 	m.HandleFunc("DELETE /api/devices/{id}", s.requireHouse(s.deleteDevice))
 	// A door for agents (mcp.go): a key is a device with agent=1, and it opens

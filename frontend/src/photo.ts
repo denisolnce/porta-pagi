@@ -25,11 +25,12 @@ export function forgetPhoto(path: string) {
 }
 
 // shrink: longest side 1000 px, JPEG 0.82 — about 100–200 KB from a 4 MB shot.
-export async function shrink(file: File): Promise<Blob> {
+// A picture that fills a laptop screen (the gate's) asks for more: `side`.
+export async function shrink(file: File, side = 1000): Promise<Blob> {
   const url = URL.createObjectURL(file);
   try {
     const img = await new Promise<HTMLImageElement>((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
-    const k = Math.min(1, 1000 / Math.max(img.width, img.height));
+    const k = Math.min(1, side / Math.max(img.width, img.height));
     const c = document.createElement("canvas");
     c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
     c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);

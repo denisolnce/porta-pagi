@@ -4,6 +4,7 @@ import { localeOf, useT } from "../i18n";
 import { useFeatures, type FeatureRow } from "../features";
 import { KIND_LABELS } from "./Notifications";
 import { parse } from "./shared";
+import { shrink } from "../photo";
 
 // What each switch adds, in one line. A switch with no line here shows its key.
 const ABOUT: Record<string, string> = {
@@ -66,6 +67,29 @@ export function Settings({ icons }: { icons: Record<string, string> }) {
   };
   const mutedBy = (k: string) => { const d = prefs?.global_detail.find((x) => x.kind === k); return d ? `${t("Switched off for the whole village by")} ${d.set_by || "?"} · ${day(d.set_at)}` : ""; };
 
+  // The gate picture: the village's own, or the one built into the portal.
+  const [site, setSite] = useState<{ name: string; updated_at: string }[] | null>(null);
+  const [picErr, setPicErr] = useState("");
+  const [bust, setBust] = useState(0);
+  const loadSite = () => api<{ name: string; updated_at: string }[]>("/site").then(setSite).catch(() => {});
+  useEffect(() => { loadSite(); }, []);
+  const own = site?.find((x) => x.name === "backdrop");
+  const upload = async (file: File | undefined) => {
+    if (!file) return;
+    setPicErr("");
+    try {
+      const blob = await shrink(file, 2000);
+      const r = await fetch(API + "/site/backdrop", { method: "PUT", headers: { Authorization: "Bearer " + (getToken() || ""), "Content-Type": "image/jpeg" }, body: blob });
+      if (!r.ok) throw new Error(String(r.status));
+      await loadSite(); setBust(Date.now());
+    } catch { setPicErr(t("Something went wrong")); }
+  };
+  const resetPic = async () => {
+    if (!confirm(t("Back to the picture the portal came with?"))) return;
+    await api("/site/backdrop", { method: "DELETE" }).catch(() => setPicErr(t("Something went wrong")));
+    await loadSite(); setBust(Date.now());
+  };
+
   const exportAll = async () => {
     const r = await fetch(`${API}/export`, { headers: { Authorization: "Bearer " + (getToken() || "") } });
     const b = await r.blob(); const u = URL.createObjectURL(b);
@@ -99,6 +123,17 @@ export function Settings({ icons }: { icons: Record<string, string> }) {
         </div>
       )}
       {prefs && prefs.global_detail.length > 0 && <div className="small">🔇 {prefs.global_detail.map((d) => `${t(KIND_LABELS[d.kind] || d.kind)}: ${d.set_by || "?"} · ${day(d.set_at)}`).join(" · ")}</div>}
+
+      <h3>🖼️ {t("Gate picture")}</h3>
+      <p className="small">{t("The picture behind the door, before anyone logs in.")} {own ? `${t("Your own since")} ${day(own.updated_at)}.` : t("The one the portal came with.")}</p>
+      <img className="gate-preview" src={`${import.meta.env.BASE_URL}backdrop.jpg?v=${bust || own?.updated_at || ""}`} alt="" />
+      {demo
+        ? <p className="small muted">{t("In the demo the picture stays as it is.")}</p>
+        : <p>
+          <label className="btn-file">🖼️ {t("Choose a picture")}<input type="file" accept="image/*" onChange={(e) => { upload(e.target.files?.[0]); e.target.value = ""; }} /></label>{" "}
+          {own && <button type="button" className="ghost" onClick={resetPic}>{t("Back to the original")}</button>}
+        </p>}
+      {picErr && <div className="err">{picErr}</div>}
 
       <h3>📦 {t("Export")}</h3>
       <p className="small">{t("Everything the village wrote, in one file. Take one before deleting a house.")}</p>

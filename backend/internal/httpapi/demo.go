@@ -407,7 +407,7 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		counts["houses"]++
 	}
 	// The demo shows every room, so every switch is on, and stays on: the
-	// demo server refuses a flip (switchesFixed) and the settings page greys
+	// demo server refuses a flip (demoLocked) and the settings page greys
 	// the switches out. The steward switched them on a year ago, so the
 	// settings page reads "switched on by", not "had it before switches".
 	var steward any

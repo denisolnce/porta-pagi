@@ -9,8 +9,9 @@ import (
 )
 
 // A village may replace the pictures the page wears — today the backdrop
-// behind the gate, frontend/public/backdrop.jpg — with its own, entered once
-// from a file on the VM like the map:
+// behind the gate, frontend/public/backdrop.jpg — with its own: a steward
+// uploads one from the settings page (PUT /api/site/backdrop) and can go back
+// to the built-in one (DELETE), or it is entered from a file on the VM:
 //
 //	docker exec -i <container> /server site-import backdrop < picture.jpg
 //
@@ -33,6 +34,11 @@ func (s *Server) ImportSite(name string, in io.Reader) error {
 	if err != nil {
 		return fmt.Errorf("read: %w", err)
 	}
+	return s.storeSite(context.Background(), name, b)
+}
+
+// storeSite checks one picture's size and type and upserts its row.
+func (s *Server) storeSite(ctx context.Context, name string, b []byte) error {
 	if len(b) > siteCap {
 		return fmt.Errorf("%s is over %d MB", name, siteCap>>20)
 	}
@@ -40,7 +46,7 @@ func (s *Server) ImportSite(name string, in io.Reader) error {
 	if ct != "image/jpeg" && ct != "image/png" && ct != "image/webp" {
 		return fmt.Errorf("%s must be a jpeg, png or webp, this is %s", name, ct)
 	}
-	_, err = s.st.Exec(context.Background(), `INSERT INTO site_files (name, bytes, content_type, updated_at) VALUES (?,?,?,datetime('now'))
+	_, err := s.st.Exec(ctx, `INSERT INTO site_files (name, bytes, content_type, updated_at) VALUES (?,?,?,datetime('now'))
 		ON CONFLICT(name) DO UPDATE SET bytes=excluded.bytes, content_type=excluded.content_type, updated_at=excluded.updated_at`, name, b, ct)
 	return err
 }
@@ -71,4 +77,57 @@ func (s *Server) serveSiteFile(w http.ResponseWriter, r *http.Request, name stri
 		w.Write([]byte(v))
 	}
 	return true
+}
+
+// listSite: which pictures this village has replaced, and when — the
+// settings page shows "your own picture since …" or "the built-in one".
+func (s *Server) listSite(w http.ResponseWriter, r *http.Request) {
+	rows, err := s.st.Rows(r.Context(), `SELECT name, updated_at FROM site_files`)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, 200, rows)
+}
+
+// putSite: a steward replaces one picture with the request body (jpeg, png
+// or webp, under 2 MB; the page shrinks it first). The demo refuses: one
+// visitor's picture would greet every other visitor for the rest of the hour.
+func (s *Server) putSite(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	if !siteNames[name] {
+		writeErr(w, 404, "no such picture")
+		return
+	}
+	if s.demoLocked {
+		writeErr(w, 403, "the demo keeps its picture")
+		return
+	}
+	body, _, ok := readPhoto(w, r)
+	if !ok {
+		return
+	}
+	if err := s.storeSite(r.Context(), name, body); err != nil {
+		writeErr(w, 400, err.Error())
+		return
+	}
+	w.WriteHeader(204)
+}
+
+// deleteSite: back to the picture built into the image.
+func (s *Server) deleteSite(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	if !siteNames[name] {
+		writeErr(w, 404, "no such picture")
+		return
+	}
+	if s.demoLocked {
+		writeErr(w, 403, "the demo keeps its picture")
+		return
+	}
+	if _, err := s.st.Exec(r.Context(), `DELETE FROM site_files WHERE name=?`, name); err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(204)
 }

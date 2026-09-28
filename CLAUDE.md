@@ -125,11 +125,16 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   `/api/bootstrap`, `/api/join` requires a bearer token. **No unauthenticated
   write surface, ever** — a camper self-check-in link from park4night was asked
   for on 2026-09-06 and refused for that reason. The one public image
-  is `backdrop.jpg` behind the gate — the owner chose it knowing the repo is
-  public; provenance `TBD`. It is every village's default; a village replaces
-  it with its own by `/server site-import backdrop < picture` (`site.go`), a
-  row in `site_files` served in the built-in file's
-  place, still without a token because the gate is before any login. Away-notices are
+  is `backdrop.jpg` behind the gate — a Google Maps screenshot; the owner
+  keeps it as the default, in the demo and in his own village, knowing the
+  licence is Google's and accepting the risk (owner's decision 2026-09-28).
+  A steward replaces it from ⚙️ settings (`PUT /api/site/backdrop`, the page
+  shrinks it to 2000 px) or goes back to the built-in one (`DELETE`); a
+  server can also enter one by `/server site-import backdrop < picture`
+  (`site.go`). Either way it is a row in `site_files` served in the built-in
+  file's place, still without a token because the gate is before any login.
+  The demo refuses both routes (`demoLocked`): one visitor's picture would
+  greet every other visitor for the rest of the hour. Away-notices are
   burglary information: they never leave the logged-in app (no digests, no feeds).
   **An MCP key is the logged-in house** (owner's decision 2026-09-09): the
   model provider is a third party that house chose, the same argument that

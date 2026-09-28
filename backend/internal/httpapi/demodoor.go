@@ -26,7 +26,7 @@ func init() {
 	demoRoutes = func(s *Server) {
 		s.mux.HandleFunc("GET /api/demo/houses", s.demoHouses)
 		s.mux.HandleFunc("POST /api/demo/enter", s.demoEnter)
-		s.switchesFixed = true
+		s.demoLocked = true
 	}
 	DemoStart = func(ctx context.Context, s *Server) { s.RunDemoReset(ctx) }
 }
