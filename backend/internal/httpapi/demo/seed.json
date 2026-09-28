@@ -390,7 +390,7 @@
       "day": -12,
       "time": "20:05",
       "author": "Pieter",
-      "body": "We go away next week for 12 days, I put the notice up. Eira feeds the cats. The grey one bites, it is not personal."
+      "body": "We go away next week for 12 days, I put the notice up. Eira has the key and feeds the cats. The grey one bites, it is not personal."
     },
     {
       "house": "forno",
@@ -473,7 +473,7 @@
           "day": 0,
           "time": "13:30",
           "house": "ribeira",
-          "body": "Yes, it is in our cabbages right now. We tried to catch it, no chance.",
+          "body": "Yes, the goat is in our cabbages right now. We tried to catch it, no chance.",
           "author": "Pieter"
         },
         {
@@ -515,7 +515,7 @@
       "house": "horta",
       "on": "02-20",
       "time": "18:10",
-      "body": "temos plantas a mais: alface, couve galega, dois tabuleiros de cebola. estão na estufa, levem sem perguntar"
+      "body": "temos plantas a mais: alface, couve galega, dois tabuleiros de cebola. estão na estufa, levem sem perguntar (spare seedlings in our greenhouse: lettuce, kale, onions. just take them)"
     },
     {
       "house": "moinho",
@@ -542,7 +542,7 @@
       "house": "horta",
       "on": "04-26",
       "time": "18:40",
-      "body": "plantas de tomate coração de boi na estufa, umas 30. levem antes que passem do ponto"
+      "body": "plantas de tomate coração de boi na estufa, umas 30. levem antes que passem do ponto (about 30 tomato seedlings in the greenhouse, take them before they get leggy)"
     },
     {
       "house": "ribeira",
@@ -1450,7 +1450,7 @@
     {
       "house": "horta",
       "kind": "order",
-      "destination": "Cooperativa Agrícola de Ourique",
+      "destination": "Cooperativa Agrícola, ração",
       "day": 5,
       "time": "18:00",
       "notes": "Ração. A cooperativa entrega às quintas de manhã, aqui na Horta. Cada um paga o seu na entrega.\n(feed order. the co-op delivers here on a thursday morning, everyone pays their own on delivery)",
@@ -1483,7 +1483,7 @@
     {
       "day": -12,
       "house": "oliveiras",
-      "text": "Quem for a Beja, pode trazer-me os óculos da óptica da Rua de Mértola? Já estão pagos.",
+      "text": "Quem for a Beja, pode trazer-me os óculos da óptica? Já estão pagos.",
       "state": "taken",
       "takenBy": "moinho"
     },
@@ -1558,7 +1558,7 @@
       "from": -3,
       "to": 9,
       "watcher": "eira",
-      "notes": "Gatos: ração de manhã, a taça está na varanda. A chave está debaixo da pedra ao pé da porta. Regar só os vasos da entrada.\n\nCats: food in the morning, the bowl is on the porch. Key under the stone by the door. Only water the pots at the entrance.",
+      "notes": "Gatos: ração de manhã, a taça está na varanda. A Eira tem a chave. Regar só os vasos da entrada.\n\nCats: food in the morning, the bowl is on the porch. Eira has the key. Only water the pots at the entrance.",
       "comments": [
         {
           "day": 1,
@@ -1579,7 +1579,7 @@
           "day": 3,
           "time": "08:35",
           "house": "eira",
-          "body": "Tudo bem por cá. Chave de volta debaixo da pedra.\nEN: all fine here, key back under the stone."
+          "body": "Tudo bem por cá. A chave fica connosco até voltarem.\nEN: all fine here, we keep the key until you are back."
         }
       ]
     },
@@ -1664,9 +1664,9 @@
       "category": "other"
     },
     {
-      "house": "pedra",
+      "house": "horta",
       "name": "Roçadora Stihl",
-      "notes": "mistura a 2%, a garrafa está ao lado. há fio novo.",
+      "notes": "mistura a 2%, a garrafa está ao lado. há fio novo. (brushcutter. the 2-stroke mix is in the bottle next to it)",
       "category": "power",
       "heldBy": "barraca",
       "heldDays": 9
@@ -1694,19 +1694,19 @@
     {
       "house": "eira",
       "name": "Betoneira pequena",
-      "notes": "Lavar logo a seguir, senão fica um tijolo.",
+      "notes": "Lavar logo a seguir, senão fica um tijolo.\nEN: small concrete mixer. Wash it straight after, or it sets solid.",
       "category": "power"
     },
     {
       "house": "horta",
       "name": "Enxadas (4)",
-      "notes": "duas largas, duas estreitas",
+      "notes": "duas largas, duas estreitas (hoes, two wide, two narrow)",
       "category": "garden"
     },
     {
       "house": "horta",
       "name": "Carrinho de mão",
-      "notes": "o pneu perde ar devagar, encher antes",
+      "notes": "o pneu perde ar devagar, encher antes (wheelbarrow, the tyre goes down slowly, pump it first)",
       "category": "garden",
       "heldBy": "pedra",
       "heldDays": 3
@@ -1714,7 +1714,7 @@
     {
       "house": "forno",
       "name": "Aparafusadora Makita + brocas",
-      "notes": "Duas baterias. O carregador fica cá em casa.",
+      "notes": "Duas baterias. O carregador fica cá em casa. (cordless drill, the charger stays with us)",
       "category": "power"
     },
     {
@@ -1726,7 +1726,7 @@
     {
       "house": "amarela",
       "name": "Máquina de costura Singer",
-      "notes": "velha mas cose. empresto, não dou 🙂",
+      "notes": "velha mas cose. empresto, não dou 🙂 (sewing machine, a loan not a gift)",
       "category": "other"
     },
     {
@@ -2304,7 +2304,7 @@
         {
           "house": "nova",
           "day": -17,
-          "note": "First time. Pedra showed me, all fine."
+          "note": "First time on the pump, after a year of watching Pedra do it. All fine."
         },
         {
           "house": "barraca",
@@ -2693,8 +2693,9 @@
           "day": -300
         },
         {
-          "house": "pedra",
-          "day": -314
+          "house": "nova",
+          "day": -314,
+          "note": "Our first run. Glass, paper and plastic in three different bins, we learned."
         },
         {
           "house": "horta",
@@ -2741,8 +2742,9 @@
           "note": "Filled the pothole by the gate with gravel from the pile."
         },
         {
-          "house": "horta",
-          "on": "02-22"
+          "house": "nova",
+          "on": "02-22",
+          "note": "Our first time on the path. Two wheelbarrows of stones and a lot of mud."
         },
         {
           "house": "forno",
@@ -2798,7 +2800,7 @@
           "day": 250,
           "time": "18:00",
           "house": "horta",
-          "body": "da última vez veio em duas horas. perguntem-lhe pela bomba de 80 m, ele sabe qual é."
+          "body": "da última vez veio em duas horas. perguntem-lhe pela bomba de 80 m, ele sabe qual é. (last time he came within two hours. say the 80 m pump, he knows which)"
         },
         {
           "day": 300,
