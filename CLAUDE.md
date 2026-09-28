@@ -628,14 +628,19 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   square — into an **empty** database only, and refuses one with houses. It
   shows every feature a visitor can open: pinned posts and replies, both
   kinds of event with yes, no and maybe, an event whose time moved with its
-  struck answers, events on a project's task, runs with needs on them, needs
-  and give-aways in every state and tag, absences now, soon and just over
+  struck answers, events on a project's task, a trip and an order with needs
+  on them, needs in every state and give-aways in every state and tag the
+  pickers still offer, absences now, soon and just over
   (one watched and talked about, one with nobody watching), tools in the
   shed and one out over a week, wishes with findings and threads, projects
   planned, in progress and finished with tasks free, held by another house
   and done, camp rows in all three states, a phone book written down over a
-  year with corrections and threads, and a codex with one section a house
-  rewrote. A thread on every subject `threads.go` takes, arguments in some.
+  year with corrections and threads, a codex with one section a house
+  rewrote, dues (one partly paid with a payment a steward marked, one all
+  paid last quarter, one with no amount) and a roster (a duty due, one not
+  yet, one done when needed, a year of turns with the newcomer's few, plans
+  ahead). A due's title may say `{trimestre}`, `{trimestre passado}` or
+  `{ano}`, filled from the day it seeds. A thread on every subject `threads.go` takes, arguments in some.
   **Dates**: a plain offset for what could happen in any month; a calendar
   anchor (`on`, most recent or `ahead`, with `keep` days of grace) for what
   the land decides; `at` a keyed event or project for what hangs off one; a
