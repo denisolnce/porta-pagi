@@ -169,6 +169,15 @@ func (s *Server) routes() {
 	m.HandleFunc("POST /api/contacts", s.requireHouse(s.createContact))
 	m.HandleFunc("PUT /api/contacts/{id}", s.requireHouse(s.updateContact))
 	m.HandleFunc("DELETE /api/contacts/{id}", s.requireHouse(s.deleteContact))
+	// Duty roster (roster.go), behind the roster switch: a steward writes the
+	// duties down, a house writes its own turns and nobody else's.
+	m.HandleFunc("GET /api/roster", s.requireHouse(s.requireFeature("roster", s.listRoster)))
+	m.HandleFunc("POST /api/roster/duties", s.requireSteward(s.requireFeature("roster", s.createDuty)))
+	m.HandleFunc("PUT /api/roster/duties/{id}", s.requireSteward(s.requireFeature("roster", s.updateDuty)))
+	m.HandleFunc("DELETE /api/roster/duties/{id}", s.requireSteward(s.requireFeature("roster", s.deleteDuty)))
+	m.HandleFunc("POST /api/roster/duties/{id}/turns", s.requireHouse(s.requireFeature("roster", s.createTurn)))
+	m.HandleFunc("PUT /api/roster/turns/{id}", s.requireHouse(s.requireFeature("roster", s.updateTurn)))
+	m.HandleFunc("DELETE /api/roster/turns/{id}", s.requireHouse(s.requireFeature("roster", s.deleteTurn)))
 	// Exit path: everything as one JSON document (steward only).
 	m.HandleFunc("GET /api/codex", s.requireHouse(s.listCodex))
 	m.HandleFunc("POST /api/codex", s.requireHouse(s.createCodexSection))
@@ -1319,7 +1328,7 @@ func (s *Server) updateAway(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) export(w http.ResponseWriter, r *http.Request) {
 	out := map[string]any{"exported_at": time.Now().UTC().Format(time.RFC3339)}
-	for _, t := range []string{"houses", "house_parcels", "house_homes", "posts", "events", "event_signups", "runs", "needs", "offers", "away", "tools", "wishes", "wish_wants", "wish_options", "comments", "projects", "project_tasks", "project_photos", "camp_takings", "codex_sections", "codex_texts", "contacts", "map_files", "site_files", "features"} {
+	for _, t := range []string{"houses", "house_parcels", "house_homes", "posts", "events", "event_signups", "runs", "needs", "offers", "away", "tools", "wishes", "wish_wants", "wish_options", "comments", "projects", "project_tasks", "project_photos", "camp_takings", "codex_sections", "codex_texts", "contacts", "roster_duties", "roster_turns", "map_files", "site_files", "features"} {
 		cols := "*"
 		switch t { // photos are bytes, not text — they stay in the SQLite backup
 		case "tools":
