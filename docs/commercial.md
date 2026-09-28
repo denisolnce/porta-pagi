@@ -255,7 +255,7 @@ rules the portal itself follows, because the buyer will check.
 
 | # | Section | Content |
 | --- | --- | --- |
-| 1 | Hero | The **demo** village's map, crests on parcels. The sentence above. Two buttons: **Walk through the demo** (primary), **Read what it refuses** (plain). Never the real village — see the rule under this table |
+| 1 | Hero | The **demo** village's map, crests on parcels. The sentence above. Two buttons: **Walk through the demo** (primary), **Read our promises** (plain; it was "Read what it refuses" until the owner found a second button that says no a poor second door, 2026-09-28). Never the real village — see the rule under this table |
 | 2 | The problem | Three lines of a fake WhatsApp group scrolling past: "Is anyone going to town?" … 40 messages … "sorry what was the answer". Then: "It was said once. Then it was gone." |
 | 3 | The nine rooms | One scroll, one screenshot each, one sentence each — lifted from `village.md`'s job table, which is already written in exactly the right voice |
 | 4 | **What this will never do, and what is yours to switch on** | Two lists. Never: ads, trackers, third-party scripts, public pages, anything sold inside the portal — the price is for the hosting, and it is on this page, not in the rooms. Off unless your village turns it on: a dues ledger, a duty roster with counts. The default is the village that built it. **This section is the differentiator and should be the longest on the page** |
