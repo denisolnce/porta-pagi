@@ -165,7 +165,7 @@ func TestFeedbackRefuses(t *testing.T) {
 	req.Header.Set("X-Forwarded-For", "198.51.100.7") // another phone: this one spent its own cap above
 	rec := httptest.NewRecorder()
 	srv.Handler().ServeHTTP(rec, req)
-	c.must(429, rec.Code, "over the village cap")
+	c.must(503, rec.Code, "over the village cap")
 	if out := buf.String(); !strings.Contains(out, "over 50 today") || !strings.Contains(out, "past the cap") {
 		t.Fatalf("village cap log:\n%s", out)
 	}

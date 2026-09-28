@@ -125,6 +125,13 @@ func (s *Server) listFeatures(w http.ResponseWriter, r *http.Request) {
 
 // putFeature: a steward flips one switch. {"on": true|false}.
 func (s *Server) putFeature(w http.ResponseWriter, r *http.Request) {
+	// The demo is one village for every visitor at once: a switch flipped
+	// by one would take a room from all the others until the hour. The page
+	// greys them out; this is the door behind it.
+	if s.switchesFixed {
+		writeErr(w, 403, "the demo keeps every switch on")
+		return
+	}
 	key := r.PathValue("key")
 	if _, ok := featureByKey(key); !ok {
 		writeErr(w, 404, "no such switch")

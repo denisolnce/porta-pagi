@@ -21,7 +21,7 @@ export function Feedback({ rooms }: { rooms: readonly Room[] }) {
   const [section, setSection] = useState("Something else");
   const [reply, setReply] = useState("");
   const [text, setText] = useState("");
-  const [state, setState] = useState<"" | "sending" | "sent" | "failed" | "busy" | "bad">("");
+  const [state, setState] = useState<"" | "sending" | "sent" | "failed" | "busy" | "full" | "bad">("");
 
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +32,7 @@ export function Feedback({ rooms }: { rooms: readonly Room[] }) {
     } catch (err) {
       // The words stay in the box: a failed send must not cost the villager them.
       const s = err instanceof ApiError ? err.status : 0;
-      setState(s === 429 ? "busy" : s === 400 ? "bad" : "failed");
+      setState(s === 429 ? "busy" : s === 503 ? "full" : s === 400 ? "bad" : "failed");
     }
   };
 
@@ -58,6 +58,7 @@ export function Feedback({ rooms }: { rooms: readonly Room[] }) {
           </label>
           {state === "failed" && <div className="err">{t("Could not send, try again later.")}</div>}
           {state === "busy" && <div className="err">{t("Too many messages, try again later.")}</div>}
+          {state === "full" && <div className="err">{t("The builder's mailbox is full for today. It did not go — try tomorrow.")}</div>}
           {state === "bad" && <div className="err">{t("Check the email address and the message.")}</div>}
           <div className="submit"><button className="primary" type="submit" disabled={state === "sending" || !text.trim()}>{state === "sending" ? t("Sending…") : `✉️ ${t("Send")}`}</button></div>
         </form>

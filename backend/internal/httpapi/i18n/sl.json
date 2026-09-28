@@ -535,5 +535,8 @@
   " makes the run an order: ": " naredi iz vožnje naročilo: ",
   "Every house loses this room until a steward switches it back on. Nothing in it is deleted.": "Vse hiše izgubijo to sobo, dokler je oskrbnik spet ne vklopi. Nič v njej se ne izbriše.",
   "In the demo every switch stays on, so every visitor sees every room.": "V predstavitvi ostanejo vsa stikala vklopljena, da vsak obiskovalec vidi vse sobe.",
-  "The export is under ⚙️ in the top bar.": "Izvoz je pod ⚙️ v zgornji vrstici."
+  "The export is under ⚙️ in the top bar.": "Izvoz je pod ⚙️ v zgornji vrstici.",
+  "Forgive what a house that has left still owes on this due?": "Odpustiti, kar hiša, ki je odšla, še dolguje pri tem prispevku?",
+  "Forgive": "Odpusti",
+  "The builder's mailbox is full for today. It did not go — try tomorrow.": "Poštni predal graditelja je za danes poln. Ni šlo — poskusi jutri."
 }

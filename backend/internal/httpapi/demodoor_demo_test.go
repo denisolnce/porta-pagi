@@ -58,3 +58,27 @@ func TestDemoDoor(t *testing.T) {
 		t.Fatal("the page does not say it is the demo")
 	}
 }
+
+// TestDemoSwitchesFixed (demo build only): one village for every visitor,
+// so no visitor — the steward's house included — flips a switch.
+func TestDemoSwitchesFixed(t *testing.T) {
+	st, err := store.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	srv := New(st, config.Config{Languages: []string{"pt", "en"}, VillageName: "Sobreiro Torto"})
+	if err := srv.SeedDemo(time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	rec := httptest.NewRecorder()
+	srv.Handler().ServeHTTP(rec, httptest.NewRequest("POST", "/api/demo/enter", strings.NewReader(`{"id":1}`)))
+	tok := strings.Split(strings.Split(rec.Body.String(), `"token":"`)[1], `"`)[0]
+	rec = httptest.NewRecorder()
+	req := httptest.NewRequest("PUT", "/api/features/camp", strings.NewReader(`{"on":false}`))
+	req.Header.Set("Authorization", "Bearer "+tok)
+	srv.Handler().ServeHTTP(rec, req)
+	if rec.Code != 403 || !srv.feature(t.Context(), "camp") {
+		t.Fatalf("the steward's house switched the demo's campground off: %d", rec.Code)
+	}
+}

@@ -11,7 +11,7 @@ import { Crest, Empty, When, parse, stamp, useList } from "./shared";
 // against expected, and never a house's sum across dues. The portal records;
 // it moves no money, so there is no field for an account or a link.
 
-type Owed = { house_id: number | null; name: string | null; crest: string | null; color: string | null; paid_at: string | null; paid_by_name: string | null };
+type Owed = { row_id: number; house_id: number | null; name: string | null; crest: string | null; color: string | null; paid_at: string | null; paid_by_name: string | null };
 type Due = {
   id: number; title: string; amount_cents: number | null; currency: string; due_on: string | null; notes: string;
   collector_id: number | null; collector_name: string | null; collector_crest: string | null; collector_color: string | null;
@@ -56,6 +56,7 @@ export function Dues({ me, houses }: { me: Me; houses: House[] }) {
     setEditing(d.id); setAdding(false); setErr("");
   };
   const mark = (d: Due, o: Owed, paid: boolean) => api(`/dues/${d.id}/houses/${o.house_id}`, { method: "PUT", body: { paid } }).then(reload);
+  const settle = (d: Due, o: Owed, method: "PUT" | "DELETE", paid?: boolean) => api(`/dues/${d.id}/rows/${o.row_id}`, { method, body: method === "PUT" ? { paid } : undefined }).then(reload);
   const del = (d: Due) => confirm(d.title + " — " + t("the due and who paid it. Only last night’s backup can bring it back.")) && api(`/dues/${d.id}`, { method: "DELETE" }).then(reload);
 
   const form = (
@@ -118,6 +119,14 @@ export function Dues({ me, houses }: { me: Me; houses: House[] }) {
                 {collects && o.house_id != null && (o.paid_at
                   ? <button className="lesser" onClick={() => mark(d, o, false)}>{t("Undo")}</button>
                   : <button className="lesser" onClick={() => mark(d, o, true)}>✓ {t("Mark paid")}</button>)}
+                {/* A house that has left: paid at the door, or forgiven — by
+                    the collector's hand, never by deleting the house. */}
+                {collects && o.house_id == null && (o.paid_at
+                  ? <button className="lesser" onClick={() => settle(d, o, "PUT", false)}>{t("Undo")}</button>
+                  : <>
+                    <button className="lesser" onClick={() => settle(d, o, "PUT", true)}>✓ {t("Mark paid")}</button>
+                    <button className="ghost" onClick={() => confirm(t("Forgive what a house that has left still owes on this due?")) && settle(d, o, "DELETE")}>{t("Forgive")}</button>
+                  </>)}
               </li>
             ))}
           </ul>

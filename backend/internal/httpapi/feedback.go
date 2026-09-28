@@ -69,7 +69,8 @@ func (s *Server) feedback(w http.ResponseWriter, r *http.Request) {
 		// Over the village's daily cap: the log keeps the words, the Resend
 		// quota is spared, and the house is told the truth — it did not go.
 		log.Printf("FEEDBACK (not emailed: over 50 today) subject=%q reply_to=%q\n%s", msg.Subject, msg.ReplyTo, msg.Text)
-		writeErr(w, http.StatusTooManyRequests, "the builder's mailbox is full for today, try tomorrow")
+		// 503, not 429: this house sent nothing too many; the day is full.
+		writeErr(w, http.StatusServiceUnavailable, "the builder's mailbox is full for today, try tomorrow")
 		return
 	}
 	why := ""

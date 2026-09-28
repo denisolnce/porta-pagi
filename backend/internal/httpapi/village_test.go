@@ -39,6 +39,8 @@ func newVillage(t *testing.T) (*Server, *fakeSender, *client, *client) {
 	srv := New(st, config.Config{BootstrapCode: "x", VillageName: "Testna Vas", Languages: []string{"sl", "en"}})
 	srv.send = fake
 	srv.now = func() time.Time { return time.Date(2026, 9, 4, 10, 0, 0, 0, time.Local) }
+	// Tests flip switches in both builds; the demo's lock has its own test.
+	srv.switchesFixed = false
 	h := srv.Handler()
 	steward := &client{t: t, h: h}
 	_, obj, _ := steward.do("POST", "/api/bootstrap", map[string]any{"code": "x", "name": "S"})

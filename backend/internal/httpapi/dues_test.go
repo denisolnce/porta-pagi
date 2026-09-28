@@ -160,6 +160,29 @@ func TestDuesLedger(t *testing.T) {
 	if rub = dueByTitle(t, steward, "Smeti"); rub["owed"] != 2.0 {
 		t.Fatalf("an edit dropped the departed house's debt: %v", rub)
 	}
+	// The collector settles it by the row's own id: paid at the door, or forgiven.
+	var gone string
+	for _, o := range rub["houses"].([]any) {
+		if row := o.(map[string]any); row["house_id"] == nil {
+			gone = fmt.Sprint(row["row_id"])
+		}
+	}
+	if gone == "" {
+		t.Fatalf("no nameless row on Smeti: %v", rub["houses"])
+	}
+	rows := "/api/dues/" + fmt.Sprint(rub["id"]) + "/rows/" + gone
+	volk.must(403, first(volk.do("PUT", rows, map[string]any{"paid": true})), "a house that does not collect")
+	steward.must(204, first(steward.do("PUT", rows, map[string]any{"paid": true})), "paid at the door")
+	if rub = dueByTitle(t, steward, "Smeti"); rub["paid"] != 1.0 {
+		t.Fatalf("the departed house's payment: %v", rub)
+	}
+	steward.must(409, first(steward.do("DELETE", rows, nil)), "forgive money already paid")
+	steward.must(204, first(steward.do("PUT", rows, map[string]any{"paid": false})), "undo")
+	steward.must(204, first(steward.do("DELETE", rows, nil)), "forgive")
+	if rub = dueByTitle(t, steward, "Smeti"); rub["owed"] != 1.0 || rub["paid"] != 0.0 {
+		t.Fatalf("after forgiving: %v", rub)
+	}
+	steward.must(404, first(steward.do("DELETE", "/api/dues/"+fmt.Sprint(rub["id"])+"/rows/"+fmt.Sprint(owedRow(rub, sID)["row_id"]), nil)), "a named row is not settled this way")
 
 	// The export carries the ledger.
 	_, exp, _ := steward.do("GET", "/api/export", nil)

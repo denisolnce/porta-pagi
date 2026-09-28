@@ -535,5 +535,8 @@
   " makes the run an order: ": " passa a viagem a encomenda: ",
   "Every house loses this room until a steward switches it back on. Nothing in it is deleted.": "Todas as casas deixam de ver esta sala até um zelador a voltar a ligar. Nada do que lá está é apagado.",
   "In the demo every switch stays on, so every visitor sees every room.": "Na demonstração todos os interruptores ficam ligados, para que cada visitante veja todas as salas.",
-  "The export is under ⚙️ in the top bar.": "A exportação está em ⚙️ na barra de cima."
+  "The export is under ⚙️ in the top bar.": "A exportação está em ⚙️ na barra de cima.",
+  "Forgive what a house that has left still owes on this due?": "Perdoar o que uma casa que já partiu ainda deve nesta quota?",
+  "Forgive": "Perdoar",
+  "The builder's mailbox is full for today. It did not go — try tomorrow.": "A caixa de correio de quem faz o portal está cheia por hoje. Não foi enviada — tente amanhã."
 }

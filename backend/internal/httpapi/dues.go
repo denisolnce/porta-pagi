@@ -44,7 +44,7 @@ func (s *Server) listDues(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// A departed house's paid row has no name and sorts last.
-	owed, err := s.st.Rows(ctx, `SELECT o.due_id, o.house_id, o.paid_at, o.paid_by, h.name, h.crest, h.color, b.name AS paid_by_name
+	owed, err := s.st.Rows(ctx, `SELECT o.id AS row_id, o.due_id, o.house_id, o.paid_at, o.paid_by, h.name, h.crest, h.color, b.name AS paid_by_name
 		FROM dues_owed o LEFT JOIN houses h ON h.id=o.house_id LEFT JOIN houses b ON b.id=o.paid_by
 		ORDER BY o.house_id IS NULL, h.name COLLATE NOCASE`)
 	if err != nil {
@@ -428,6 +428,78 @@ func (s *Server) markDue(w http.ResponseWriter, r *http.Request) {
 	args := []any{h.ID, id, hid}
 	if !paid {
 		q, args = `UPDATE dues_owed SET paid_at=NULL, paid_by=NULL WHERE due_id=? AND house_id=?`, []any{id, hid}
+	}
+	if _, err := s.st.Exec(r.Context(), q, args...); err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(204)
+}
+
+// settleLeft: a row whose house has left, by the row's own id — the house
+// is gone, so the house route cannot name it. PUT {"paid": true|false}
+// marks it as markDue marks a named row (the household paid at the door on
+// its way out); DELETE forgives an unpaid one, the collector's or a
+// steward's deliberate act, never a side effect of deleting the house.
+func (s *Server) settleLeft(w http.ResponseWriter, r *http.Request) {
+	h := houseFrom(r)
+	id, err := pathID(r)
+	if err != nil {
+		writeErr(w, 400, "bad id")
+		return
+	}
+	rowID, err := strconv.ParseInt(r.PathValue("row"), 10, 64)
+	if err != nil {
+		writeErr(w, 400, "bad row id")
+		return
+	}
+	due, err := s.st.One(r.Context(), `SELECT collector_id FROM dues WHERE id=?`, id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	if due == nil {
+		writeErr(w, 404, "not found")
+		return
+	}
+	if c, ok := due["collector_id"].(int64); !h.IsSteward && (!ok || c != h.ID) {
+		writeErr(w, 403, "the house that collects it, or a steward")
+		return
+	}
+	row, err := s.st.One(r.Context(), `SELECT paid_at FROM dues_owed WHERE id=? AND due_id=? AND house_id IS NULL`, rowID, id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	if row == nil {
+		writeErr(w, 404, "no row of a house that has left")
+		return
+	}
+	if r.Method == http.MethodDelete {
+		if row["paid_at"] != nil {
+			writeErr(w, 409, "paid money stays in the ledger; mark it unpaid first")
+			return
+		}
+		if _, err := s.st.Exec(r.Context(), `DELETE FROM dues_owed WHERE id=?`, rowID); err != nil {
+			fail(w, err)
+			return
+		}
+		w.WriteHeader(204)
+		return
+	}
+	m, err := readJSON(r)
+	if err != nil {
+		writeErr(w, 400, "bad json")
+		return
+	}
+	paid, ok := m["paid"].(bool)
+	if !ok {
+		writeErr(w, 400, "paid must be true or false")
+		return
+	}
+	q, args := `UPDATE dues_owed SET paid_at=datetime('now'), paid_by=? WHERE id=? AND paid_at IS NULL`, []any{h.ID, rowID}
+	if !paid {
+		q, args = `UPDATE dues_owed SET paid_at=NULL, paid_by=NULL WHERE id=?`, []any{rowID}
 	}
 	if _, err := s.st.Exec(r.Context(), q, args...); err != nil {
 		fail(w, err)

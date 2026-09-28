@@ -33,6 +33,9 @@ type Server struct {
 
 	// the feedback email (feedback.go); nil = Resend, tests inject a fake
 	mail func(context.Context, mailer.Message) error
+	// switchesFixed: the demo build keeps every switch as seeded (features.go);
+	// tests release it to flip switches in both builds.
+	switchesFixed bool
 }
 
 func New(st *store.Store, cfg config.Config) *Server {
@@ -185,6 +188,9 @@ func (s *Server) routes() {
 	m.HandleFunc("PUT /api/dues/{id}", s.requireHouse(s.requireFeature("dues", s.updateDue)))
 	m.HandleFunc("DELETE /api/dues/{id}", s.requireHouse(s.requireFeature("dues", s.deleteDue)))
 	m.HandleFunc("PUT /api/dues/{id}/houses/{house_id}", s.requireHouse(s.requireFeature("dues", s.markDue)))
+	// A row whose house has left: marked or forgiven by its own id.
+	m.HandleFunc("PUT /api/dues/{id}/rows/{row}", s.requireHouse(s.requireFeature("dues", s.settleLeft)))
+	m.HandleFunc("DELETE /api/dues/{id}/rows/{row}", s.requireHouse(s.requireFeature("dues", s.settleLeft)))
 	// Exit path: everything as one JSON document (steward only).
 	m.HandleFunc("GET /api/codex", s.requireHouse(s.listCodex))
 	m.HandleFunc("POST /api/codex", s.requireHouse(s.createCodexSection))
