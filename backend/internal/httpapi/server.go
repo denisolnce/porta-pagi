@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/dennislapchenko/porta-pagi/backend/internal/config"
+	"github.com/dennislapchenko/porta-pagi/backend/internal/mailer"
 	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
 )
 
@@ -29,6 +30,9 @@ type Server struct {
 
 	tries  *limiter // per-IP cap on code guessing
 	misses *counter // village-wide wrong-code counter, burns live pairing codes
+
+	// the feedback email (feedback.go); nil = Resend, tests inject a fake
+	mail func(context.Context, mailer.Message) error
 }
 
 func New(st *store.Store, cfg config.Config) *Server {
@@ -171,6 +175,8 @@ func (s *Server) routes() {
 	m.HandleFunc("DELETE /api/codex/{id}", s.requireSteward(s.deleteCodexSection))
 
 	m.HandleFunc("GET /api/export", s.requireSteward(s.export))
+	// Feedback to the builder (feedback.go): emailed or logged, never stored.
+	m.HandleFunc("POST /api/feedback", s.requireHouse(s.feedback))
 	// Everything that is not /api/ is the frontend (static.go). An unknown /api
 	// path must stay a 404 — the SPA shell answering 200 hides a typo forever.
 	m.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) { writeErr(w, 404, "no such endpoint") })

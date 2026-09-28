@@ -368,6 +368,8 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
 - **No secrets in this repo, and none needed.** The first steward code is
   generated on first boot and printed to the container log. The VAPID key pair
   for web push is generated on first use and kept in the `settings` table.
+  The one secret a village may add, `RESEND_API_KEY`, is optional and lives in
+  the deploy's environment: without it feedback goes to the log.
 - **Push is opt-in per phone, filtered per house, mutable village-wide.** A
   phone may register only an `https://` endpoint on a dotted hostname —
   the backend POSTs to whatever it is given, and what actually keeps it off a
@@ -599,8 +601,25 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   panel still loads. The file is gitignored and served `no-cache`. Commit
   subjects are what a villager reads there, in English — write them for that
   reader. **Where it lives**: a chip row mirrored at the foot of Home, under
-  the buildings, seen only by whoever scrolls down; its one chip toggles the
-  panel, per device, off by default.
+  the buildings, seen only by whoever scrolls down; its chips — 🔨 Changelog
+  and ✉️ Feedback — open one panel at a time under the row, per device, off
+  by default.
+- **Feedback goes to the builder, never into the database.** `POST
+  /api/feedback` (`feedback.go`), any house: a section (the rooms Home shows,
+  Map, Codex, Notifications, Something else — the English name travels), the
+  text (1–4000 characters) and an optional reply address, which becomes the
+  email's `reply_to` and is used for nothing else. With `RESEND_API_KEY` and
+  `FEEDBACK_TO` set it is emailed through Resend (`internal/mailer`, stdlib,
+  the shape of truetothebook's client, no retry); without them the whole
+  message is written to the server log under `FEEDBACK` and the house is told
+  it went, so a village or the demo loses nothing before email is wired. A
+  failed send is a 502 the page shows as "try again later", and the message
+  is logged with the cause. The demo hands anyone a house, so the door is
+  public there: 5 per IP per hour, and past 50 a day village-wide a message
+  is logged instead of emailed, so a script can neither spend the Resend
+  account's quota nor shut the door on the houses. The reply address
+  and the text leave for Resend, a processor — the privacy note owes a line
+  (`docs/later.md`).
 
 ## Layout
 
@@ -615,6 +634,7 @@ frontend/public/    manifest.webmanifest, sw.js (push only, no caching), icons, 
                     (an emoji glyph renders off-centre and monochrome — do not go back to one)
                     src/push.ts, src/Install.tsx, src/AddPhone.tsx, src/photo.ts (auth'd photo fetch + browser-side shrink)
 backend/internal/httpapi/codex.go  the codex: four routes and the one-time stdin import
+backend/internal/httpapi/feedback.go  the feedback door; internal/mailer = one Resend POST, stdlib; frontend src/Feedback.tsx is its form
 backend/internal/httpapi/i18n.go   tr() for push texts and the manifest's line, off i18n/<lang>.json — the dictionaries the page imports too (@i18n alias);
                     i18n_test.go refuses a translation whose verbs, end spaces or leading icon differ from its key
 backend/internal/httpapi/contacts.go  the phone book: four routes, and the one place a type's spelling is settled

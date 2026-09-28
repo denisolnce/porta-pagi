@@ -430,5 +430,21 @@
   "This is a demo village. Nobody lives here; pick a house and walk in as them.": "Esta é uma aldeia de demonstração. Ninguém vive aqui; escolha uma casa e entre como ela.",
   "Everything you change is wiped on the hour.": "Tudo o que mudar é apagado à hora certa.",
   "Added": "Adicionado em",
-  "Updated": "Atualizado em"
+  "Updated": "Atualizado em",
+  "Feedback": "Sugestões",
+  "to whoever builds the portal": "para quem constrói o portal",
+  "It goes to whoever builds the portal, not to the village.": "Vai para quem constrói o portal, não para a aldeia.",
+  "About": "Assunto",
+  "Something else": "Outra coisa",
+  "Your email (optional)": "O seu email (opcional)",
+  "Only used to answer this message.": "Só é usado para responder a esta mensagem.",
+  "Message": "Mensagem",
+  "what is wrong, what is missing, what you would change": "o que está mal, o que falta, o que mudaria",
+  "Send": "Enviar",
+  "Sending…": "A enviar…",
+  "Sent. Thank you.": "Enviado. Obrigado.",
+  "Write another": "Nova mensagem",
+  "Could not send, try again later.": "Não foi possível enviar, tente mais tarde.",
+  "Too many messages, try again later.": "Demasiadas mensagens, tente mais tarde.",
+  "Check the email address and the message.": "Verifique o endereço de email e a mensagem."
 }
