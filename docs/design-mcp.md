@@ -138,6 +138,10 @@ push (a key must not mint keys), no `PUT /api/houses/{id}` (rename, crest,
 colour, the map mark: a house does that itself, once), no steward route. With
 the fence, this table is not a menu: **what is not here, a key cannot do**.
 46 tools; `TestMCPSurface` pins the count so a change is a visible decision.
+A tool of a room behind a switch carries its `Feature` (the campground's
+three carry `camp`): while the switch is off the tool is neither listed nor
+callable, as absent as the room's routes, and the count is of the table, not
+of what one village sees.
 
 | Tool | Route | Notes the description carries |
 | --- | --- | --- |
@@ -199,8 +203,8 @@ for the privacy note as before.
 
 ## The Houses room
 
-At the foot of *Your house*, the `.actions` row holds `📦 Export everything`
-(stewards), `Log out on this device`, and now **`+ MCP key`** on the right,
+At the foot of *Your house*, the `.actions` row holds `Log out on this
+device` and **`+ MCP key`** on the right,
 plain weight — the card is not for it (not `primary`), it is not an inner
 addition (not `lesser`), it is not a dismissal (not `ghost`).
 

@@ -105,6 +105,9 @@ label { display: block; font-size: .9rem; color: var(--ink2); margin-top: .5rem;
    shrinks the pair below its content and stacks them, while the house name
    beside it has whole lines to give. */
 .topbar .lang { flex: none; white-space: nowrap; }
+/* The steward's door to the village settings: one glyph, never a word, so the
+   bar keeps its one line on a phone. */
+.topbar .gear { flex: none; text-decoration: none; font-size: 1.1rem; line-height: 1; }
 .topbar .lang button { padding: .1rem .5rem; font-size: .85rem; }
 
 main { flex: 1; max-width: 1100px; width: 100%; margin: 0 auto; padding: 1rem 1rem 6rem; }
@@ -346,7 +349,8 @@ a.card:hover { background: #fff8e4; }
 .kind.muted-global { color: var(--ink3); }
 /* A single switch inside a two-column grid of kinds: let it have the row. */
 .kind.wide { grid-column: 1 / -1; }
-.kinds.global { border-top: 1px dashed var(--parch3); padding-top: .5rem; }
+/* A switch on the settings page: the line, then who flipped it and when. */
+.kind.switch { flex-wrap: wrap; justify-content: space-between; gap: .1rem .8rem; }
 .gate h2 { justify-content: center; }
 .bottomnav { position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(var(--wood2), var(--wood)); border-top: 3px solid #1a100a; display: flex; justify-content: space-around; padding: .3rem 0 calc(.3rem + env(safe-area-inset-bottom)); z-index: 5; }
 .bottomnav a { color: var(--parch2); text-decoration: none; text-align: center; font-size: .68rem; font-family: "IM Fell English", serif; flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }

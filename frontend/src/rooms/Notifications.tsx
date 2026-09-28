@@ -3,9 +3,15 @@ import { api } from "../api";
 import { useT } from "../i18n";
 import { disablePush, enablePush, pushState, type PushState } from "../push";
 
+// The push kinds in the house's words. The backend sends only the kinds this
+// village offers — a switched-off feature's kind is not in the list.
+export const KIND_LABELS: Record<string, string> = { posts: "Tavern posts", needs: "Needs", offers: "Give-aways", runs: "Runs to town", events: "Events", away: "Away notices", tools: "Tool shed", projects: "Projects", camp: "Campground" };
+
 // Notifications: this phone on/off, and the house-wide list of kinds. All kinds
 // are on until a house switches one off (the backend stores only the off list).
-export function Notifications({ steward }: { steward: boolean }) {
+// What a steward muted for the whole village shows here, with who and when;
+// the steward's lever itself is on the settings page (Settings.tsx).
+export function Notifications() {
   const { t, lang } = useT();
   const [state, setState] = useState<PushState>("off");
   const [prefs, setPrefs] = useState<{ off: string[]; global_off: string[]; global_detail: { kind: string; set_by: string | null; set_at: string }[]; kinds: string[]; phones: number; quiet_ok: boolean } | null>(null);
@@ -14,13 +20,6 @@ export function Notifications({ steward }: { steward: boolean }) {
   const load = () => api<any>("/me/prefs").then(setPrefs).catch(() => {});
   useEffect(() => { pushState().then(setState); load(); }, []);
 
-  // Steward lever: one switch mutes a kind for every house in the village.
-  const toggleGlobal = async (k: string) => {
-    if (!prefs) return;
-    const off = prefs.global_off.includes(k) ? prefs.global_off.filter((x) => x !== k) : [...prefs.global_off, k];
-    setPrefs({ ...prefs, global_off: off });
-    await api("/prefs/global", { method: "PUT", body: { off } });
-  };
   // Quiet hours are the only device-scoped preference: the phone that rings at
   // 23:00 belongs to a person, not to the house.
   const toggleQuiet = async () => {
@@ -39,7 +38,7 @@ export function Notifications({ steward }: { steward: boolean }) {
     setBusy(true);
     try { setState(await (state === "on" ? disablePush() : enablePush(lang))); await load(); } finally { setBusy(false); }
   };
-  const labels: Record<string, string> = { posts: "Tavern posts", needs: "Needs", offers: "Give-aways", runs: "Runs to town", events: "Events", away: "Away notices", tools: "Tool shed", projects: "Projects", camp: "Campground" };
+  const labels = KIND_LABELS;
 
   return (
     <>
@@ -68,14 +67,6 @@ export function Notifications({ steward }: { steward: boolean }) {
         </div>
       )}
       {prefs && prefs.global_off.length > 0 && <div className="small">🔇 {prefs.global_detail.map((d) => `${t(labels[d.kind] || d.kind)}: ${d.set_by || "?"} · ${d.set_at.slice(0, 10)}`).join(" · ")}</div>}
-      {prefs && steward && (
-        <div className="kinds global">
-          <div className="small">🗝️ {t("Village-wide (steward): kinds switched off here reach nobody, whatever each house chose.")}</div>
-          {prefs.kinds.map((k) => (
-            <label key={k} className="kind"><input type="checkbox" checked={!prefs.global_off.includes(k)} onChange={() => toggleGlobal(k)} /> {t(labels[k] || k)}</label>
-          ))}
-        </div>
-      )}
     </>
   );
 }

@@ -56,7 +56,11 @@ func mintKey(t *testing.T, c *client, label string) (string, string) {
 // TestMCPFlow: a house mints a key, the agent initialises, lists the tools,
 // creates an event, and the phone sees it with the house's own yes on it.
 func TestMCPFlow(t *testing.T) {
-	srv, _, _, volk := newVillage(t)
+	srv, _, steward, volk := newVillage(t)
+	// Every switch on, so the list below is the whole table.
+	for _, f := range Features {
+		switchOn(t, steward, f.Key)
+	}
 	key, _ := mintKey(t, volk, "Claude on a laptop")
 
 	code, out := rpc(t, srv, key, "initialize", map[string]any{"protocolVersion": "2025-06-18", "capabilities": map[string]any{}, "clientInfo": map[string]any{"name": "t"}})
@@ -225,7 +229,11 @@ func TestMCPFence(t *testing.T) {
 // delete, no device, pairing, push or house write, no steward route; and every
 // tool reaches a registered route.
 func TestMCPSurface(t *testing.T) {
-	srv, _, _, volk := newVillage(t)
+	srv, _, steward, volk := newVillage(t)
+	// Every switch on: the whole table is reachable, as in the demo.
+	for _, f := range Features {
+		switchOn(t, steward, f.Key)
+	}
 	key, _ := mintKey(t, volk, "agent")
 	want := map[string]bool{"list_away": true, "create_away": true, "update_away": true, "list_camp": true, "create_camp": true, "update_camp": true, "list_contacts": true, "create_contact": true, "update_contact": true, "add_project_photo": true, "whoami": true, "weather": true}
 	seen := map[string]bool{}
@@ -241,6 +249,9 @@ func TestMCPSurface(t *testing.T) {
 		}
 		if tl.Path == "/api/houses" && tl.Method != "GET" {
 			t.Fatalf("%s writes houses", tl.Name)
+		}
+		if _, ok := featureByKey(tl.Feature); tl.Feature != "" && !ok {
+			t.Fatalf("%s belongs to a switch that does not exist: %q", tl.Name, tl.Feature)
 		}
 		if strings.Contains(tl.Path, "/photo") && !tl.Image {
 			t.Fatalf("%s carries bytes without the image flag", tl.Name)
@@ -319,6 +330,7 @@ func TestMCPKeyLifecycle(t *testing.T) {
 // thread, becomes a watcher, and walks a camper's stay.
 func TestMCPWatchtowerAndCamp(t *testing.T) {
 	srv, _, steward, volk := newVillage(t)
+	switchOn(t, steward, "camp")
 	key, _ := mintKey(t, volk, "agent")
 	_, away, _ := steward.do("POST", "/api/away", map[string]any{"from_date": "2026-09-10", "to_date": "2026-09-14", "notes": "kokoši"})
 	id := away["id"]

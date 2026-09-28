@@ -153,11 +153,12 @@ func (s *Server) routes() {
 	m.HandleFunc("GET /api/map", s.requireHouse(s.listMap))
 	m.HandleFunc("GET /api/map/{name}", s.requireHouse(s.getMap))
 	m.HandleFunc("DELETE /api/photos/{id}", s.requireHouse(s.deleteProjectPhoto))
-	// Campground
-	m.HandleFunc("GET /api/camp", s.requireHouse(s.listCamp))
-	m.HandleFunc("POST /api/camp", s.requireHouse(s.createCamp))
-	m.HandleFunc("PUT /api/camp/{id}", s.requireHouse(s.updateCamp))
-	m.HandleFunc("DELETE /api/camp/{id}", s.requireHouse(s.deleteRow("camp_takings")))
+	// Campground — a switch (features.go): off, every route here is a 404.
+	// The house check runs first, so a key still meets the MCP fence, not a 404.
+	m.HandleFunc("GET /api/camp", s.requireHouse(s.requireFeature("camp", s.listCamp)))
+	m.HandleFunc("POST /api/camp", s.requireHouse(s.requireFeature("camp", s.createCamp)))
+	m.HandleFunc("PUT /api/camp/{id}", s.requireHouse(s.requireFeature("camp", s.updateCamp)))
+	m.HandleFunc("DELETE /api/camp/{id}", s.requireHouse(s.requireFeature("camp", s.deleteRow("camp_takings"))))
 	// Contacts (contacts.go): the village's phone book. Any house corrects a
 	// number; the house that added it, or a steward, takes one away.
 	m.HandleFunc("GET /api/contacts", s.requireHouse(s.listContacts))
