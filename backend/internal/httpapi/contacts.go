@@ -19,11 +19,11 @@ import (
 var contactFields = []string{"name", "phone", "notes", "type"}
 
 func (s *Server) listContacts(w http.ResponseWriter, r *http.Request) {
-	// Untyped last: a row with no type wears no pill saying what it is, so it
-	// is the one the eye should meet after the named ones, not before. Then by
-	// type, so like sits with like, then by name inside it. A type beginning
-	// with Č or Š sorts after Z, which moves that block of rows and splits
-	// nothing.
+	// By name, like a phone book. The page sorts again with the collator of its
+	// own language and files the names under their letters — COLLATE NOCASE
+	// folds A–Z only, so here a Č sorts after Z; this order is the one an
+	// agent reads. created_at and edited_at come with the row: the card says
+	// when a number was written down or last corrected.
 	//
 	// The house that wrote a number down is an id and no more: the card does
 	// not name it, so neither the page nor an agent is handed its name, crest
@@ -31,7 +31,7 @@ func (s *Server) listContacts(w http.ResponseWriter, r *http.Request) {
 	rows, err := s.st.Rows(r.Context(), `SELECT c.*, ed.name AS edited_by_name,
 		(SELECT count(*) FROM comments m WHERE m.subject='contact' AND m.subject_id=c.id) AS comments
 		FROM contacts c LEFT JOIN houses ed ON ed.id=c.edited_by
-		ORDER BY c.type='', c.type COLLATE NOCASE, c.name COLLATE NOCASE`)
+		ORDER BY c.name COLLATE NOCASE, c.id`)
 	if err != nil {
 		fail(w, err)
 		return
