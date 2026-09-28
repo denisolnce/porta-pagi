@@ -17,7 +17,7 @@ survived.
 
 ## Navigation options
 
-The bar gives each item about 60 px. Home already renders every `ROOMS` entry, `nav: false` included (`App.tsx` `Home`).
+The bar gives each item about 60 px. Home already renders every `ROOMS` entry, `nav: false` included (`App.tsx` `Home`) — every one whose switch is on: an entry with a `feature` (the Campground's is `camp`) is absent from Home, the bar and the routes while that switch is off.
 
 | Option | What the villager sees | Taps to a room | What breaks | Verdict |
 | --- | --- | --- | --- | --- |

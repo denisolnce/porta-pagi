@@ -53,6 +53,10 @@ type mcpTool struct {
 	Method, Path string
 	Schema       map[string]any
 	Image        bool // body is base64 `data` with `content_type`, not JSON
+	// Feature is the switch the tool belongs to (features.go), "" for none.
+	// While it is off the tool is neither listed nor callable: absent, the
+	// same as its routes.
+	Feature string
 }
 
 // The two clocks, said once here and pointed at from every time field.
@@ -154,10 +158,10 @@ var mcpTools = []mcpTool{
 		Schema: schema([]string{"project_id", "data", "content_type"}, map[string]any{"project_id": prop("integer", ""), "data": prop("string", "The image, base64 (standard alphabet, with or without padding)"), "content_type": prop("string", "image/jpeg, image/png or image/webp")})},
 
 	// Campground
-	{Name: "list_camp", Desc: "Camper stays at the village parking: arrived (a house noticed), held (a house has the money), handed (it reached the box). One row is one stay. There is no amount and no total; the cash box is the ledger.", Method: "GET", Path: "/api/camp", Schema: schema(nil, map[string]any{})},
-	{Name: "create_camp", Desc: "A camper arrived. One row is one camper's stay; there is no amount and no total. Do not put a licence plate or a nationality in the label — \"grey camper\" is enough. have_money=true means your house already has the cash, and the row lands as handed. Rings the other houses.", Method: "POST", Path: "/api/camp",
+	{Name: "list_camp", Feature: "camp", Desc: "Camper stays at the village parking: arrived (a house noticed), held (a house has the money), handed (it reached the box). One row is one stay. There is no amount and no total; the cash box is the ledger.", Method: "GET", Path: "/api/camp", Schema: schema(nil, map[string]any{})},
+	{Name: "create_camp", Feature: "camp", Desc: "A camper arrived. One row is one camper's stay; there is no amount and no total. Do not put a licence plate or a nationality in the label — \"grey camper\" is enough. have_money=true means your house already has the cash, and the row lands as handed. Rings the other houses.", Method: "POST", Path: "/api/camp",
 		Schema: schema(nil, map[string]any{"from_who": prop("string", "Optional label for the camper, e.g. grey camper — no plate, no nationality"), "notes": prop("string", "Optional"), "taken_on": prop("string", "Optional, YYYY-MM-DD; default today"), "have_money": prop("boolean", "Your house already holds the cash")})},
-	{Name: "update_camp", Desc: "claim=true: your house has the money (from arrived; the others hear, so nobody collects twice). state=handed: it reached the box (the holder). state=held: back from handed (the holder). notes: the noticer or the holder edits.", Method: "PUT", Path: "/api/camp/{id}",
+	{Name: "update_camp", Feature: "camp", Desc: "claim=true: your house has the money (from arrived; the others hear, so nobody collects twice). state=handed: it reached the box (the holder). state=held: back from handed (the holder). notes: the noticer or the holder edits.", Method: "PUT", Path: "/api/camp/{id}",
 		Schema: schema([]string{"id"}, map[string]any{"id": idProp, "claim": prop("boolean", ""), "state": prop("string", "handed or held"), "notes": prop("string", "")})},
 
 	// Contacts: the village phone book. Owner's decision 2026-09-10, the same
@@ -290,6 +294,9 @@ func (s *Server) mcp(w http.ResponseWriter, r *http.Request) {
 	case "tools/list":
 		list := make([]map[string]any, 0, len(mcpTools))
 		for _, t := range mcpTools {
+			if t.Feature != "" && !s.feature(r.Context(), t.Feature) {
+				continue
+			}
 			list = append(list, map[string]any{"name": t.Name, "description": t.Desc, "inputSchema": t.Schema})
 		}
 		rpcReply(w, req.ID, map[string]any{"tools": list}, nil)
@@ -303,7 +310,7 @@ func (s *Server) mcp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		tool := mcpToolByName(p.Name)
-		if tool == nil {
+		if tool == nil || (tool.Feature != "" && !s.feature(r.Context(), tool.Feature)) {
 			rpcReply(w, req.ID, nil, &rpcError{-32602, "no such tool: " + p.Name})
 			return
 		}

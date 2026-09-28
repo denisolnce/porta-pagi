@@ -678,6 +678,7 @@ func TestProjects(t *testing.T) {
 // (village hears), hands it over; a tick on arrival lands straight in handed.
 func TestCamp(t *testing.T) {
 	_, fake, steward, volk := newVillage(t)
+	switchOn(t, steward, "camp")
 	code, _, _ := steward.do("POST", "/api/push/subscribe", map[string]any{"endpoint": "https://push.example/s", "lang": "sl", "keys": map[string]any{"p256dh": "p", "auth": "a"}})
 	steward.must(204, code, "subscribe")
 	code, obj, _ := volk.do("POST", "/api/camp", map[string]any{"notes": "siv kamper"})

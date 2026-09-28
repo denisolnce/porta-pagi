@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Children, isValidElement, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { Link, NavLink, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { api, ApiError, getToken, setToken, type House, type Me } from "./api";
 import { syncPushLang } from "./push";
@@ -13,28 +13,49 @@ import { Projects, Project } from "./rooms/Projects";
 import { Camp } from "./rooms/Camp";
 import { Codex } from "./rooms/Codex";
 import { Contacts } from "./rooms/Contacts";
+import { Settings } from "./rooms/Settings";
 import { Changelog } from "./Changelog";
 import { Feedback } from "./Feedback";
 import { InstallBanner } from "./Install";
 import { Weather } from "./Weather";
 import { isOver, When } from "./rooms/shared";
-import { FeaturesContext, type FeatureRow } from "./features";
+import { FeaturesContext, useFeatures, type FeatureRow } from "./features";
 
 export type Session = { me: Me; houses: House[]; refresh: () => Promise<void>; logout: () => void };
 
 // `short` is the bottom-nav label: a phone gives each item about 60 px, and
 // "Lopa z orodjem" does not fit. `nav: false` keeps a room off the bottom bar —
 // Houses is reached by tapping your own house name in the top bar.
-export const ROOMS = [
+// `feature` names the switch the room belongs to (features.go). While it is
+// off the room is absent: no building on Home, no nav item, and its route and
+// everything under it falls through to Home. That one field is all a room
+// behind a switch needs here.
+export type Room = { path: string; icon: string; name: string; short: string; sub: string; nav: boolean; feature?: string };
+export const ROOMS: Room[] = [
   { path: "/tavern", icon: "🍺", name: "Tavern", short: "Hall", sub: "calendar, work bees and the board", nav: true },
   { path: "/projects", icon: "📋", name: "Projects", short: "Projects", sub: "long jobs, split into tasks", nav: true },
   { path: "/market", icon: "🧺", name: "Market", short: "Market", sub: "needs, give-aways, runs, orders", nav: true },
   { path: "/shed", icon: "🛠", name: "Tool shed", short: "Shed", sub: "what the village has", nav: true },
   { path: "/watch", icon: "🕯️", name: "Watchtower", short: "Watch", sub: "who is away", nav: false },
-  { path: "/camp", icon: "🏕️", name: "Campground", short: "Camp", sub: "who noticed, who has the money", nav: false },
+  { path: "/camp", icon: "🏕️", name: "Campground", short: "Camp", sub: "who noticed, who has the money", nav: false, feature: "camp" },
   { path: "/houses", icon: "🏘️", name: "Houses", short: "Houses", sub: "who lives here", nav: false },
   { path: "/contacts", icon: "📇", name: "Contacts", short: "Contacts", sub: "who to call", nav: false },
 ];
+
+// The rooms this village has: ROOMS without the ones whose switch is off.
+const roomsOn = (list: FeatureRow[]) => ROOMS.filter((r) => !r.feature || !!list.find((f) => f.key === r.feature)?.on);
+export const useRooms = () => roomsOn(useFeatures().list);
+
+// withoutOff takes the routes as one fragment and drops those of a
+// switched-off room — its own path and every path under it — so the
+// catch-all renders Home, as for a room never built.
+function withoutOff(routes: ReactElement<{ children: ReactNode }>, rooms: Room[]) {
+  const off = ROOMS.filter((r) => !rooms.includes(r)).map((r) => r.path);
+  return Children.toArray(routes.props.children).filter((el) => {
+    const path = isValidElement<{ path?: string }>(el) ? el.props.path ?? "" : "";
+    return !off.some((p) => path === p || path.startsWith(p + "/"));
+  });
+}
 
 export default function App() {
   const { t, lang, setLang, languages, village, demo } = useT();
@@ -57,6 +78,10 @@ export default function App() {
   }, [refresh]);
 
   const logout = () => { setToken(null); setMe(null); setState("gate"); };
+  const steward = me?.is_steward === 1;
+  // A room's icon by its switch, for the settings page.
+  const icons = Object.fromEntries(ROOMS.filter((r) => r.feature).map((r) => [r.feature!, r.icon]));
+  const rooms = roomsOn(features); // App provides the switches, so it cannot ask the context for them
 
   return (
     <FeaturesContext.Provider value={{ list: features, reload: reloadFeatures }}>
@@ -64,6 +89,8 @@ export default function App() {
         <div className="inner">
           <h1><Link to="/">🏰 {village}</Link> <span className="small" style={{ color: "var(--parch2)" }}>· {t("Village portal")}</span></h1>
           {demo ? <DemoSwitch me={me} /> : me && <Link className="house" to="/houses"><span className="crest" style={{ backgroundColor: me.color }}>{me.crest}</span> {me.name}</Link>}
+          {/* The steward's village-level levers; a house that is not a steward has no door here. */}
+          {state === "in" && steward && <Link className="gear" to="/settings" title={t("Village settings")} aria-label={t("Village settings")}>⚙️</Link>}
           <span className="lang">
             {/* The village's languages, in its order; the buttons are the codes. */}
             {languages.map((l) => <span key={l}><button className={lang === l ? "primary" : ""} onClick={() => setLang(l)}>{l.toUpperCase()}</button>{" "}</span>)}
@@ -84,7 +111,7 @@ export default function App() {
           </div>
         )}
         {state === "in" && me && (
-          <Routes>
+          <Routes>{withoutOff(<>
             <Route path="/" element={<Home me={me} houses={houses} />} />
             <Route path="/tavern" element={<Hall me={me} houses={houses} />} />
             {/* Notifications sent before the merge point at #/bell — keep it alive. */}
@@ -99,15 +126,16 @@ export default function App() {
             <Route path="/contacts" element={<Contacts me={me} />} />
             {/* The codex is a chip on Home; this is its address, for pasting into the Tavern. */}
             <Route path="/codex" element={<Codex me={me} />} />
+            {steward && <Route path="/settings" element={<Settings icons={icons} />} />}
             <Route path="/join/:code" element={<Home me={me} houses={houses} />} />
             <Route path="*" element={<Home me={me} houses={houses} />} />
-          </Routes>
+          </>, rooms)}</Routes>
         )}
       </main>
       {state === "in" && (
         <nav className="bottomnav">
           <NavLink to="/" end><span className="icon">🗺️</span>{t("Village")}</NavLink>
-          {ROOMS.filter((r) => r.nav).map((r) => <NavLink key={r.path} to={r.path}><span className="icon">{r.icon}</span>{t(r.short)}</NavLink>)}
+          {rooms.filter((r) => r.nav).map((r) => <NavLink key={r.path} to={r.path}><span className="icon">{r.icon}</span>{t(r.short)}</NavLink>)}
         </nav>
       )}
     </FeaturesContext.Provider>
@@ -126,6 +154,9 @@ type Foot = "" | "changelog" | "feedback";
 
 function Home({ me, houses }: { me: Me; houses: House[] }) {
   const { t } = useT();
+  const rooms = useRooms();
+  // A switched-off room's list is a 404, so its badge is not even asked for.
+  const campOn = rooms.some((r) => r.feature === "camp");
   const [top, setTop] = useState<Topper>(() => {
     try { const v = localStorage.getItem("potok.top"); if (v === "map" || v === "weather" || v === "tavern" || v === "codex") return v; } catch { /* ignore */ }
     return "tavern";
@@ -141,7 +172,7 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
   // things at once (the shed: how many are in it, how many are out).
   const [badges, setBadges] = useState<Record<string, string>>({});
   useEffect(() => {
-    Promise.all([api<any[]>("/needs"), api<any[]>("/events"), api<any[]>("/away"), api<any[]>("/posts"), api<any[]>("/tools"), api<any[]>("/projects"), api<any[]>("/camp"), api<any[]>("/wishes")])
+    Promise.all([api<any[]>("/needs"), api<any[]>("/events"), api<any[]>("/away"), api<any[]>("/posts"), api<any[]>("/tools"), api<any[]>("/projects"), campOn ? api<any[]>("/camp") : Promise.resolve([]), api<any[]>("/wishes")])
       .then(([n, e, a, p, tools, projects, camp, wishes]) => {
         // Local date, not UTC: between midnight and 02:00 CEST a UTC date
         // counts a finished event as still ahead.
@@ -165,7 +196,7 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
           "/camp": [num(camp.filter((x) => x.state === "arrived").length, "arrived"), num(camp.filter((x) => x.state === "held").length, "held")].filter(Boolean).join(" · "),
         });
       }).catch(() => {});
-  }, [t]);
+  }, [t, campOn]);
   return (
     <>
       <InstallBanner />
@@ -184,7 +215,7 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
       {top === "tavern" && <HallPeek />}
       {top === "codex" && <Codex me={me} />}
       <div className="buildings">
-        {ROOMS.map((r) => (
+        {rooms.map((r) => (
           <Link key={r.path} to={r.path} className="building">
             <span className="icon">{r.icon}</span>
             <span className="sign">{t(r.name)}</span>

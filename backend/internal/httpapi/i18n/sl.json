@@ -458,5 +458,17 @@
   " changes the order: ": " spremeni naročilo: ",
   " — your need is in it": " — tvoja potreba je v njem",
   "your need stays on the market, without the order": "tvoja potreba ostane na tržnici, brez naročila",
-  "Called off: the order from %s by %s": "Odpade naročilo hiše %[2]s: %[1]s"
+  "Called off: the order from %s by %s": "Odpade naročilo hiše %[2]s: %[1]s",
+  "Village settings": "Nastavitve vasi",
+  "Switches": "Stikala",
+  "A room that is off is absent: no door, no notifications, nothing for an agent. What it holds stays, and comes back when it is switched on.": "Izklopljene sobe ni: ni vrat, ni obvestil, nič za agenta. Kar hrani, ostane in se vrne, ko jo vklopite.",
+  "Campground — who noticed a camper, who has the money": "Kamp — kdo je opazil kamperja, kdo ima denar",
+  "Dues ledger — who paid what, and when": "Knjiga prispevkov — kdo je plačal kaj in kdaj",
+  "Duty roster — turns at the village's chores, with counts": "Razpored dežurstev — kdo je na vrsti pri vaških opravilih, s štetjem",
+  "This adds counting to a portal that counts nothing by default. Switch it on?": "S tem začne šteti portal, ki privzeto ne šteje ničesar. Vklopim?",
+  "The village had this before switches.": "Vas je to imela že pred stikali.",
+  "Switched on by": "Vklopil",
+  "Switched off by": "Izklopil",
+  "Export": "Izvoz",
+  "Everything the village wrote, in one file. Take one before deleting a house.": "Vse, kar je vas zapisala, v eni datoteki. Naredite ga, preden izbrišete hišo."
 }

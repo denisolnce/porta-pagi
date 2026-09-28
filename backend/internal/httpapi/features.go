@@ -79,6 +79,21 @@ func (s *Server) offKinds(ctx context.Context) map[string]bool {
 	return off
 }
 
+// kinds is the push kinds this village offers: Kinds without the ones whose
+// feature is off. The prefs page lists these and no other, and a prefs write
+// touches only these, so a house's or a steward's choice about a switched-off
+// kind waits intact for the day it comes back.
+func (s *Server) kinds(ctx context.Context) []string {
+	off := s.offKinds(ctx)
+	out := []string{}
+	for _, k := range Kinds {
+		if !off[k] {
+			out = append(out, k)
+		}
+	}
+	return out
+}
+
 // listFeatures: every switch with its state, for any house — the page draws
 // its doors from it. Who flipped a switch, and when, rides along; both are
 // null on a row nobody flipped (migration 025 carried the campground over

@@ -100,6 +100,10 @@ func (s *Server) fanout(kind string, build func(lang string) Payload, query stri
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
+		// A switched-off feature's kind rings nobody (features.go).
+		if s.offKinds(ctx)[kind] {
+			return
+		}
 		rows, err := s.st.Rows(ctx, query, args...)
 		if err != nil {
 			log.Printf("push: recipients: %v", err)
@@ -225,15 +229,24 @@ func (s *Server) getPrefs(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	// A switched-off feature's kind is not offered, and nothing said about
+	// it shows: not the house's own choice, not a steward's mute.
+	offered := s.kinds(r.Context())
 	off := []string{}
 	for _, x := range rows {
-		off = append(off, x["kind"].(string))
+		if k := x["kind"].(string); slices.Contains(offered, k) {
+			off = append(off, k)
+		}
 	}
 	subs, _ := s.st.One(r.Context(), `SELECT count(*) AS n FROM push_subscriptions WHERE house_id=?`, houseFrom(r).ID)
 	grows, _ := s.st.Rows(r.Context(), `SELECT g.kind, g.set_at, h.name AS set_by FROM notify_off_global g LEFT JOIN houses h ON h.id=g.set_by`)
 	goff := []string{}
+	gdetail := []map[string]any{}
 	for _, x := range grows {
-		goff = append(goff, x["kind"].(string))
+		if k := x["kind"].(string); slices.Contains(offered, k) {
+			goff = append(goff, k)
+			gdetail = append(gdetail, x)
+		}
 	}
 	// quiet_ok is THIS phone's, not the house's — the only device-scoped field
 	// the page carries besides the on/off switch.
@@ -241,7 +254,7 @@ func (s *Server) getPrefs(w http.ResponseWriter, r *http.Request) {
 	if d, _ := s.st.One(r.Context(), `SELECT quiet_ok FROM devices WHERE id=?`, houseFrom(r).DeviceID); d != nil {
 		quiet, _ = d["quiet_ok"].(int64)
 	}
-	writeJSON(w, 200, map[string]any{"off": off, "global_off": goff, "global_detail": grows, "kinds": Kinds, "phones": subs["n"], "quiet_ok": quiet == 1})
+	writeJSON(w, 200, map[string]any{"off": off, "global_off": goff, "global_detail": gdetail, "kinds": offered, "phones": subs["n"], "quiet_ok": quiet == 1})
 }
 
 // putGlobalPrefs: a steward mutes kinds for every house at once — the lever for
@@ -260,9 +273,10 @@ func (s *Server) putGlobalPrefs(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	// Keep existing rows (their who/when stays true); add new ones stamped with
-	// this steward; drop the ones switched back on.
+	// this steward; drop the ones switched back on. A switched-off feature's
+	// kind is not in the list and keeps whatever row it had.
 	h := houseFrom(r)
-	for _, k := range Kinds {
+	for _, k := range s.kinds(r.Context()) {
 		if want[k] {
 			s.st.Exec(r.Context(), `INSERT OR IGNORE INTO notify_off_global(kind, set_by) VALUES (?,?)`, k, h.ID)
 		} else {
@@ -281,9 +295,12 @@ func (s *Server) putPrefs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	off, _ := m["off"].([]any)
-	s.st.Exec(r.Context(), `DELETE FROM notify_off WHERE house_id=?`, h.ID)
+	offered := s.kinds(r.Context())
+	for _, k := range offered {
+		s.st.Exec(r.Context(), `DELETE FROM notify_off WHERE house_id=? AND kind=?`, h.ID, k)
+	}
 	for _, k := range off {
-		if ks, ok := k.(string); ok && contains(Kinds, ks) {
+		if ks, ok := k.(string); ok && contains(offered, ks) {
 			s.st.Exec(r.Context(), `INSERT OR IGNORE INTO notify_off(house_id, kind) VALUES (?,?)`, h.ID, ks)
 		}
 	}

@@ -458,5 +458,17 @@
   " changes the order: ": " muda a encomenda: ",
   " — your need is in it": " — o seu preciso está nela",
   "your need stays on the market, without the order": "o seu preciso fica no mercado, fora da encomenda",
-  "Called off: the order from %s by %s": "Cancelada a encomenda de %[2]s: %[1]s"
+  "Called off: the order from %s by %s": "Cancelada a encomenda de %[2]s: %[1]s",
+  "Village settings": "Definições da aldeia",
+  "Switches": "Interruptores",
+  "A room that is off is absent: no door, no notifications, nothing for an agent. What it holds stays, and comes back when it is switched on.": "Uma sala desligada não existe: sem porta, sem notificações, nada para um agente. O que guarda fica, e volta quando é ligada.",
+  "Campground — who noticed a camper, who has the money": "Parque — quem viu um campista, quem tem o dinheiro",
+  "Dues ledger — who paid what, and when": "Livro das quotas — quem pagou o quê, e quando",
+  "Duty roster — turns at the village's chores, with counts": "Escala de turnos — a vez de cada um nas tarefas da aldeia, com contagens",
+  "This adds counting to a portal that counts nothing by default. Switch it on?": "Isto traz contagens a um portal que por omissão não conta nada. Ligar?",
+  "The village had this before switches.": "A aldeia já tinha isto antes dos interruptores.",
+  "Switched on by": "Ligado por",
+  "Switched off by": "Desligado por",
+  "Export": "Exportação",
+  "Everything the village wrote, in one file. Take one before deleting a house.": "Tudo o que a aldeia escreveu, num só ficheiro. Faça uma antes de apagar uma casa."
 }

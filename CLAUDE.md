@@ -23,8 +23,21 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   the defaults are the village that built the portal, and most are off. A
   row in `features` exists only for a switch a steward flipped, with who
   and when. **Off means absent**: `requireFeature` answers 404 on the
-  feature's routes, its MCP tools and its push kind go, and the page draws
-  no door (`useFeature` in `frontend/src/features.tsx`). The switches today:
+  feature's routes (inside `requireHouse`, so a key still meets the MCP
+  fence first), a tool with its `Feature` is neither listed nor callable,
+  its push kind is not offered in `GET /api/me/prefs` and rings nobody
+  (`fanout`), and the page draws no door: a `ROOMS` entry with its
+  `feature` has no building on Home, no nav item, and its routes fall
+  through to Home (`withoutOff` in `App.tsx`). Off hides, never deletes:
+  the rows stay, the export keeps them, and a house's or a steward's mute
+  of that kind waits untouched for the switch to come back. **The steward's
+  levers for the whole village live on one page**, `/settings` behind ⚙️ in
+  the top bar (`rooms/Settings.tsx`, drawn and routed only for a steward,
+  in the demo too): the switches with who flipped each and when, the
+  village-wide notification mutes, and the export. Switching a counting room
+  on asks once more, because it adds counting to a portal that counts
+  nothing by default. What is about houses — creating them, invites, land,
+  making stewards, deleting a house — stays in the Houses room. The switches today:
   `camp` (the Campground; on for a village that existed before switches,
   migration `025`), `dues` (a dues ledger) and `roster` (a duty roster with
   counts). The two counting rooms are the one place a total is allowed, and
@@ -363,7 +376,8 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   the longest row it was measured against, is in `styles.css`.
 - **Done is a state, never a deletion.** Finished projects and closed tasks
   stay readable with their closing notes. Nothing archives itself.
-- **Exit is designed.** `GET /api/export` (steward) dumps everything as JSON;
+- **Exit is designed.** `GET /api/export` (steward, the 📦 button on the
+  settings page) dumps everything as JSON, a switched-off room's rows too;
   `VACUUM INTO` backups land nightly in `${DATA_DIR}/backups/`. Keep both working.
 - **No secrets in this repo, and none needed.** The first steward code is
   generated on first boot and printed to the container log. The VAPID key pair
@@ -377,8 +391,9 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   fails early. A
   phone subscribes after the villager taps Allow and records the language it
   subscribed in; the house switches kinds off in `notify_off` (empty = all
-  nine kinds on); a steward mutes a kind for everyone in `notify_off_global`,
-  which records who and when, shown to every house. Both lists are checked on
+  nine kinds on); a steward mutes a kind for everyone in `notify_off_global`
+  from the settings page, which records who and when, shown to every house in
+  its own Notifications panel. Both lists are checked on
   every send. **Nothing is exempt**: the alarm kind was removed on 2026-09-06
   because a real emergency is a phone call, and a notification nobody is holding
   is worse than none. An event is `event` or `work`, and that is all. The author's
@@ -638,6 +653,7 @@ backend/            Go: main.go, internal/{config,store,httpapi}; migrations emb
 frontend/           Vite + React; src/rooms/* one file per room (Projects.tsx holds list + page; Contacts.tsx holds the room, the
                     fzf-style match, the letter shelves and the type picker that is its only user). Hall.tsx = Calendar.tsx + Board.tsx
                     stacked, because the tavern is one door; src/map/VillageMap.tsx; rooms/Codex.tsx = the founding text, from the DB;
+                    rooms/Settings.tsx = the steward's village settings (switches, village-wide mutes, export), a page, not a room;
                     src/Changelog.tsx reads public/changelog.json, which scripts/changelog.mjs writes from the git log at build
 frontend/public/    manifest.webmanifest, sw.js (push only, no caching), icons, backdrop.jpg (aerial photo behind the gate), fonts/ (self-hosted, OFL)
                     icon.svg is hand-drawn paths, full-bleed, content inside the central 80 % safe circle

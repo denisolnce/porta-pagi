@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, API, type House, type Me } from "../api";
+import { api, type House, type Me } from "../api";
 import { useT } from "../i18n";
 import { VillageMap } from "../map/VillageMap";
 import { Crest } from "./shared";
@@ -8,6 +8,8 @@ import { AddPhone } from "../AddPhone";
 
 // Houses: everyone sees the list and manages their own house + devices.
 // Stewards also create houses, hand out invite links and assign parcels.
+// What a steward does for the village as a whole — its switches, the
+// village-wide mutes, the export — is on the settings page behind ⚙️.
 export function Houses({ me, houses, refresh, logout }: { me: Me; houses: House[]; refresh: () => Promise<void>; logout: () => void }) {
   const { t } = useT();
   const steward = me.is_steward === 1;
@@ -201,7 +203,7 @@ export function Houses({ me, houses, refresh, logout }: { me: Me; houses: House[
         </p>
           <div className="submit"><button type="submit">{t("Save")}</button></div>
         </form>
-        <Notifications steward={steward} />
+        <Notifications />
         <h3>{t("Your devices")}</h3>
         <p><AddPhone /></p>
         {devices.map((d) => (
@@ -210,7 +212,6 @@ export function Houses({ me, houses, refresh, logout }: { me: Me; houses: House[
           </div>
         ))}
         <div className="actions" style={{ marginTop: "1rem", display: "flex", gap: ".5rem", flexWrap: "wrap" }}>
-          {steward && <button type="button" onClick={async () => { const r = await fetch(`${API}/export`, { headers: { Authorization: "Bearer " + (localStorage.getItem("potok.token") || "") } }); const b = await r.blob(); const u = URL.createObjectURL(b); const a = document.createElement("a"); a.href = u; a.download = "potok-export.json"; a.click(); URL.revokeObjectURL(u); }}>📦 {t("Export everything")}</button>}
           <button className="danger" onClick={logout}>{t("Log out on this device")}</button>
           <button type="button" onClick={() => setKeyOpen(!keyOpen)}>{t("+ MCP key")}</button>
         </div>
