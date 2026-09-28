@@ -25,10 +25,10 @@ CREATE TABLE dues (
 -- One row per house a due asks, written when the due is. paid_at NULL is not
 -- paid. paid_by is the house that marked it — the collector or a steward.
 --
--- A house that is deleted takes its unpaid rows with it (the trigger) and
--- leaves its paid ones behind without a name (SET NULL): the ledger keeps
--- what came in, and forgets what a departed house still owed. Settle with a
--- house before its stay ends.
+-- A house that is deleted leaves every row behind without a name (SET
+-- NULL), paid and unpaid alike: the ledger keeps what came in, and what a
+-- house that has left still owed stays on the due as "not yet" until the
+-- due itself goes. Deleting a house is not a way to forgive a debt.
 CREATE TABLE dues_owed (
   id        INTEGER PRIMARY KEY,
   due_id    INTEGER NOT NULL REFERENCES dues(id) ON DELETE CASCADE,
@@ -39,6 +39,3 @@ CREATE TABLE dues_owed (
 );
 CREATE INDEX idx_dues_owed_house ON dues_owed(house_id);
 
-CREATE TRIGGER dues_owed_unpaid_leave BEFORE DELETE ON houses BEGIN
-  DELETE FROM dues_owed WHERE house_id = OLD.id AND paid_at IS NULL;
-END;

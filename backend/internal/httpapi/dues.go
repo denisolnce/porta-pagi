@@ -340,7 +340,10 @@ func (s *Server) updateDue(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 		for _, o := range rows {
-			if hid, ok := o["house_id"].(int64); ok && keep[hid] {
+			// A row whose house has left is not the edit's to drop: its
+			// debt stays until the due goes (026_dues.sql).
+			hid, ok := o["house_id"].(int64)
+			if !ok || keep[hid] {
 				continue
 			}
 			if _, err := tx.Exec(r.Context(), `DELETE FROM dues_owed WHERE id=?`, o["id"]); err != nil {

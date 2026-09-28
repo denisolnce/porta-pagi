@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -241,5 +242,20 @@ func TestRosterMCP(t *testing.T) {
 	isErr, text = call(t, srv, key, "list_roster", nil)
 	if isErr || !strings.Contains(text, `"next_due":"2026-09-11"`) || !strings.Contains(text, "pressure fine") {
 		t.Fatalf("list_roster: %s", text)
+	}
+}
+
+// TestRosterCommonPlace: land takes no turns. A common place never holds a
+// token in the app; one is planted to prove the route refuses it anyway.
+func TestRosterCommonPlace(t *testing.T) {
+	srv, _, steward, _ := newVillage(t)
+	steward.must(200, func() int { c, _, _ := steward.do("PUT", "/api/features/roster", map[string]any{"on": true}); return c }(), "switch on")
+	_, duty, _ := steward.do("POST", "/api/roster/duties", map[string]any{"title": "Mow"})
+	_, obj, _ := steward.do("POST", "/api/houses", map[string]any{"name": "Largo", "kind": "common"})
+	tok := randomToken(32)
+	srv.st.Exec(nil2(), `INSERT INTO devices(house_id, token_hash, label) VALUES (?,?,?)`, int64(obj["id"].(float64)), hashToken(tok), "planted")
+	common := &client{t: t, h: srv.Handler(), token: tok}
+	if code, _, _ := common.do("POST", "/api/roster/duties/"+fmt.Sprint(duty["id"])+"/turns", map[string]any{"done": true, "on_date": srv.now().Format("2006-01-02")}); code != 403 {
+		t.Fatalf("a common place took a turn: %d", code)
 	}
 }

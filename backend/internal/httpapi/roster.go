@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
 )
 
 // Duty roster, behind the `roster` switch: the village's recurring chores —
@@ -175,20 +177,34 @@ func (s *Server) updateDuty(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, "every_days is a whole number of days, 1 to 366, or empty")
 		return
 	}
-	for _, k := range []string{"title", "notes"} {
-		if _, ok := m[k]; ok {
-			s.st.Exec(r.Context(), `UPDATE roster_duties SET `+k+`=? WHERE id=?`, str(m, k), id)
+	// One transaction: a duty is edited whole or not at all, and a failed
+	// write is an error the steward sees, not a 204.
+	if err := s.st.Tx(r.Context(), func(tx *store.Store) error {
+		for _, k := range []string{"title", "notes"} {
+			if _, ok := m[k]; ok {
+				if _, err := tx.Exec(r.Context(), `UPDATE roster_duties SET `+k+`=? WHERE id=?`, str(m, k), id); err != nil {
+					return err
+				}
+			}
 		}
-	}
-	if _, ok := m["every_days"]; ok {
-		s.st.Exec(r.Context(), `UPDATE roster_duties SET every_days=? WHERE id=?`, every, id)
-	}
-	if retired, ok := m["retired"].(bool); ok {
-		if retired {
-			s.st.Exec(r.Context(), `UPDATE roster_duties SET retired_at=COALESCE(retired_at, datetime('now')) WHERE id=?`, id)
-		} else {
-			s.st.Exec(r.Context(), `UPDATE roster_duties SET retired_at=NULL WHERE id=?`, id)
+		if _, ok := m["every_days"]; ok {
+			if _, err := tx.Exec(r.Context(), `UPDATE roster_duties SET every_days=? WHERE id=?`, every, id); err != nil {
+				return err
+			}
 		}
+		if retired, ok := m["retired"].(bool); ok {
+			q := `UPDATE roster_duties SET retired_at=NULL WHERE id=?`
+			if retired {
+				q = `UPDATE roster_duties SET retired_at=COALESCE(retired_at, datetime('now')) WHERE id=?`
+			}
+			if _, err := tx.Exec(r.Context(), q, id); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(204)
 }
@@ -244,6 +260,12 @@ func (s *Server) createTurn(w http.ResponseWriter, r *http.Request) {
 	}
 	if d == nil {
 		writeErr(w, 404, "no such duty")
+		return
+	}
+	// Land does not take turns: a common place is not a household, and its
+	// turn would count in no row of the table.
+	if k, _ := s.st.One(r.Context(), `SELECT kind FROM houses WHERE id=?`, h.ID); k != nil && k["kind"] == "common" {
+		writeErr(w, 403, "a common place takes no turns")
 		return
 	}
 	if d["retired_at"] != nil {

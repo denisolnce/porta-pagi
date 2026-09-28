@@ -186,7 +186,7 @@ Decisions, each with the option rejected:
   *Rejected: an IBAN field* — a portal holding payment details is a target and a payment surface. Nothing polices the notes.
 - **Nothing pushes.** Money should not buzz phones (the Campground's first rule); the collector says it in the Tavern in its own words.
   *Rejected: a `dues` kind to the houses asked* — a lock screen reading "you owe 35 €" is the room's worst line. It can come when a village asks.
-- **A house that leaves takes its unpaid rows and leaves its paid ones, without a name** (`ON DELETE SET NULL`, and a trigger for the unpaid). The ledger keeps what came in.
+- **A house that leaves leaves all its rows, without a name** (`ON DELETE SET NULL`). The ledger keeps what came in, and what a departed house still owed stays "not yet" until the due itself is deleted — neither deleting the house nor editing the due's houses forgives it. Rejected: a trigger that dropped the unpaid rows, which made the house-delete button forgive debt without saying so (review, 2026-09-28).
   *Rejected: cascade everything* — the collected total would drop under money already in the box; *keep everything* — a debt nobody can collect stays open forever. The cost: settle with a house before its stay ends.
 - **A house that has paid cannot be dropped from a due** (409): mark it unpaid first, so money never leaves the ledger by a side door. Paid is a day, not an amount.
   *Rejected: partial payments* — a second number per row for a village of neighbours; editing the amount later moves both totals, and the card shows it.

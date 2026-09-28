@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
 import { api, type House, type Me } from "../api";
 import { localeOf, useT } from "../i18n";
-import { useFeature } from "../features";
 import { DatePicker } from "../DatePicker";
 import { Crest, Empty, When, parse } from "./shared";
 
@@ -21,20 +19,21 @@ type RosterData = { today: string; since: string; duties: Duty[]; counts: { duty
 
 export function Roster({ me, houses }: { me: Me; houses: House[] }) {
   const { t, lang } = useT();
-  const on = useFeature("roster");
   const [data, setData] = useState<RosterData | null>(null);
   const [err, setErr] = useState("");
   const [open, setOpen] = useState(false);
   const [f, setF] = useState({ title: "", every_days: "", notes: "" });
   const steward = me.is_steward === 1;
   const reload = useCallback(() => api<RosterData>("/roster").then(setData).catch((e) => setErr(String(e.message))), []);
-  useEffect(() => { if (on) reload(); }, [on, reload]);
-  if (!on) return <Navigate to="/" replace />;
+  // A switched-off roster has no route at all (App.tsx, withoutOff).
+  useEffect(() => { reload(); }, [reload]);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
-    await api("/roster/duties", { method: "POST", body: { title: f.title, notes: f.notes, every_days: f.every_days ? Number(f.every_days) : null } }).catch((e) => setErr(e.message));
-    setF({ title: "", every_days: "", notes: "" }); setOpen(false); reload();
+    try {
+      await api("/roster/duties", { method: "POST", body: { title: f.title, notes: f.notes, every_days: f.every_days ? Number(f.every_days) : null } });
+    } catch (ex: any) { setErr(ex.message); return; } // the typed duty stays in the form
+    setErr(""); setF({ title: "", every_days: "", notes: "" }); setOpen(false); reload();
   };
 
   const duties = data?.duties || [];

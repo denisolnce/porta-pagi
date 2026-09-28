@@ -13,8 +13,11 @@ with work-bee sign-ups, and the message board), Market (needs, give-aways,
 shop runs and orders), Watchtower (who is away), Tool shed (what the village lends),
 Projects (long jobs split into takable tasks), Campground (who collected from
 which camper) and Contacts (who to call) — plus the Codex, the village's
-founding text, editable by every house. A village may switch on a Dues
-ledger (who paid what the village asked), off by default. One shared login per house, handed
+founding text, editable by every house. A steward switches on, from
+the ⚙️ settings, the rooms a village wants beyond those: the Campground (on
+for a village that had it before switches), a Dues ledger (who paid what the
+village asked) and a Duty roster (turns at the chores, with counts) — all
+three off by default. One shared login per house, handed
 out as an invite link; a house adds its own further phones with a six-digit
 pairing code. Installs to the home screen and sends notifications.
 
@@ -114,8 +117,8 @@ Other clients, `.mcp.json` shape:
 What the agent can do: read and write in every room — board, calendar and
 answers, threads, shop runs and needs, give-aways, the Watchtower, the shed
 and its wishlist, projects, tasks and a picture on a project, the campground,
-the codex, the weather, and — where the village switched it on — the dues
-ledger. What it cannot: delete anything, mint keys or touch
+the codex, the weather, and — where the village switched them on — the
+campground, the dues ledger and the duty roster. What it cannot: delete anything, mint keys or touch
 devices, edit the house itself, or do a steward's work. **The key opens
 `/api/mcp` and nothing else** — `curl` with it gets a 403 — so the tool list
 is the whole surface.

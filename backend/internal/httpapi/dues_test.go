@@ -136,7 +136,7 @@ func TestDuesLedger(t *testing.T) {
 		t.Fatal("mark_due on a due another house collects")
 	}
 
-	// A house that leaves: its paid row stays without a name, its unpaid one goes.
+	// A house that leaves: both its rows stay without a name, paid and unpaid.
 	_, sova, _ := steward.do("POST", "/api/houses", map[string]any{"name": "Sova"})
 	sovaID := sova["id"].(float64)
 	steward.must(201, first(steward.do("POST", "/api/dues", map[string]any{"title": "Zavarovanje", "amount": "10"})), "insurance")
@@ -151,8 +151,14 @@ func TestDuesLedger(t *testing.T) {
 	if last := ins["houses"].([]any)[2].(map[string]any); last["house_id"] != nil || last["paid_at"] == nil {
 		t.Fatalf("the departed house's row: %v", last)
 	}
-	if rub := dueByTitle(t, steward, "Smeti"); rub["owed"] != 2.0 {
-		t.Fatalf("Sova's unpaid row stayed: %v", rub)
+	rub := dueByTitle(t, steward, "Smeti")
+	if rub["owed"] != 3.0 || rub["paid"] != 0.0 {
+		t.Fatalf("deleting Sova forgave its unpaid row: %v", rub)
+	}
+	// Editing the due's houses does not forgive it either.
+	steward.must(204, first(steward.do("PUT", "/api/dues/"+fmt.Sprint(rub["id"]), map[string]any{"houses": []any{sID}})), "smeti asks only the steward now")
+	if rub = dueByTitle(t, steward, "Smeti"); rub["owed"] != 2.0 {
+		t.Fatalf("an edit dropped the departed house's debt: %v", rub)
 	}
 
 	// The export carries the ledger.

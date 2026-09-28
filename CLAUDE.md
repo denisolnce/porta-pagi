@@ -341,8 +341,9 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   away, so the rule lives here. **The portal records, it never moves
   money**: no payment link, no account-number field; how to pay is the
   notes, in the village's words. **Nothing pushes** — money should not buzz
-  phones. A house that is deleted takes its unpaid rows and leaves its paid
-  ones without a name (the trigger in `026_dues.sql`), so the collected
+  phones. A house that is deleted leaves all its rows without a name, paid and
+  unpaid (`026_dues.sql`): deleting a house never forgives a debt, and an
+  edit of the due's houses does not either, so the collected
   total never drops under money already in the box; a house that has paid
   cannot be dropped from a due until it is marked unpaid. `list_dues` and
   `mark_due` are its agent tools, gone with the switch.
