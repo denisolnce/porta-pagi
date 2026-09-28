@@ -369,9 +369,14 @@ function DemoSwitch({ me }: { me: Me | null }) {
     setToken(r.token); location.reload(); // the same page, as the other house
   };
   return (
-    <label className="house demo-switch">
-      {me ? <span className="crest" style={{ backgroundColor: me.color }}>{me.crest}</span> : "🚪"}{" "}
-      <select value={me?.id ?? ""} onChange={(e) => enter(Number(e.target.value))}>
+    // The crest is the control: a phone's top bar has no room for a house
+    // name beside the title, the gear and the languages, so the picker is an
+    // invisible select laid over the crest, and the name shows where it fits.
+    <label className="house demo-switch" title={me?.name}>
+      {me ? <span className="crest" style={{ backgroundColor: me.color }}>{me.crest}</span> : "🚪"}
+      {me && <span className="demo-name">{me.name}</span>}
+      <span className="demo-caret" aria-hidden="true">▾</span>
+      <select aria-label={t("Enter as a house")} value={me?.id ?? ""} onChange={(e) => enter(Number(e.target.value))}>
         {!me && <option value="">{t("Enter as a house")}</option>}
         {houses.map((h) => <option key={h.id} value={h.id}>{h.name}{h.is_steward ? ` (${t("Steward").toLowerCase()})` : ""}</option>)}
       </select>

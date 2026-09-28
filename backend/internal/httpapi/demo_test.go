@@ -78,6 +78,11 @@ func TestDemoSeed(t *testing.T) {
 			t.Errorf("the demo seeded with %s switched off", f.Key)
 		}
 	}
+	// …switched on by the steward, not "had before switches", which is the
+	// owner's village's own story.
+	if row, _ := st.One(t.Context(), `SELECT count(*) AS n FROM features f JOIN houses h ON h.id=f.set_by WHERE h.is_steward=1 AND f.set_at IS NOT NULL`); row["n"].(int64) != int64(len(Features)) {
+		t.Errorf("switches not attributed to the steward: %v", row)
+	}
 	// The steward exists and the common place is not a house.
 	if n := value(t, st, `SELECT count(*) AS v FROM houses WHERE is_steward=1`); n != "1" {
 		t.Fatal("the demo needs exactly one steward house")

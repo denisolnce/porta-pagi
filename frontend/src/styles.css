@@ -458,7 +458,12 @@ a.card:hover { background: #fff8e4; }
 .tp-new { margin-top: .15rem; border-top: 1px dashed var(--parch3); border-radius: 0 0 4px 4px; font-size: .9rem; color: var(--ink2); }
 
 /* The demo's house switcher sits where the house link sits; the select wears the parchment. */
-.demo-switch select { font: inherit; background: var(--parch, #f1e4c6); color: var(--ink, #2c2416); border: 1px solid #7a5a3a; border-radius: 6px; padding: .1rem .3rem; max-width: 12rem; }
+.demo-switch { position: relative; cursor: pointer; }
+.demo-switch .demo-caret { font-size: .8rem; opacity: .8; }
+/* The select covers the whole label and is invisible: tapping the crest or
+   the name opens the native picker, whose options are drawn by the phone. */
+.demo-switch select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font: inherit; color: var(--ink, #2c2416); }
+@media (max-width: 520px) { .demo-switch .demo-name { display: none; } }
 /* One column of full-width doors: on a phone a ragged wrap of ten widths is harder to hit. */
 .demo-doors { display: grid; gap: .5rem; margin-top: .8rem; }
 .demo-doors button { display: flex; align-items: center; gap: .5rem; justify-content: flex-start; }

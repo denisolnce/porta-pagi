@@ -229,14 +229,6 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 	if err := dec.Decode(&seed); err != nil {
 		return nil, fmt.Errorf("demo/seed.json: %w", err)
 	}
-	// The demo shows every room, so every switch is on, and stays on: the
-	// demo server refuses a flip (switchesFixed) and the settings page greys
-	// the switches out.
-	for _, f := range Features {
-		if _, err := tx.Exec(ctx, `INSERT INTO features(key, enabled) VALUES (?, 1)`, f.Key); err != nil {
-			return nil, err
-		}
-	}
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	// Calendar days between two dates, counted in UTC so a clock change
 	// between them is not a day lost or gained.
@@ -413,6 +405,21 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 			}
 		}
 		counts["houses"]++
+	}
+	// The demo shows every room, so every switch is on, and stays on: the
+	// demo server refuses a flip (switchesFixed) and the settings page greys
+	// the switches out. The steward switched them on a year ago, so the
+	// settings page reads "switched on by", not "had it before switches".
+	var steward any
+	for _, h := range seed.Houses {
+		if h.Steward {
+			steward = houses[h.Key]
+		}
+	}
+	for _, f := range Features {
+		if _, err := tx.Exec(ctx, `INSERT INTO features(key, enabled, set_by, set_at) VALUES (?, 1, ?, ?)`, f.Key, steward, past(-365, "21:00")); err != nil {
+			return nil, err
+		}
 	}
 	// The map: the synthetic cadastre and water, as rows like any village's.
 	for name, src := range map[string]struct{ file, source, snap string }{"parcels": {"demo/parcels.geojson", "synthetic cadastre — nobody's land", date(-40)}, "water": {"demo/water.json", "", ""}} {
