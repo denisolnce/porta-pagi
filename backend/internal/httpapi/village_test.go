@@ -1356,6 +1356,98 @@ func TestMarketEdits(t *testing.T) {
 	}
 }
 
+// TestRunKinds: a run is a trip unless it says order, and nothing else; the
+// kind survives a round trip and an edit; a flipped kind rings the riders;
+// an order's riders hear an order's words when it moves and when it is called
+// off, in every language the dictionaries hold — never "drives to".
+func TestRunKinds(t *testing.T) {
+	srv, fake, steward, volk := newVillage(t)
+	srv.cfg.Languages = []string{"sl", "en", "pt"}
+	for _, l := range []string{"sl", "en", "pt"} {
+		code, _, _ := steward.do("POST", "/api/push/subscribe", map[string]any{"endpoint": "https://push.example/" + l, "lang": l, "keys": map[string]any{"p256dh": "p", "auth": "a"}})
+		steward.must(204, code, "subscribe "+l)
+	}
+	kindOf := func(id float64) any {
+		_, _, runs := steward.do("GET", "/api/runs", nil)
+		for _, r := range runs {
+			if r["id"] == id {
+				return r["kind"]
+			}
+		}
+		t.Fatalf("run %v not listed", id)
+		return nil
+	}
+	for _, bad := range []any{"boat", "", "Order", 1} {
+		code, _, _ := volk.do("POST", "/api/runs", map[string]any{"kind": bad, "destination": "Kočevje", "cutoff_at": "2026-09-10T09:00"})
+		volk.must(400, code, fmt.Sprintf("kind %v", bad))
+	}
+	_, trip, _ := volk.do("POST", "/api/runs", map[string]any{"destination": "Kočevje", "cutoff_at": "2026-09-10T09:00"})
+	if k := kindOf(trip["id"].(float64)); k != "trip" {
+		t.Fatalf("a run with no kind is a trip, got %v", k)
+	}
+	_, order, _ := volk.do("POST", "/api/runs", map[string]any{"kind": "order", "destination": "Semenarna", "cutoff_at": "2026-09-10T09:00"})
+	oid := itoa(order["id"].(float64))
+	if k := kindOf(order["id"].(float64)); k != "order" {
+		t.Fatalf("order came back as %v", k)
+	}
+	code, _, _ := steward.do("POST", "/api/needs", map[string]any{"text": "fižol", "run_id": order["id"]})
+	steward.must(201, code, "need joins the order")
+	waitFor(t, 6, fake) // two runs to the steward's three phones; its own need rings nobody
+	fake.mu.Lock()
+	fake.sent, fake.payloads = nil, nil
+	fake.mu.Unlock()
+
+	code, _, _ = volk.do("PUT", "/api/runs/"+oid, map[string]any{"kind": "boat"})
+	volk.must(400, code, "bad kind on edit")
+	code, _, _ = volk.do("PUT", "/api/runs/"+oid, map[string]any{"notes": "only notes"})
+	volk.must(204, code, "notes edit")
+	waitFor(t, 0, fake)
+	said := func() map[string][2]string {
+		out := map[string][2]string{}
+		fake.mu.Lock()
+		defer fake.mu.Unlock()
+		for i, sub := range fake.sent {
+			var q Payload
+			json.Unmarshal(fake.payloads[i], &q)
+			out[sub.Lang] = [2]string{q.Title, q.Body}
+		}
+		fake.sent, fake.payloads = nil, nil
+		return out
+	}
+	code, _, _ = volk.do("PUT", "/api/runs/"+oid, map[string]any{"kind": "trip"})
+	volk.must(204, code, "flip to a trip")
+	waitFor(t, 3, fake)
+	if k := kindOf(order["id"].(float64)); k != "trip" {
+		t.Fatalf("kind edit did not land: %v", k)
+	}
+	if got := said()["en"]; got != [2]string{"🚗 Zeleni Volk changes the run to Semenarna", "leaves on Thursday at 9:00 — your need rides on it"} {
+		t.Fatalf("kind flip: %q", got)
+	}
+	code, _, _ = volk.do("PUT", "/api/runs/"+oid, map[string]any{"kind": "order", "destination": "Amazon"})
+	volk.must(204, code, "back to an order, and a new shop")
+	waitFor(t, 3, fake)
+	want := map[string][2]string{
+		"sl": {"📦 Zeleni Volk spremeni naročilo: Amazon", "zaključek v četrtek ob 9:00 — tvoja potreba je v njem"},
+		"en": {"📦 Zeleni Volk changes the order: Amazon", "closes on Thursday at 9:00 — your need is in it"},
+		"pt": {"📦 Zeleni Volk muda a encomenda: Amazon", "fecha na quinta às 9:00 — o seu preciso está nela"},
+	}
+	if got := said(); fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Fatalf("order moved:\n got %q\nwant %q", got, want)
+	}
+
+	code, _, _ = volk.do("DELETE", "/api/runs/"+oid, nil)
+	volk.must(204, code, "order called off")
+	waitFor(t, 3, fake)
+	want = map[string][2]string{
+		"sl": {"📦 Odpade naročilo hiše Zeleni Volk: Amazon", "tvoja potreba ostane na tržnici, brez naročila"},
+		"en": {"📦 Called off: the order from Amazon by Zeleni Volk", "your need stays on the market, without the order"},
+		"pt": {"📦 Cancelada a encomenda de Zeleni Volk: Amazon", "o seu preciso fica no mercado, fora da encomenda"},
+	}
+	if got := said(); fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Fatalf("order called off:\n got %q\nwant %q", got, want)
+	}
+}
+
 // TestCodex: any house writes the codex and the section says which one; a
 // form that opened on an older stamp is refused, not merged; only a steward
 // removes a section; the adopted text is imported once, stamped with the

@@ -926,15 +926,23 @@ func (s *Server) createRun(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, "destination and cutoff_at required")
 		return
 	}
-	id, err := s.st.Exec(r.Context(), `INSERT INTO runs(house_id, destination, cutoff_at, notes) VALUES (?,?,?,?)`, houseFrom(r).ID, str(m, "destination"), str(m, "cutoff_at"), str(m, "notes"))
+	kind := "trip"
+	if _, ok := m["kind"]; ok {
+		if kind = str(m, "kind"); runWords[kind].icon == "" {
+			writeErr(w, 400, "kind is trip or order")
+			return
+		}
+	}
+	id, err := s.st.Exec(r.Context(), `INSERT INTO runs(house_id, kind, destination, cutoff_at, notes) VALUES (?,?,?,?,?)`, houseFrom(r).ID, kind, str(m, "destination"), str(m, "cutoff_at"), str(m, "notes"))
 	if err != nil {
 		fail(w, err)
 		return
 	}
+	rw := runWords[kind]
 	s.notify("runs", houseFrom(r).ID, func(lang string) Payload {
 		return Payload{
-			Title: "🚗 " + houseFrom(r).Name + tr(lang, " drives to ") + str(m, "destination"),
-			Body: join(" — ", tr(lang, "leaves ")+humanWhen(str(m, "cutoff_at"), lang, s.now()),
+			Title: rw.icon + " " + houseFrom(r).Name + tr(lang, rw.goes) + str(m, "destination"),
+			Body: join(" — ", tr(lang, rw.until)+humanWhen(str(m, "cutoff_at"), lang, s.now()),
 				tr(lang, "post what you need")),
 			URL: "#/market",
 		}
@@ -942,8 +950,20 @@ func (s *Server) createRun(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 201, map[string]any{"id": id})
 }
 
-// updateRun: destination, cutoff_at, notes — owner or steward. The village
-// heard about the run when it was posted; a changed place or time is told only
+// runWords: what a banner says for each kind of run. A trip is a car: it
+// drives, it leaves, a need rides on it. An order is a delivery from a shop,
+// a catalogue or a supplier: the house orders, the order closes, a need is in
+// it — an order never "drives to" anywhere. The Slovenian and Portuguese
+// order strings put the typed shop after a colon or a bare preposition, so no
+// case ending is glued onto a name a house typed (docs/later.md, the
+// Slovenian case row, which the trip strings still carry).
+var runWords = map[string]struct{ icon, goes, until, moved, rides, stays, off string }{
+	"trip":  {"🚗", " drives to ", "leaves ", " changes the run to ", " — your need rides on it", "your need stays on the market, without a run", "Called off: the run to %s by %s"},
+	"order": {"📦", " orders from ", "closes ", " changes the order: ", " — your need is in it", "your need stays on the market, without the order", "Called off: the order from %s by %s"},
+}
+
+// updateRun: kind, destination, cutoff_at, notes — owner or steward. The village
+// heard about the run when it was posted; a changed place, time or kind is told only
 // to the houses whose open needs ride on it (owner's decision 2026-09-08).
 func (s *Server) updateRun(w http.ResponseWriter, r *http.Request) {
 	h := houseFrom(r)
@@ -962,12 +982,16 @@ func (s *Server) updateRun(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	before, err := s.st.One(r.Context(), `SELECT r.destination, r.cutoff_at, r.house_id, d.name AS driver FROM runs r JOIN houses d ON d.id=r.house_id WHERE r.id=?`, id)
+	if _, ok := m["kind"]; ok && runWords[str(m, "kind")].icon == "" {
+		writeErr(w, 400, "kind is trip or order")
+		return
+	}
+	before, err := s.st.One(r.Context(), `SELECT r.kind, r.destination, r.cutoff_at, r.house_id, d.name AS driver FROM runs r JOIN houses d ON d.id=r.house_id WHERE r.id=?`, id)
 	if err != nil {
 		fail(w, err)
 		return
 	}
-	for _, k := range []string{"destination", "cutoff_at", "notes"} {
+	for _, k := range []string{"kind", "destination", "cutoff_at", "notes"} {
 		if _, ok := m[k]; ok {
 			s.st.Exec(r.Context(), `UPDATE runs SET `+k+`=? WHERE id=?`, str(m, k), id)
 		}
@@ -979,16 +1003,24 @@ func (s *Server) updateRun(w http.ResponseWriter, r *http.Request) {
 	if v, ok := m["cutoff_at"]; ok {
 		at, _ = v.(string)
 	}
-	if dest != str(before, "destination") || at != str(before, "cutoff_at") {
+	kind := str(before, "kind")
+	if _, ok := m["kind"]; ok {
+		kind = str(m, "kind")
+	}
+	// A flipped kind rings too, in the new kind's words: the place and the
+	// time may be the same, but milk on a car that is back tonight is not
+	// milk in a delivery that comes next week.
+	if dest != str(before, "destination") || at != str(before, "cutoff_at") || kind != str(before, "kind") {
 		// The banner names the driver, whoever edited (a steward may): the
 		// rider needs to know whose car moved. Driver and editor hear nothing.
 		driver, driverID := str(before, "driver"), before["house_id"].(int64)
+		rw := runWords[kind]
 		riders, _ := s.st.Rows(r.Context(), `SELECT DISTINCT house_id FROM needs WHERE run_id=? AND state!='done' AND house_id NOT IN (?, ?)`, id, driverID, h.ID)
 		for _, n := range riders {
 			s.notifyHouse("runs", n["house_id"].(int64), func(lang string) Payload {
 				return Payload{
-					Title: "🚗 " + driver + tr(lang, " changes the run to ") + dest,
-					Body:  tr(lang, "leaves ") + humanWhen(at, lang, s.now()) + tr(lang, " — your need rides on it"),
+					Title: rw.icon + " " + driver + tr(lang, rw.moved) + dest,
+					Body:  tr(lang, rw.until) + humanWhen(at, lang, s.now()) + tr(lang, rw.rides),
 					URL:   "#/market",
 				}
 			})
@@ -1007,7 +1039,7 @@ func (s *Server) deleteRun(w http.ResponseWriter, r *http.Request) {
 	if !s.ownerOrSteward(w, r, "runs", id) {
 		return
 	}
-	before, err := s.st.One(r.Context(), `SELECT r.destination, r.house_id, d.name AS driver FROM runs r JOIN houses d ON d.id=r.house_id WHERE r.id=?`, id)
+	before, err := s.st.One(r.Context(), `SELECT r.kind, r.destination, r.house_id, d.name AS driver FROM runs r JOIN houses d ON d.id=r.house_id WHERE r.id=?`, id)
 	if err != nil {
 		fail(w, err)
 		return
@@ -1022,7 +1054,7 @@ func (s *Server) deleteRun(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	driver, dest := str(before, "driver"), str(before, "destination")
+	driver, dest, rw := str(before, "driver"), str(before, "destination"), runWords[str(before, "kind")]
 	for _, n := range riders {
 		s.notifyHouse("runs", n["house_id"].(int64), func(lang string) Payload {
 			// The driver is a label here, not the actor: a steward may be the
@@ -1034,8 +1066,8 @@ func (s *Server) deleteRun(w http.ResponseWriter, r *http.Request) {
 				// Verb first: a lock screen truncates a long typed
 				// destination, and "Odpade vožnja …" still says the run is off
 				// where "… odpade" would have been cut away.
-				Title: "🚗 " + fmt.Sprintf(tr(lang, "Called off: the run to %s by %s"), dest, driver),
-				Body:  tr(lang, "your need stays on the market, without a run"),
+				Title: rw.icon + " " + fmt.Sprintf(tr(lang, rw.off), dest, driver),
+				Body:  tr(lang, rw.stays),
 				URL:   "#/market",
 			}
 		})

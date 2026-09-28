@@ -49,6 +49,12 @@ func TestNotificationBanners(t *testing.T) {
 			map[string]any{"destination": "Bauhaus Ljubljana", "cutoff_at": "2026-09-06T09:00"},
 			[2]string{"🚗 House Zeleni Volk gre v Bauhaus Ljubljana", "odhod v nedeljo ob 9:00 — napiši, kaj rabiš"},
 			[2]string{"🚗 House Zeleni Volk drives to Bauhaus Ljubljana", "leaves on Sunday at 9:00 — post what you need"}},
+		// An order never "drives to": the shop a house typed sits after a
+		// colon in Slovenian, so no case ending is glued onto it.
+		{"order", "POST", "/api/runs",
+			map[string]any{"kind": "order", "destination": "Amazon", "cutoff_at": "2026-09-06T09:00"},
+			[2]string{"📦 House Zeleni Volk zbira naročila: Amazon", "zaključek v nedeljo ob 9:00 — napiši, kaj rabiš"},
+			[2]string{"📦 House Zeleni Volk orders from Amazon", "closes on Sunday at 9:00 — post what you need"}},
 		{"need", "POST", "/api/needs",
 			map[string]any{"text": "mleko 2l in kvas"},
 			[2]string{"🛒 House Zeleni Volk rabi iz trgovine", "mleko 2l in kvas"},

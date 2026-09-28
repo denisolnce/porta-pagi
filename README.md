@@ -10,7 +10,7 @@ inside.
 Closed web portal for the houses of one small community: a cadastral map as
 the home screen, and seven rooms — Tavern (pinned notices, the month calendar
 with work-bee sign-ups, and the message board), Market (needs, give-aways,
-shop runs), Watchtower (who is away), Tool shed (what the village lends),
+shop runs and orders), Watchtower (who is away), Tool shed (what the village lends),
 Projects (long jobs split into takable tasks), Campground (who collected from
 which camper) and Contacts (who to call) — plus the Codex, the village's
 founding text, editable by every house. One shared login per house, handed

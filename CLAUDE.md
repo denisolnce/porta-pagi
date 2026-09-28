@@ -396,14 +396,24 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   its need went too. Push carries a title, a one-line snippet and a route, in
   human words — `banner_test.go` pins every creation banner and
   `TestMarketEdits` the run-change and run-cancelled ones, so read them before
-  changing copy.
+  changing copy. **A run is a trip or an order** (`runs.kind`, migration
+  `028`): one house, a cut-off, the needs that join it. A trip 🚗 drives
+  somewhere and leaves; an order 📦 is placed with a shop, a catalogue or a
+  supplier and closes. Only the words differ — card, form and all three
+  banners (`runWords` in `server.go`, pinned in `TestRunKinds`) — and an
+  order never "drives to". **The app records the order, never the money**: no
+  amount column, no shares, no who-owes-whom. Both ring under the one `runs`
+  kind, so its opt-out reads "Runs & orders". Flipping the kind rings the
+  riders like a move does, in the new kind's words: milk on a car that is
+  back tonight is not milk in a delivery that comes next week.
 - **What a lock screen may say about an empty house.** Anyone holding a phone
   can read a notification. The line: a **multi-day absence is anonymous** — an
   away push names no house, no dates, no notes, only "new notice, open the
   Watchtower", and a comment on that notice rings the same way, with no author
   and no snippet. A **scheduled short trip is named** — a shop run says who drives
   and when, because the house is coming back the same day and the whole point
-  is to answer it. Classify a new kind against that line; do not guess.
+  is to answer it; an order says who orders and until when, and nobody
+  leaves home for it. Classify a new kind against that line; do not guess.
   The one other exception is the optional author name on a tavern post, which
   the poster typed themselves.
 - **Quiet hours: 21:00–07:00 nothing rings, unless a phone asked.** Everything
