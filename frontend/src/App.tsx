@@ -17,6 +17,7 @@ import { Changelog } from "./Changelog";
 import { InstallBanner } from "./Install";
 import { Weather } from "./Weather";
 import { isOver, When } from "./rooms/shared";
+import { FeaturesContext, type FeatureRow } from "./features";
 
 export type Session = { me: Me; houses: House[]; refresh: () => Promise<void>; logout: () => void };
 
@@ -38,11 +39,13 @@ export default function App() {
   const { t, lang, setLang, languages, village, demo } = useT();
   const [me, setMe] = useState<Me | null>(null);
   const [houses, setHouses] = useState<House[]>([]);
+  const [features, setFeatures] = useState<FeatureRow[]>([]);
+  const reloadFeatures = useCallback(async () => { setFeatures(await api<FeatureRow[]>("/features")); }, []);
   const [state, setState] = useState<"loading" | "gate" | "in">(getToken() ? "loading" : "gate");
 
   const refresh = useCallback(async () => {
-    const [m, hs] = await Promise.all([api<Me>("/me"), api<House[]>("/houses")]);
-    setMe(m); setHouses(hs); setState("in");
+    const [m, hs, fs] = await Promise.all([api<Me>("/me"), api<House[]>("/houses"), api<FeatureRow[]>("/features")]);
+    setMe(m); setHouses(hs); setFeatures(fs); setState("in");
   }, []);
   // The phone's notifications follow the language the page shows.
   useEffect(() => { if (state === "in") syncPushLang(lang); }, [state, lang]);
@@ -55,7 +58,7 @@ export default function App() {
   const logout = () => { setToken(null); setMe(null); setState("gate"); };
 
   return (
-    <>
+    <FeaturesContext.Provider value={{ list: features, reload: reloadFeatures }}>
       <header className="topbar">
         <div className="inner">
           <h1><Link to="/">🏰 {village}</Link> <span className="small" style={{ color: "var(--parch2)" }}>· {t("Village portal")}</span></h1>
@@ -106,7 +109,7 @@ export default function App() {
           {ROOMS.filter((r) => r.nav).map((r) => <NavLink key={r.path} to={r.path}><span className="icon">{r.icon}</span>{t(r.short)}</NavLink>)}
         </nav>
       )}
-    </>
+    </FeaturesContext.Provider>
   );
 }
 
@@ -320,7 +323,7 @@ function DemoSwitch({ me }: { me: Me | null }) {
       {me ? <span className="crest" style={{ backgroundColor: me.color }}>{me.crest}</span> : "🚪"}{" "}
       <select value={me?.id ?? ""} onChange={(e) => enter(Number(e.target.value))}>
         {!me && <option value="">{t("Enter as a house")}</option>}
-        {houses.map((h) => <option key={h.id} value={h.id}>{h.crest} {h.name}{h.is_steward ? ` (${t("Steward").toLowerCase()})` : ""}</option>)}
+        {houses.map((h) => <option key={h.id} value={h.id}>{h.name}{h.is_steward ? ` (${t("Steward").toLowerCase()})` : ""}</option>)}
       </select>
     </label>
   );

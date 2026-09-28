@@ -65,6 +65,9 @@ func (s *Server) routes() {
 	m.HandleFunc("POST /api/pair", s.requireHouse(s.createPairing))
 
 	m.HandleFunc("GET /api/me", s.requireHouse(s.me))
+	// Switches (features.go): any house reads them, a steward flips one.
+	m.HandleFunc("GET /api/features", s.requireHouse(s.listFeatures))
+	m.HandleFunc("PUT /api/features/{key}", s.requireSteward(s.putFeature))
 	m.HandleFunc("GET /api/devices", s.requireHouse(s.listDevices))
 	m.HandleFunc("DELETE /api/devices/{id}", s.requireHouse(s.deleteDevice))
 	// A door for agents (mcp.go): a key is a device with agent=1, and it opens

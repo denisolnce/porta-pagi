@@ -17,6 +17,20 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
 
 ## Invariants
 
+- **Switches: a village turns some rooms on or off, one binary for all**
+  (owner's decision 2026-09-23, `docs/commercial.md` § Decided). The list is
+  `Features` in `backend/internal/httpapi/features.go`, each with a default;
+  the defaults are the village that built the portal, and most are off. A
+  row in `features` exists only for a switch a steward flipped, with who
+  and when. **Off means absent**: `requireFeature` answers 404 on the
+  feature's routes, its MCP tools and its push kind go, and the page draws
+  no door (`useFeature` in `frontend/src/features.tsx`). The switches today:
+  `camp` (the Campground; on for a village that existed before switches,
+  migration `025`), `dues` (a dues ledger) and `roster` (a duty roster with
+  counts). The two counting rooms are the one place a total is allowed, and
+  only because a village switched it on: the "do not add a total anywhere"
+  rules below are the defaults, not exceptions to this one. The demo seeds
+  every switch on.
 - **A house is the account, with or without land.** Everyone in a house shares
   one identity; a device row per phone tells them apart. Never add per-person
   accounts without a decision recorded in the plan. **A member who lives here

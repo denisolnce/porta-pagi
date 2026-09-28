@@ -53,6 +53,12 @@ func TestDemoSeed(t *testing.T) {
 	if row, _ := st.One(t.Context(), `SELECT count(*) AS n FROM tools WHERE held_by IS NOT NULL AND held_since < ?`, now.AddDate(0, 0, -7).UTC().Format("2006-01-02 15:04:05")); row["n"].(int64) == 0 {
 		t.Fatal("no tool has been out for a week")
 	}
+	// Every switch is on in the demo: it shows every room.
+	for _, f := range Features {
+		if !srv.feature(t.Context(), f.Key) {
+			t.Errorf("the demo seeded with %s switched off", f.Key)
+		}
+	}
 	// The steward exists and the common place is not a house.
 	if row, _ := st.One(t.Context(), `SELECT count(*) AS n FROM houses WHERE is_steward=1`); row["n"].(int64) != 1 {
 		t.Fatal("the demo needs exactly one steward house")

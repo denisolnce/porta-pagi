@@ -154,6 +154,13 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 	if err := json.Unmarshal(raw, &seed); err != nil {
 		return nil, fmt.Errorf("demo/seed.json: %w", err)
 	}
+	// The demo shows every room, so every switch is on. A visitor who is the
+	// steward can flip them in the settings; the hour puts them back.
+	for _, f := range Features {
+		if _, err := tx.Exec(ctx, `INSERT INTO features(key, enabled) VALUES (?, 1)`, f.Key); err != nil {
+			return nil, err
+		}
+	}
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	// Calendar days between two dates, counted in UTC so a clock change
 	// between them is not a day lost or gained.
