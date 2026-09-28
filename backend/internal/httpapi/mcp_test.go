@@ -89,8 +89,15 @@ func TestMCPFlow(t *testing.T) {
 
 	_, out = rpc(t, srv, key, "tools/list", nil)
 	tools := out["result"].(map[string]any)["tools"].([]any)
-	if len(tools) != len(mcpTools) {
-		t.Fatalf("tools/list: %d of %d", len(tools), len(mcpTools))
+	// Every tool but those behind a switch this village has off.
+	listed := 0
+	for _, tl := range mcpTools {
+		if tl.Feature == "" || srv.feature(t.Context(), tl.Feature) {
+			listed++
+		}
+	}
+	if len(tools) != listed {
+		t.Fatalf("tools/list: %d of %d", len(tools), listed)
 	}
 
 	isErr, text := call(t, srv, key, "whoami", nil)
@@ -225,8 +232,12 @@ func TestMCPFence(t *testing.T) {
 // delete, no device, pairing, push or house write, no steward route; and every
 // tool reaches a registered route.
 func TestMCPSurface(t *testing.T) {
-	srv, _, _, volk := newVillage(t)
+	srv, _, steward, volk := newVillage(t)
 	key, _ := mintKey(t, volk, "agent")
+	// Every switch on, so every tool in the table is reachable.
+	for _, f := range Features {
+		steward.do("PUT", "/api/features/"+f.Key, map[string]any{"on": true})
+	}
 	want := map[string]bool{"list_away": true, "create_away": true, "update_away": true, "list_camp": true, "create_camp": true, "update_camp": true, "list_contacts": true, "create_contact": true, "update_contact": true, "add_project_photo": true, "whoami": true, "weather": true}
 	seen := map[string]bool{}
 	for _, tl := range mcpTools {
@@ -257,7 +268,7 @@ func TestMCPSurface(t *testing.T) {
 			t.Fatalf("tool missing from the table: %s", name)
 		}
 	}
-	if len(mcpTools) != 46 {
+	if len(mcpTools) != 49 {
 		t.Fatalf("the surface moved: %d tools — a visible decision, update this pin and docs/design-mcp.md", len(mcpTools))
 	}
 	// Unknown tool, unknown method, a batch, garbage.

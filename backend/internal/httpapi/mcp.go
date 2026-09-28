@@ -53,6 +53,9 @@ type mcpTool struct {
 	Method, Path string
 	Schema       map[string]any
 	Image        bool // body is base64 `data` with `content_type`, not JSON
+	// Feature is the switch the tool belongs to (features.go), "" for none.
+	// A switched-off feature's tools are not listed and cannot be called.
+	Feature string
 }
 
 // The two clocks, said once here and pointed at from every time field.
@@ -169,6 +172,14 @@ var mcpTools = []mcpTool{
 		Schema: schema([]string{"name"}, map[string]any{"name": prop("string", "Who or what it is, e.g. the well-driller's name or a workshop"), "phone": prop("string", "Optional. The number, as a person would write it down"), "notes": prop("string", "Optional, e.g. speaks German, comes on Tuesdays"), "type": prop("string", "Optional. One word: vet, craftsman, office …")})},
 	{Name: "update_contact", Desc: "Correct a contact. Any house may correct any number — a wrong one helps nobody — and the row then names your house as the one that last wrote it. There is no tool to remove a contact: the house that added it, or a steward, does that in the app.", Method: "PUT", Path: "/api/contacts/{id}",
 		Schema: schema([]string{"id"}, map[string]any{"id": idProp, "name": prop("string", ""), "phone": prop("string", ""), "notes": prop("string", ""), "type": prop("string", "One word; empty leaves it untyped")})},
+
+	// Duty roster, behind its switch. A house records its own turns and
+	// nobody else's; there is no tool for duties, which a steward writes.
+	{Name: "list_roster", Feature: "roster", Desc: "The duty roster: the village's recurring chores (duties), each with its agreed cadence in days (every_days, null = when needed), the last day it was done, next_due, the turns planned from today on and the done turns of the last twelve months. counts is done turns per house per duty over those twelve months — one number per duty, never a sum across duties, never a ranking. Nobody is assigned: houses take turns themselves. " + clocks, Method: "GET", Path: "/api/roster", Schema: schema(nil, map[string]any{})},
+	{Name: "add_turn", Feature: "roster", Desc: "Your house takes a turn on a duty ahead (done=false, today or later: \"we mow on Saturday\") or records one it did (done=true, today or earlier). Always your own house; there is no way to record a turn for another house. Nothing is pushed.", Method: "POST", Path: "/api/roster/duties/{id}/turns",
+		Schema: schema([]string{"id"}, map[string]any{"id": prop("integer", "Duty id"), "on_date": prop("string", "YYYY-MM-DD; default today"), "done": prop("boolean", "true: it is done; false (default): a turn taken ahead"), "note": prop("string", "Optional, how it went, e.g. pressure low, called the plumber")})},
+	{Name: "update_turn", Feature: "roster", Desc: "Your own turn only. done=true marks a planned turn done once its day has come; on_date moves it; note says how it went. There is no tool to remove a turn: your house does that in the app.", Method: "PUT", Path: "/api/roster/turns/{id}",
+		Schema: schema([]string{"id"}, map[string]any{"id": prop("integer", "Turn id"), "done": prop("boolean", ""), "on_date": prop("string", "YYYY-MM-DD"), "note": prop("string", "")})},
 
 	// Codex
 	{Name: "list_codex", Desc: "The village's founding text as ordered sections, each with texts per language of the village ({\"sl\": {\"title\", \"body\"}, …}), its rev and the house that last wrote it; updated_by null means the text stands as the council adopted it. Bodies are plain text: a blank line splits paragraphs, lines starting with \"- \" are a list.", Method: "GET", Path: "/api/codex", Schema: schema(nil, map[string]any{})},
@@ -290,6 +301,9 @@ func (s *Server) mcp(w http.ResponseWriter, r *http.Request) {
 	case "tools/list":
 		list := make([]map[string]any, 0, len(mcpTools))
 		for _, t := range mcpTools {
+			if t.Feature != "" && !s.feature(r.Context(), t.Feature) {
+				continue
+			}
 			list = append(list, map[string]any{"name": t.Name, "description": t.Desc, "inputSchema": t.Schema})
 		}
 		rpcReply(w, req.ID, map[string]any{"tools": list}, nil)
@@ -303,7 +317,7 @@ func (s *Server) mcp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		tool := mcpToolByName(p.Name)
-		if tool == nil {
+		if tool == nil || (tool.Feature != "" && !s.feature(r.Context(), tool.Feature)) {
 			rpcReply(w, req.ID, nil, &rpcError{-32602, "no such tool: " + p.Name})
 			return
 		}

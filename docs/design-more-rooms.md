@@ -176,3 +176,109 @@ The village's context file (in its deploy repo) gets one line per room. CLAUDE.m
 | `from_who` retention | Steward button, 12 months | With the privacy note | The board, a lawyer confirms |
 | Treasurer and hand-over target | `TBD` | Before the "Handed over" button means anything | The collective |
 | Slovenian room names | `TBD` | Before shipping | A Slovenian-speaking house |
+
+## Rooms behind a switch
+
+### Duty roster
+
+Built 2026-09-28 behind the `roster` switch, off by default
+(`docs/commercial.md` § Decided): `027_roster.sql`, `roster.go`,
+`rooms/Roster.tsx`. The villager job, in one line: **whose turn is it to mow,
+and does every house carry its share** — the question a WhatsApp group
+answers once a year, with a fight. With the switch off the room, its routes
+and its three MCP tools are absent.
+
+| Table | Fields | Notes |
+| --- | --- | --- |
+| `roster_duties` | `id`, `house_id` (who wrote it, SET NULL), `title`, `notes`, `every_days` (NULL = when needed), `retired_at`, `created_at` | A duty is the village's agreement, not a house's row |
+| `roster_turns` | `id`, `duty_id` (CASCADE), `house_id` (SET NULL), `on_date` `YYYY-MM-DD`, `state` planned/done, `note`, `done_at`, `created_at` | `UNIQUE(duty_id, house_id, on_date)`: a double tap does not count twice |
+
+**A turn is one house doing one duty on one date.** A house takes one ahead
+("we mow on Saturday": `planned`, today or later), marks it done when the day
+has come, or records one it already did (`done`, today or earlier). The room
+puts the common case on one tap — ✓ Done today — and the rest behind "Another
+day…", whose button says which of the two the chosen day makes. Only a done
+turn counts. A note says how it went ("pressure low, called the plumber").
+
+**The count is done turns per house per duty over the last twelve months**,
+rolling. Twelve months hold exactly one full cycle of every seasonal chore
+whatever month the table is read in — a whole mowing season, a whole winter.
+A house's turns fall off one by one, so nobody banks credit forever and
+nobody carries a debt forever.
+
+| Period | Why not |
+| --- | --- |
+| Calendar year | Cuts a winter in two: every house is at zero on 1 January in the middle of the snow |
+| A season per duty | A season field on every duty and a steward to keep it right; the rolling year gives the same fairness with no setting |
+| All time | A house that came last spring is behind forever; one that left years ago still leads |
+| Chosen by the reader | A picker for the period that flatters you |
+
+The table is houses down and duties across. **Houses in the village's order,
+never by count** — a sort by count is a leaderboard. **No sum across
+duties**: a pump check is five minutes and a mowing is a morning, and a row
+total would say they are the same. A zero is printed, muted: in a room a
+village switched on to count, zero is the answer, not a gap. The cost, paid
+knowingly: a house that joined in spring shows fewer turns than one that was
+here all year, and the table does not say when each house came.
+
+**A duty may carry a cadence, and the room shows "next around".**
+`every_days` is what the village agreed ("every two weeks" = 14); empty is
+"when needed", which is what snow is. Next due is the last done turn plus the
+cadence, whoever did it — and before the first turn, the day the steward
+wrote the duty down plus the cadence, so "the pump, every week" is due a week
+after it was agreed rather than never. When it is reached the card wears a
+`due` tag, on the duty and never on a house. **Nothing assigns a house to a date and nothing
+reminds anyone**: the roster is the village's own agreement and the portal
+only shows it (`later.md` warned that a roster not the collective's own idea
+breeds resentment). A scheduler that rotates houses was not built on purpose.
+
+**A turn that did not happen is not "missed".** A plan whose day has passed
+is not counted, and only its own house sees it, asked "did it happen?" —
+✓ Done or "It did not happen", which removes it. Other houses never see it.
+Rejected: a `missed` state, which is a tally of failures, the thing every "no
+tallies" rule exists to prevent and the one that hurts most once counting is
+on; and counting a plan as done when its day passes, which counts what nobody
+said happened.
+
+**A steward writes the duties down; a house writes only its own turns.** What
+is counted is an agreement the village made in person, so the list of duties
+is the steward's pen: a house that could add a duty could start counting its
+neighbours on a chore nobody agreed to. A steward edits, retires and brings
+back a duty, and deletes one only while nobody has done it — after that it is
+history and the count read it, so it is retired. A retired duty takes no new
+turn, and a plan made before it was retired cannot be marked done: the table
+would show it the day the duty came back. **Nobody touches another
+house's turns, a steward included**: a count a steward could lower is a count
+nobody trusts. The cost: a house with no phone in the portal has no turns, and
+a steward cannot enter a paper roster for it.
+
+**A house leaving does not break the count.** Its done turns stay (SET NULL):
+the log reads "a house that has left", and the lane was still cleared that
+day, so next due does not jump back — a cascade would make a duty look overdue
+the day a house leaves. The table has no row for it, because it counts houses
+that exist. Its planned turns are nobody's plan and the room leaves them out.
+The steward's delete dialog does not change: nothing of the roster goes with
+the house.
+
+**Nothing pushes**, like the phone book. A turn ringing every phone would put
+"look who did it again" on lock screens, which is public credit, the thing a
+favour tally is made of. Who mows on Saturday is in the room. The cost: a
+house that clears the lane at seven announces it in the WhatsApp group, or
+nobody hears.
+
+**Separate from the calendar's work parties**, on purpose. A work party is
+one day and many hands, and its answers are a headcount for that day that dies
+with the event — an invariant that holds in every village, switch or no
+switch. A turn is a count that persists by design. Folding the two would make
+the calendar's `yes` a score in every village that switched the roster on, or
+make turns die with their events. And one house mowing on a Tuesday is not an
+event anybody attends. A village that mows together calls a work party as
+always, and each house records its turn in the roster.
+
+**Agents**: `list_roster`, `add_turn`, `update_turn`, tagged with the switch
+(`docs/design-mcp.md`). No tool writes a duty, and none removes a turn.
+
+Not built: a Home badge ("mowing due") — Home loads every badge in one
+request batch, which a switched-off room would fail, and the switch filtering
+on Home is its own change; a per-house "joined" mark beside the counts; a
+reminder when a duty is due.

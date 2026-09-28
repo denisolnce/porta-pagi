@@ -41,7 +41,7 @@ the original guess, not a schedule.
 | Almanac: per-house frost log | New room | Frost pooling is this site's binding constraint. A shared record of first and last frost per place is worth more than any forecast | v1 | Needs a habit, or it stays empty |
 | Archive: village knowledge base. Valves, pipes, who to call, how the water system works | New room | Infrastructure knowledge lives in a few heads | v2 | Needs a steward or it rots |
 | Skills board: who welds, who has a chainsaw licence | Archive, opt-in cards | Useful the day something breaks | v2 | Privacy. Opt-in only, each house writes its own |
-| Duty roster: mowing common ground, snow, water system | Tavern, recurring | Only if the collective has duties | v2 | Builds resentment if the roster is not the collective's own idea |
+| Duty roster: mowing common ground, snow, water system | **Built** behind the `roster` switch, off by default (`docs/design-more-rooms.md` § Duty roster). The village that built the portal leaves it off | Only if the collective has duties | — | Builds resentment if the roster is not the collective's own idea: a steward writes the duties the village agreed, nothing assigns a house |
 | WhatsApp one-time-code login | Gate | Replaces the invite link | v2 or never | Meta's Business API, a per-verification fee |
 | Moving into the collective's own website | Deploy | One address for everything | v2 or never | The collective asks for it |
 | Renown points, quests, leaderboards | — | **Never, unless the houses ask.** Counted reciprocity turns into debt | — | High |

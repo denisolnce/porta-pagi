@@ -137,7 +137,10 @@ a state, and an agent that deletes has no confirm), no devices, pairing or
 push (a key must not mint keys), no `PUT /api/houses/{id}` (rename, crest,
 colour, the map mark: a house does that itself, once), no steward route. With
 the fence, this table is not a menu: **what is not here, a key cannot do**.
-46 tools; `TestMCPSurface` pins the count so a change is a visible decision.
+49 tools; `TestMCPSurface` pins the count so a change is a visible decision.
+A tool that belongs to a switch (`Feature` on its row, `features.go`) is
+absent while the village has that switch off: `tools/list` leaves it out and
+`tools/call` answers it as an unknown tool.
 
 | Tool | Route | Notes the description carries |
 | --- | --- | --- |
@@ -160,6 +163,7 @@ the fence, this table is not a menu: **what is not here, a key cannot do**.
 | `list_camp` · `create_camp` · `update_camp` | `/api/camp` | One row is one camper's stay; no amount, no total, no plate or nationality in the label — the handler refuses nothing here, so the description carries the rule |
 | `list_codex` · `create_codex_section` · `update_codex_section` | `/api/codex` | Send the `rev` you read; a 409 means another house wrote first |
 | `list_contacts` · `create_contact` · `update_contact` | `/api/contacts` | The village phone book. `type` is a free word, not a fixed list; a spelling differing only in case folds into the one in use. The numbers belong to people outside the village who never agreed to this portal, so the description says to keep them in the conversation, as `list_away`'s does. Nothing here pushes |
+| `list_roster` · `add_turn` · `update_turn` | `GET /api/roster`, `POST /api/roster/duties/{id}/turns`, `PUT /api/roster/turns/{id}` | Behind the `roster` switch. Always your own house's turn: there is no field for another house. A plan is today or later, a done turn today or earlier. `counts` is per house per duty over twelve months, never a sum across duties or a ranking. No tool writes a duty — that is a steward's route |
 
 Off the surface, each with its argument:
 
@@ -380,7 +384,7 @@ key last acted).
   `is_steward`, so a steward's key reads 0 while that house's phone reads 1.
 - `TestMCPSurface`: no tool deletes, none reaches devices, pairing, push,
   `/api/me/*`, export, a house write or a steward route; every tool lands on
-  a registered handler; the count is pinned at 46; unknown tool, unknown
+  a registered handler (every switch on first); the count is pinned at 49; unknown tool, unknown
   method, a batch and garbage are refused.
 - `TestMCPKeyLifecycle`: a common place cannot mint, a key cannot mint,
   Remove turns the key into a 401.

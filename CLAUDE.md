@@ -351,6 +351,25 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   phone has**: three actions that wrap read as two groups, and the third looks
   like it belongs to something else. What that costs in padding and face, and
   the longest row it was measured against, is in `styles.css`.
+- **The duty roster counts turns, and only because a village switched it on**
+  (`roster`, off by default; `roster.go`, `rooms/Roster.tsx`, design and the
+  options rejected in `docs/design-more-rooms.md` § Duty roster). A turn is
+  one house, one duty, one date, planned or done; **only done counts**. The
+  count is done turns per house per duty over **the last twelve months,
+  rolling** — one whole cycle of every seasonal chore, and nobody banks credit
+  or carries a debt forever. **Houses in the village's order, never by count;
+  no sum across duties** — a pump check is not a mowing. **A steward writes
+  the duties down** (the list of what is counted is the village's agreement,
+  not one house's), retires one, and deletes one only while nobody has done
+  it. **A house writes only its own turns, and nobody else touches them, a
+  steward included** — a count a steward could lower is a count nobody trusts.
+  A duty may carry a cadence (`every_days`) and shows "next around" off its
+  last done turn, or off the day it was written down before the first; **nothing assigns a house to a date and nothing reminds**.
+  **A turn that did not happen is not "missed"**: it is not counted, and after
+  its day only its own house sees it. A house leaving keeps its done turns in
+  the log without its name (SET NULL), so next due does not jump; the table
+  counts houses that exist. **Nothing pushes.** Kept apart from work parties,
+  whose `yes` stays a headcount for one day in every village.
 - **Done is a state, never a deletion.** Finished projects and closed tasks
   stay readable with their closing notes. Nothing archives itself.
 - **Exit is designed.** `GET /api/export` (steward) dumps everything as JSON;
@@ -421,7 +440,7 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   keeps the hash and cannot show it again. **A key opens `/api/mcp` and
   nothing else**: `requireHouse` answers 403 to an agent device on every other
   route unless the request carries the `viaMCP` context mark the dispatcher
-  sets — so the tool table in `mcp.go` is the whole surface (46 tools, pinned
+  sets — so the tool table in `mcp.go` is the whole surface (49 tools, pinned
   by `TestMCPSurface`: reads and writes in every room, a project picture in,
   **no deletes**, no devices, pairing, push, house row or steward route), and
   the raw REST API is closed to a key on purpose. **And the door takes a key
@@ -608,6 +627,7 @@ backend/internal/httpapi/codex.go  the codex: four routes and the one-time stdin
 backend/internal/httpapi/i18n.go   tr() for push texts and the manifest's line, off i18n/<lang>.json — the dictionaries the page imports too (@i18n alias);
                     i18n_test.go refuses a translation whose verbs, end spaces or leading icon differ from its key
 backend/internal/httpapi/contacts.go  the phone book: four routes, and the one place a type's spelling is settled
+backend/internal/httpapi/roster.go    the duty roster behind its switch: duties (steward), turns (a house's own), the twelve-month count
 backend/internal/httpapi/mcp.go    the door for agents: the tool table (the whole surface), the JSON-RPC endpoint, the in-process
                     dispatcher and the key route; the fence that keeps a key on /api/mcp is in auth.go
 backend/internal/httpapi/shed.go   tool photo routes, wishlist; photos.go = how a photo is read and served (≤2 MB, auth) + project pictures; remind.go = return nudges
