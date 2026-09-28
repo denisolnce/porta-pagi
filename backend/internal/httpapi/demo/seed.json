@@ -1410,6 +1410,68 @@
           "time": "18:00"
         }
       ]
+    },
+    {
+      "house": "barraca",
+      "kind": "order",
+      "destination": "Amazon.es",
+      "day": 3,
+      "time": "20:00",
+      "notes": "one order for everybody, it comes to my work in Ourique and I bring it up. write what you want, with a link if you have one",
+      "needs": [
+        {
+          "day": -6,
+          "house": "nova",
+          "text": "USB-C cable, 2 m, the braided kind",
+          "time": "21:30"
+        },
+        {
+          "day": -5,
+          "house": "moinho",
+          "text": "A head torch, rechargeable. Ours eats batteries.",
+          "state": "taken",
+          "takenBy": "barraca"
+        },
+        {
+          "day": -4,
+          "house": "forno",
+          "text": "filtros de café, tamanho 4, duas caixas"
+        },
+        {
+          "day": -4,
+          "house": "pedra",
+          "text": "pilhas AA, das boas. 8",
+          "state": "taken",
+          "takenBy": "barraca",
+          "time": "19:15"
+        }
+      ]
+    },
+    {
+      "house": "horta",
+      "kind": "order",
+      "destination": "Cooperativa Agrícola de Ourique",
+      "day": 5,
+      "time": "18:00",
+      "notes": "Ração. A cooperativa entrega às quintas de manhã, aqui na Horta. Cada um paga o seu na entrega.\n(feed order. the co-op delivers here on a thursday morning, everyone pays their own on delivery)",
+      "needs": [
+        {
+          "day": -8,
+          "house": "oliveiras",
+          "text": "Um saco de milho partido, se faz favor."
+        },
+        {
+          "day": -7,
+          "house": "nova",
+          "text": "One bag of layer pellets, please. We have four hens now!",
+          "time": "12:10"
+        },
+        {
+          "day": -6,
+          "house": "eira",
+          "text": "2 sacos de ração de postura, 25 kg"
+        }
+      ]
     }
   ],
   "needs": [
@@ -1482,12 +1544,6 @@
       "text": "The last moving boxes, flat, lots. A year later we are finally unpacked.",
       "state": "done",
       "claimedBy": "amarela"
-    },
-    {
-      "day": -4,
-      "house": "eira",
-      "text": "Encomenda conjunta de ração para as galinhas na cooperativa, sacos de 25 kg. Digam quantos sacos até ao fim da semana.\nEN: joint order of chicken feed from the co-op, 25 kg bags. Say how many by the end of the week.",
-      "tag": "joint"
     },
     {
       "day": -2,
@@ -2058,6 +2114,642 @@
       "day": -40,
       "state": "handed",
       "notes": "grey van parked down by the stream, water running out of it. asked them to move up to the Largo, they did"
+    }
+  ],
+  "dues": [
+    {
+      "house": "eira",
+      "collector": "pedra",
+      "day": -6,
+      "title": "Água do furo, {trimestre} trimestre",
+      "amount": 3500,
+      "currency": "€",
+      "due": 20,
+      "notes": "A conta da luz da bomba, dividida pelas dez casas. Paga-se à Pedra, em dinheiro.\nEN: the pump's electricity bill, split over the ten houses. Cash to Pedra.",
+      "owed": [
+        {
+          "house": "pedra",
+          "paid": 0
+        },
+        {
+          "house": "horta",
+          "paid": 1
+        },
+        {
+          "house": "forno",
+          "paid": 2
+        },
+        {
+          "house": "oliveiras",
+          "paid": 3,
+          "paidBy": "eira"
+        },
+        {
+          "house": "moinho",
+          "paid": 4
+        },
+        {
+          "house": "eira",
+          "paid": 5
+        },
+        {
+          "house": "amarela"
+        },
+        {
+          "house": "ribeira"
+        },
+        {
+          "house": "barraca"
+        },
+        {
+          "house": "nova"
+        }
+      ]
+    },
+    {
+      "house": "eira",
+      "collector": "pedra",
+      "day": -100,
+      "title": "Água do furo, {trimestre passado} trimestre",
+      "amount": 3500,
+      "currency": "€",
+      "due": 14,
+      "notes": "A conta da luz da bomba, dividida pelas dez casas. Paga-se à Pedra, em dinheiro.\nEN: the pump's electricity bill, split over the ten houses. Cash to Pedra.",
+      "owed": [
+        {
+          "house": "pedra",
+          "paid": 0
+        },
+        {
+          "house": "eira",
+          "paid": 1
+        },
+        {
+          "house": "horta",
+          "paid": 2
+        },
+        {
+          "house": "forno",
+          "paid": 3
+        },
+        {
+          "house": "moinho",
+          "paid": 5
+        },
+        {
+          "house": "oliveiras",
+          "paid": 6
+        },
+        {
+          "house": "amarela",
+          "paid": 9
+        },
+        {
+          "house": "ribeira",
+          "paid": 12,
+          "paidBy": "eira"
+        },
+        {
+          "house": "nova",
+          "paid": 16
+        },
+        {
+          "house": "barraca",
+          "paid": 27
+        }
+      ]
+    },
+    {
+      "house": "eira",
+      "collector": "moinho",
+      "day": -20,
+      "title": "Seguro do caminho {ano}",
+      "amount": 6250,
+      "currency": "€",
+      "due": 40,
+      "notes": "Seguro de responsabilidade civil do caminho de acesso. Paga-se ao Moinho, que trata com a seguradora.\nEN: liability insurance for the access track. Pay Moinho, they deal with the insurer.",
+      "owed": [
+        {
+          "house": "moinho",
+          "paid": 0
+        },
+        {
+          "house": "eira"
+        },
+        {
+          "house": "forno"
+        },
+        {
+          "house": "amarela"
+        },
+        {
+          "house": "ribeira"
+        },
+        {
+          "house": "barraca"
+        },
+        {
+          "house": "pedra"
+        },
+        {
+          "house": "horta"
+        },
+        {
+          "house": "nova"
+        },
+        {
+          "house": "oliveiras"
+        }
+      ]
+    },
+    {
+      "house": "eira",
+      "collector": "forno",
+      "day": -12,
+      "title": "Limpeza da fossa do celeiro",
+      "notes": "O camião vem quando puder. A fatura divide-se pelas quatro casas ligadas à fossa do celeiro, quando chegar.\nEN: the septic truck comes when it can. The bill gets split between the four houses on the barn's tank, once it arrives.",
+      "owed": [
+        {
+          "house": "forno"
+        },
+        {
+          "house": "amarela"
+        },
+        {
+          "house": "barraca"
+        },
+        {
+          "house": "nova"
+        }
+      ]
+    }
+  ],
+  "duties": [
+    {
+      "house": "eira",
+      "title": "Ver a bomba do furo",
+      "every": 7,
+      "notes": "Ouvir se trabalha em vazio, ver o manómetro, ver se pinga.\nEN: listen for it running dry, check the gauge, look for drips.",
+      "turns": [
+        {
+          "house": "moinho",
+          "day": -3,
+          "note": "Gauge at 3 bar, all quiet."
+        },
+        {
+          "house": "pedra",
+          "day": -10,
+          "note": "pressão boa. pingava na junta de cima, apertei."
+        },
+        {
+          "house": "nova",
+          "day": -17,
+          "note": "First time. Pedra showed me, all fine."
+        },
+        {
+          "house": "barraca",
+          "day": -24,
+          "note": "sounds ok I think? no drips"
+        },
+        {
+          "house": "amarela",
+          "day": -31,
+          "note": "fez um barulho esquisito ao arrancar, depois ficou bem"
+        },
+        {
+          "house": "eira",
+          "day": -38
+        },
+        {
+          "house": "forno",
+          "day": -45
+        },
+        {
+          "house": "moinho",
+          "day": -52
+        },
+        {
+          "house": "amarela",
+          "day": -59
+        },
+        {
+          "house": "ribeira",
+          "day": -66
+        },
+        {
+          "house": "barraca",
+          "day": -73
+        },
+        {
+          "house": "pedra",
+          "day": -80
+        },
+        {
+          "house": "horta",
+          "day": -87
+        },
+        {
+          "house": "oliveiras",
+          "day": -94
+        },
+        {
+          "house": "eira",
+          "day": -101
+        },
+        {
+          "house": "forno",
+          "day": -108
+        },
+        {
+          "house": "moinho",
+          "day": -115
+        },
+        {
+          "house": "amarela",
+          "day": -122
+        },
+        {
+          "house": "ribeira",
+          "day": -129
+        },
+        {
+          "house": "barraca",
+          "day": -136
+        },
+        {
+          "house": "pedra",
+          "day": -143
+        },
+        {
+          "house": "horta",
+          "day": -150
+        },
+        {
+          "house": "oliveiras",
+          "day": -157
+        },
+        {
+          "house": "eira",
+          "day": -164
+        },
+        {
+          "house": "forno",
+          "day": -171
+        },
+        {
+          "house": "moinho",
+          "day": -178
+        },
+        {
+          "house": "amarela",
+          "day": -185
+        },
+        {
+          "house": "ribeira",
+          "day": -192
+        },
+        {
+          "house": "barraca",
+          "day": -199
+        },
+        {
+          "house": "pedra",
+          "day": -206
+        },
+        {
+          "house": "horta",
+          "day": -213
+        },
+        {
+          "house": "oliveiras",
+          "day": -220
+        },
+        {
+          "house": "eira",
+          "day": -227
+        },
+        {
+          "house": "forno",
+          "day": -234
+        },
+        {
+          "house": "moinho",
+          "day": -241
+        },
+        {
+          "house": "amarela",
+          "day": -248
+        },
+        {
+          "house": "ribeira",
+          "day": -255
+        },
+        {
+          "house": "barraca",
+          "day": -262
+        },
+        {
+          "house": "pedra",
+          "day": -269
+        },
+        {
+          "house": "horta",
+          "day": -276
+        },
+        {
+          "house": "oliveiras",
+          "day": -283
+        },
+        {
+          "house": "eira",
+          "day": -290
+        },
+        {
+          "house": "forno",
+          "day": -297
+        },
+        {
+          "house": "moinho",
+          "day": -304
+        },
+        {
+          "house": "amarela",
+          "day": -311
+        },
+        {
+          "house": "ribeira",
+          "day": -318
+        },
+        {
+          "house": "barraca",
+          "day": -325
+        },
+        {
+          "house": "pedra",
+          "day": -332
+        },
+        {
+          "house": "horta",
+          "day": -339
+        },
+        {
+          "house": "oliveiras",
+          "day": -346
+        },
+        {
+          "house": "eira",
+          "day": -353
+        },
+        {
+          "house": "forno",
+          "day": -360
+        },
+        {
+          "house": "barraca",
+          "day": 4,
+          "state": "planned"
+        },
+        {
+          "house": "nova",
+          "day": 11,
+          "state": "planned"
+        }
+      ]
+    },
+    {
+      "house": "eira",
+      "title": "Virar o composto do Largo",
+      "every": 21,
+      "notes": "Com a forquilha grande, que está no celeiro.\nEN: with the big fork, it lives in the barn.",
+      "turns": [
+        {
+          "house": "forno",
+          "day": -23,
+          "note": "Está a aquecer bem, até sai fumo."
+        },
+        {
+          "house": "ribeira",
+          "day": -44,
+          "note": "Too wet, added two bales of straw."
+        },
+        {
+          "house": "oliveiras",
+          "day": -65,
+          "note": "Virado. Precisa de mais castanho: folhas, palha, cartão."
+        },
+        {
+          "house": "amarela",
+          "day": -86
+        },
+        {
+          "house": "ribeira",
+          "day": -107
+        },
+        {
+          "house": "barraca",
+          "day": -128
+        },
+        {
+          "house": "pedra",
+          "day": -149
+        },
+        {
+          "house": "horta",
+          "day": -170
+        },
+        {
+          "house": "oliveiras",
+          "day": -191
+        },
+        {
+          "house": "eira",
+          "day": -212
+        },
+        {
+          "house": "forno",
+          "day": -233
+        },
+        {
+          "house": "moinho",
+          "day": -254
+        },
+        {
+          "house": "amarela",
+          "day": -275
+        },
+        {
+          "house": "ribeira",
+          "day": -296
+        },
+        {
+          "house": "barraca",
+          "day": -317
+        },
+        {
+          "house": "pedra",
+          "day": -338
+        },
+        {
+          "house": "horta",
+          "day": -359
+        }
+      ]
+    },
+    {
+      "house": "eira",
+      "title": "Levar o vidro e o papel ao ecoponto",
+      "every": 14,
+      "notes": "Os sacos ficam no celeiro, à esquerda da porta. O ecoponto é o da entrada de Ourique.\nEN: the bags are in the barn, left of the door. Use the recycling bins at the edge of Ourique.",
+      "turns": [
+        {
+          "house": "barraca",
+          "day": -6,
+          "note": "took it on my way to work"
+        },
+        {
+          "house": "amarela",
+          "day": -20,
+          "note": "o vidrão estava cheio, deixei no da bomba de gasolina"
+        },
+        {
+          "house": "nova",
+          "day": -34
+        },
+        {
+          "house": "moinho",
+          "day": -48,
+          "note": "Two bags of glass, one of cardboard. Someone is drinking a lot of wine."
+        },
+        {
+          "house": "pedra",
+          "day": -62
+        },
+        {
+          "house": "horta",
+          "day": -76
+        },
+        {
+          "house": "oliveiras",
+          "day": -90
+        },
+        {
+          "house": "eira",
+          "day": -104
+        },
+        {
+          "house": "forno",
+          "day": -118
+        },
+        {
+          "house": "moinho",
+          "day": -132
+        },
+        {
+          "house": "amarela",
+          "day": -146
+        },
+        {
+          "house": "ribeira",
+          "day": -160
+        },
+        {
+          "house": "barraca",
+          "day": -174
+        },
+        {
+          "house": "pedra",
+          "day": -188
+        },
+        {
+          "house": "horta",
+          "day": -202
+        },
+        {
+          "house": "oliveiras",
+          "day": -216
+        },
+        {
+          "house": "eira",
+          "day": -230
+        },
+        {
+          "house": "forno",
+          "day": -244
+        },
+        {
+          "house": "moinho",
+          "day": -258
+        },
+        {
+          "house": "amarela",
+          "day": -272
+        },
+        {
+          "house": "ribeira",
+          "day": -286
+        },
+        {
+          "house": "barraca",
+          "day": -300
+        },
+        {
+          "house": "pedra",
+          "day": -314
+        },
+        {
+          "house": "horta",
+          "day": -328
+        },
+        {
+          "house": "oliveiras",
+          "day": -342
+        },
+        {
+          "house": "eira",
+          "day": -356
+        },
+        {
+          "house": "moinho",
+          "day": 8,
+          "state": "planned"
+        }
+      ]
+    },
+    {
+      "house": "eira",
+      "title": "Limpar o caminho depois da chuva",
+      "notes": "Pedras, ramos e a valeta da curva. Quem passar primeiro, faz.\nEN: stones, branches and the ditch at the bend. Whoever gets there first.",
+      "turns": [
+        {
+          "house": "pedra",
+          "on": "10-28",
+          "note": "tirei as pedras da curva. a valeta tem de ser aberta outra vez."
+        },
+        {
+          "house": "eira",
+          "on": "11-19",
+          "note": "Caminho limpo até à estrada."
+        },
+        {
+          "house": "ribeira",
+          "on": "12-10",
+          "note": "Um ramo grande do sobreiro caiu no caminho. Cortado e arrumado ao pé do celeiro. / Big cork oak branch down, cut and stacked by the barn."
+        },
+        {
+          "house": "moinho",
+          "on": "01-15",
+          "note": "Filled the pothole by the gate with gravel from the pile."
+        },
+        {
+          "house": "horta",
+          "on": "02-22"
+        },
+        {
+          "house": "forno",
+          "on": "03-30",
+          "note": "A valeta está aberta. Estava cheia de terra."
+        }
+      ]
     }
   ],
   "contacts": [

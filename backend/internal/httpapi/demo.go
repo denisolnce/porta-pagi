@@ -6,6 +6,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
@@ -99,8 +100,8 @@ type demoSeed struct {
 	}
 	Runs []struct {
 		demoWhen
-		House, Destination, Notes string
-		Needs                     []demoNeed
+		House, Kind, Destination, Notes string // kind: trip (a car) or order (a delivery)
+		Needs                           []demoNeed
 	}
 	Needs  []demoNeed
 	Offers []struct {
@@ -141,6 +142,32 @@ type demoSeed struct {
 	Camp []struct {
 		demoWhen
 		House, Notes, State, HeldBy string
+	}
+	// A due a steward wrote down, the house that collects it, and who has
+	// paid: "paid" is days after the due was written, absent for not yet.
+	// In a title, "{trimestre}" and "{ano}" become the quarter and the year
+	// the seed runs in, "{trimestre passado}" the quarter before, so the
+	// water of the third quarter is not asked for in March.
+	Dues []struct {
+		demoWhen
+		House, Collector, Title, Notes, Currency string
+		Amount                                   int // cents; 0 = no amount
+		Due                                      int // days after it was written; 0 = no date
+		Owed                                     []struct {
+			House, PaidBy string // PaidBy defaults to the collector
+			Paid          *int
+		}
+	}
+	// Duties the steward wrote down a year ago, and the turns houses took on
+	// them, each dated like a top-level row: a done turn whose day has not
+	// come, or a planned one whose day has passed, is not seeded.
+	Duties []struct {
+		House, Title, Notes string
+		Every               int // days; 0 = when needed
+		Turns               []struct {
+			demoWhen
+			House, State, Note string
+		}
 	}
 	Contacts []struct {
 		demoWhen
@@ -202,8 +229,9 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 	if err := dec.Decode(&seed); err != nil {
 		return nil, fmt.Errorf("demo/seed.json: %w", err)
 	}
-	// The demo shows every room, so every switch is on. A visitor who is the
-	// steward can flip them in the settings; the hour puts them back.
+	// The demo shows every room, so every switch is on, and stays on: the
+	// demo server refuses a flip (switchesFixed) and the settings page greys
+	// the switches out.
 	for _, f := range Features {
 		if _, err := tx.Exec(ctx, `INSERT INTO features(key, enabled) VALUES (?, 1)`, f.Key); err != nil {
 			return nil, err
@@ -582,7 +610,7 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 			}
 		}
 		created := past(createdDay, "08:15")
-		rid, err := tx.Exec(ctx, `INSERT INTO runs(house_id, destination, cutoff_at, notes, created_at) VALUES (?,?,?,?,?)`, id(r.House), r.Destination, wall(day, r.Time), r.Notes, created)
+		rid, err := tx.Exec(ctx, `INSERT INTO runs(house_id, kind, destination, cutoff_at, notes, created_at) VALUES (?,?,?,?,?,?)`, id(r.House), orDefault(r.Kind, "trip"), r.Destination, wall(day, r.Time), r.Notes, created)
 		if err != nil {
 			return nil, err
 		}
@@ -698,6 +726,74 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 			return nil, err
 		}
 		counts["camp rows"]++
+	}
+	for _, d := range seed.Dues {
+		day := dayOf(d.demoWhen)
+		s, ok := written(day, orDefault(d.Time, "10:00"))
+		if !ok {
+			continue
+		}
+		q := (int(today.Month())-1)/3 + 1
+		title := strings.NewReplacer("{trimestre passado}", fmt.Sprintf("%d.º", (q+2)%4+1), "{trimestre}", fmt.Sprintf("%d.º", q), "{ano}", fmt.Sprint(today.Year())).Replace(d.Title)
+		var amount, dueOn any
+		if d.Amount > 0 {
+			amount = d.Amount
+		}
+		if d.Due != 0 {
+			dueOn = date(day + d.Due)
+		}
+		did, err := tx.Exec(ctx, `INSERT INTO dues(title, amount_cents, currency, due_on, notes, collector_id, house_id, created_at) VALUES (?,?,?,?,?,?,?,?)`, title, amount, d.Currency, dueOn, d.Notes, id(d.Collector), id(d.House), s)
+		if err != nil {
+			return nil, err
+		}
+		counts["dues"]++
+		for _, o := range d.Owed {
+			var paidAt, paidBy any
+			if o.Paid != nil {
+				if ps, ok := written(day+*o.Paid, "19:00"); ok {
+					after("a due paid", ps, s)
+					paidAt, paidBy = ps, id(orDefault(o.PaidBy, d.Collector))
+				}
+			}
+			if _, err := tx.Exec(ctx, `INSERT INTO dues_owed(due_id, house_id, paid_at, paid_by) VALUES (?,?,?,?)`, did, id(o.House), paidAt, paidBy); err != nil {
+				return nil, err
+			}
+		}
+	}
+	for _, d := range seed.Duties {
+		var every any
+		if d.Every > 0 {
+			every = d.Every
+		}
+		did, err := tx.Exec(ctx, `INSERT INTO roster_duties(house_id, title, notes, every_days, created_at) VALUES (?,?,?,?,?)`, id(d.House), d.Title, d.Notes, every, past(-380, "21:00"))
+		if err != nil {
+			return nil, err
+		}
+		counts["duties"]++
+		for _, t := range d.Turns {
+			day := dayOf(t.demoWhen)
+			state := orDefault(t.State, "done")
+			var doneAt any
+			created := past(-1, "20:00")
+			switch state {
+			case "done":
+				s, ok := written(day, orDefault(t.Time, "18:00"))
+				if !ok {
+					continue
+				}
+				doneAt, created = s, s
+			case "planned":
+				if day < 0 {
+					continue
+				}
+			default:
+				panic("demo seed: a turn is done or planned")
+			}
+			if _, err := tx.Exec(ctx, `INSERT INTO roster_turns(duty_id, house_id, on_date, state, note, done_at, created_at) VALUES (?,?,?,?,?,?,?)`, did, id(t.House), date(day), state, t.Note, doneAt, created); err != nil {
+				return nil, fmt.Errorf("demo seed: %s on %s: %w", d.Title, date(day), err)
+			}
+			counts["turns"]++
+		}
 	}
 	for _, c := range seed.Contacts {
 		day := dayOf(c.demoWhen)
