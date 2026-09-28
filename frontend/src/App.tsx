@@ -27,7 +27,7 @@ export type Session = { me: Me; houses: House[]; refresh: () => Promise<void>; l
 export const ROOMS = [
   { path: "/tavern", icon: "🍺", name: "Tavern", short: "Hall", sub: "calendar, work bees and the board", nav: true },
   { path: "/projects", icon: "📋", name: "Projects", short: "Projects", sub: "long jobs, split into tasks", nav: true },
-  { path: "/market", icon: "🧺", name: "Market", short: "Market", sub: "needs, give-aways, runs", nav: true },
+  { path: "/market", icon: "🧺", name: "Market", short: "Market", sub: "needs, give-aways, runs, orders", nav: true },
   { path: "/shed", icon: "🛠", name: "Tool shed", short: "Shed", sub: "what the village has", nav: true },
   { path: "/watch", icon: "🕯️", name: "Watchtower", short: "Watch", sub: "who is away", nav: false },
   { path: "/camp", icon: "🏕️", name: "Campground", short: "Camp", sub: "who noticed, who has the money", nav: false },

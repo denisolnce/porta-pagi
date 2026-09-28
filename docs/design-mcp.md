@@ -148,7 +148,7 @@ the fence, this table is not a menu: **what is not here, a key cannot do**.
 | `list_events` · `create_event` · `update_event` | `GET`/`POST /api/events`, `PUT /api/events/{id}` | `kind` is `event` or `work`; `starts_at` wall clock `YYYY-MM-DDTHH:MM`; creating answers `yes` for your house; moving the time marks every answer stale |
 | `answer_event` | `POST /api/events/{id}/signup` | `state`: `yes` / `no` / `maybe`; silence is the fourth thing, and there is no tool to speak it |
 | `get_thread` · `comment` | `GET`/`POST /api/threads/{subject}/{id}` | `subject`: `event`, `wish`, `away` or `contact`; one reply level. A contact's thread pushes to nobody, because the phone book has no push kind. The away thread is on the surface with the Watchtower, and `TestMCPWatchtowerAndCamp` pins that an agent reads and writes it |
-| `list_runs` · `create_run` · `update_run` | `/api/runs` | `destination`, `cutoff_at`; moving a run pushes to its riders |
+| `list_runs` · `create_run` · `update_run` | `/api/runs` | `kind` (trip / order), `destination`, `cutoff_at`; moving a run pushes to its riders |
 | `list_needs` · `create_need` · `update_need` | `/api/needs` | `text`, optional `run_id`; `state` open / taken / done |
 | `list_offers` · `create_offer` · `update_offer` | `/api/offers` | `tag`: giveaway / seeds / surplus / joint |
 | `list_away` · `create_away` · `update_away` | `/api/away` | Dates `YYYY-MM-DD`; `watch: true/false` is the watcher; the description says it is burglary information, read it only when asked and keep it in the conversation |
