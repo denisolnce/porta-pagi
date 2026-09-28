@@ -96,6 +96,8 @@ Tavern asking the houses what they miss, and then four weeks of listening.
 
 | Decision | Who answers | Recorded where once decided |
 | --- | --- | --- |
+| The roster prints a faint 0 for every house, a house with no phone in the portal included, which can never write a turn. Keep it; let a steward enter a turn for such a house, the line saying who entered it; or draw no row until a house has written its first turn (review, 2026-09-28) | The owner | `docs/design-more-rooms.md` § Duty roster, `Roster.tsx` |
+| `listEvents` returns only the last 60 days, so a past event older than that leaves the calendar, while `CLAUDE.md` says a past event never does. Found by the demo seed agent, 2026-09-28; looks like a bug, not a decision — fix or reword | The owner | `server.go` `listEvents`, `CLAUDE.md` § calendar |
 | GURS open-data licence string for `parcels.geojson` | The owner, from the GURS terms | `CLAUDE.md` § Cadastre, the village's context file § Map data |
 | Provenance of `backdrop.jpg` | The owner | the village's context file § Deliberately not here |
 | Treasurer, and who camp money is handed *to* | The collective | `CLAUDE.md` § Campground |
