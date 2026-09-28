@@ -530,5 +530,10 @@
   "Undo": "Razveljavi",
   "Mark paid": "Označi plačano",
   "the due and who paid it. Only last night’s backup can bring it back.": "prispevek in kdo ga je plačal. Nazaj ga lahko prinese samo sinočnja varnostna kopija.",
-  "paid — mark it unpaid first": "plačano — najprej označite neplačano"
+  "paid — mark it unpaid first": "plačano — najprej označite neplačano",
+  " makes the order a run: ": " naredi iz naročila vožnjo: ",
+  " makes the run an order: ": " naredi iz vožnje naročilo: ",
+  "Every house loses this room until a steward switches it back on. Nothing in it is deleted.": "Vse hiše izgubijo to sobo, dokler je oskrbnik spet ne vklopi. Nič v njej se ne izbriše.",
+  "In the demo every switch stays on, so every visitor sees every room.": "V predstavitvi ostanejo vsa stikala vklopljena, da vsak obiskovalec vidi vse sobe.",
+  "The export is under ⚙️ in the top bar.": "Izvoz je pod ⚙️ v zgornji vrstici."
 }

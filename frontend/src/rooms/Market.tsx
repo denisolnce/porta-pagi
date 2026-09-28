@@ -55,7 +55,7 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
           <form className="inline" onSubmit={(e) => { e.preventDefault(); saveEdit(path, x.id, reload); }}>
             <div className="row">
               <label style={x.tag ? { gridColumn: "span 2" } : undefined}>{t(path === "/needs" ? "I need" : "I give away")}<input value={ef.text} onChange={(e) => setEf({ ...ef, text: e.target.value })} required maxLength={300} autoFocus /></label>
-              {x.tag && <label>{t("Kind")}<select value={ef.tag} onChange={(e) => setEf({ ...ef, tag: e.target.value })}>{["giveaway", "seeds", "surplus", "joint"].map((k) => <option key={k} value={k}>{t(k)}</option>)}</select></label>}
+              {x.tag && <label>{t("Kind")}<select value={ef.tag} onChange={(e) => setEf({ ...ef, tag: e.target.value })}>{["giveaway", "seeds", "surplus", ...(x.tag === "joint" ? ["joint"] : [])].map((k) => <option key={k} value={k}>{t(k)}</option>)}</select></label>}
             </div>
             <div className="submit"><button type="button" className="ghost" onClick={() => setEditing("")}>✕</button><button className="primary" type="submit">{t("Save")}</button></div>
           </form>
@@ -83,7 +83,7 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
       <div className="tabs">
         <button className={tab === "needs" ? "active" : ""} onClick={() => setTab("needs")}>🛒 {t("Needs")} ({needs.items.filter((x) => x.state === "open").length})</button>
         <button className={tab === "offers" ? "active" : ""} onClick={() => setTab("offers")}>🎁 {t("Give-aways")} ({offers.items.filter((x) => x.state === "open").length})</button>
-        <button className={tab === "runs" ? "active" : ""} onClick={() => setTab("runs")}>🚗📦 {t("Runs & orders")} ({runs.items.length})</button>
+        <button className={tab === "runs" ? "active" : ""} onClick={() => setTab("runs")}>🚗 {t("Runs & orders")} ({runs.items.length})</button>
       </div>
       <form className="inline" onSubmit={submit}>
         {tab === "needs" && (<>
@@ -93,7 +93,7 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
         {tab === "offers" && (
           <div className="row">
             <label style={{ gridColumn: "span 2" }}>{t("I give away")}<input value={text} onChange={(e) => setText(e.target.value)} placeholder={t("What you have and do not need")} maxLength={300} /></label>
-            <label>{t("Kind")}<select value={tag} onChange={(e) => setTag(e.target.value)}>{["giveaway", "seeds", "surplus", "joint"].map((k) => <option key={k} value={k}>{t(k)}</option>)}</select></label>
+            <label>{t("Kind")}<select value={tag} onChange={(e) => setTag(e.target.value)}>{["giveaway", "seeds", "surplus"].map((k) => <option key={k} value={k}>{t(k)}</option>)}</select></label>
           </div>
         )}
         {tab === "runs" && (
@@ -121,7 +121,7 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
               <div className="submit"><button type="button" className="ghost" onClick={() => setEditing("")}>✕</button><button className="primary" type="submit">{t("Save")}</button></div>
             </form>
           ) : (<>
-          <div className="head"><span aria-hidden="true">{runOf(r.kind).icon}</span><Crest crest={r.house_crest} color={r.house_color} /><span className="who">{r.house_name}</span> {t(runOf(r.kind).verb)} <strong>{r.destination}</strong><span className="when">{t(runOf(r.kind).when)} <When iso={r.cutoff_at} /></span></div>
+          <div className="head"><Crest crest={r.house_crest} color={r.house_color} /><span className="who">{r.house_name}</span> <span aria-hidden="true">{runOf(r.kind).icon}</span> {t(runOf(r.kind).verb)} <strong>{r.destination}</strong><span className="when">{t(runOf(r.kind).when)} <When iso={r.cutoff_at} /></span></div>
           {r.notes && <div className="body small">{r.notes}</div>}
           </>)}
           <div className="small">{needs.items.filter((n) => n.run_id === r.id && n.state !== "done").map((n) => <div key={n.id}>• {n.house_name}: {n.text}</div>)}</div>

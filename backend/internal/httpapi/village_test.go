@@ -1421,16 +1421,27 @@ func TestRunKinds(t *testing.T) {
 	if k := kindOf(order["id"].(float64)); k != "trip" {
 		t.Fatalf("kind edit did not land: %v", k)
 	}
-	if got := said()["en"]; got != [2]string{"🚗 Zeleni Volk changes the run to Semenarna", "leaves on Thursday at 9:00 — your need rides on it"} {
+	if got := said()["en"]; got != [2]string{"🚗 Zeleni Volk makes the order a run: Semenarna", "leaves on Thursday at 9:00 — your need rides on it"} {
 		t.Fatalf("kind flip: %q", got)
 	}
 	code, _, _ = volk.do("PUT", "/api/runs/"+oid, map[string]any{"kind": "order", "destination": "Amazon"})
 	volk.must(204, code, "back to an order, and a new shop")
 	waitFor(t, 3, fake)
 	want := map[string][2]string{
-		"sl": {"📦 Zeleni Volk spremeni naročilo: Amazon", "zaključek v četrtek ob 9:00 — tvoja potreba je v njem"},
-		"en": {"📦 Zeleni Volk changes the order: Amazon", "closes on Thursday at 9:00 — your need is in it"},
-		"pt": {"📦 Zeleni Volk muda a encomenda: Amazon", "fecha na quinta às 9:00 — o seu preciso está nela"},
+		"sl": {"📦 Zeleni Volk naredi iz vožnje naročilo: Amazon", "zaključek v četrtek ob 9:00 — tvoja potreba je v njem"},
+		"en": {"📦 Zeleni Volk makes the run an order: Amazon", "closes on Thursday at 9:00 — your need is in it"},
+		"pt": {"📦 Zeleni Volk passa a viagem a encomenda: Amazon", "fecha na quinta às 9:00 — o seu pedido está nela"},
+	}
+	if got := said(); fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Fatalf("run became an order:\n got %q\nwant %q", got, want)
+	}
+	code, _, _ = volk.do("PUT", "/api/runs/"+oid, map[string]any{"destination": "Amazon.es"})
+	volk.must(204, code, "the order changes shop")
+	waitFor(t, 3, fake)
+	want = map[string][2]string{
+		"sl": {"📦 Zeleni Volk spremeni naročilo: Amazon.es", "zaključek v četrtek ob 9:00 — tvoja potreba je v njem"},
+		"en": {"📦 Zeleni Volk changes the order: Amazon.es", "closes on Thursday at 9:00 — your need is in it"},
+		"pt": {"📦 Zeleni Volk muda a encomenda: Amazon.es", "fecha na quinta às 9:00 — o seu pedido está nela"},
 	}
 	if got := said(); fmt.Sprint(got) != fmt.Sprint(want) {
 		t.Fatalf("order moved:\n got %q\nwant %q", got, want)
@@ -1440,9 +1451,9 @@ func TestRunKinds(t *testing.T) {
 	volk.must(204, code, "order called off")
 	waitFor(t, 3, fake)
 	want = map[string][2]string{
-		"sl": {"📦 Odpade naročilo hiše Zeleni Volk: Amazon", "tvoja potreba ostane na tržnici, brez naročila"},
-		"en": {"📦 Called off: the order from Amazon by Zeleni Volk", "your need stays on the market, without the order"},
-		"pt": {"📦 Cancelada a encomenda de Zeleni Volk: Amazon", "o seu preciso fica no mercado, fora da encomenda"},
+		"sl": {"📦 Odpade naročilo hiše Zeleni Volk: Amazon.es", "tvoja potreba ostane na tržnici, brez naročila"},
+		"en": {"📦 Called off: the order from Amazon.es by Zeleni Volk", "your need stays on the market, without the order"},
+		"pt": {"📦 Cancelada a encomenda de Zeleni Volk: Amazon.es", "o seu pedido fica no mercado, fora da encomenda"},
 	}
 	if got := said(); fmt.Sprint(got) != fmt.Sprint(want) {
 		t.Fatalf("order called off:\n got %q\nwant %q", got, want)

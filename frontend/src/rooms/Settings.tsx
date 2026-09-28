@@ -23,7 +23,9 @@ type Prefs = { kinds: string[]; global_off: string[]; global_detail: { kind: str
 // the route exists only for a steward. What is about houses (creating them,
 // invites, land, stewardship) stays in the Houses room.
 export function Settings({ icons }: { icons: Record<string, string> }) {
-  const { t, lang } = useT();
+  // The demo is one village for every visitor at once: a switch flipped by
+  // one would take a room from all the others for the rest of the hour.
+  const { t, lang, demo } = useT();
   const { list, reload } = useFeatures();
   // set_at is a UTC stamp; the day it names is the village's, not Greenwich's.
   const day = (iso: string) => parse(iso).toLocaleDateString(localeOf(lang), { day: "numeric", month: "short", year: "numeric" });
@@ -36,6 +38,9 @@ export function Settings({ icons }: { icons: Record<string, string> }) {
   const flip = async (f: FeatureRow) => {
     const on = !f.on;
     if (on && COUNTING.includes(f.key) && !confirm(`${t(ABOUT[f.key] || f.key)}\n\n${t("This adds counting to a portal that counts nothing by default. Switch it on?")}`)) return;
+    // Off is one tap that takes a room from every house, the campground's
+    // money in flight with it: say so first. Nothing is deleted.
+    if (!on && !confirm(`${t(ABOUT[f.key] || f.key)}\n\n${t("Every house loses this room until a steward switches it back on. Nothing in it is deleted.")}`)) return;
     setBusy(f.key); setErr("");
     try {
       await api(`/features/${f.key}`, { method: "PUT", body: { on } });
@@ -73,10 +78,11 @@ export function Settings({ icons }: { icons: Record<string, string> }) {
 
       <h3>{t("Switches")}</h3>
       <p className="small">{t("A room that is off is absent: no door, no notifications, nothing for an agent. What it holds stays, and comes back when it is switched on.")}</p>
+      {demo && <p className="small muted">{t("In the demo every switch stays on, so every visitor sees every room.")}</p>}
       <div className="kinds">
         {list.map((f) => (
           <div key={f.key} className="kind wide switch">
-            <label className="kind"><input type="checkbox" checked={f.on} disabled={busy !== null} onChange={() => flip(f)} /> {icons[f.key] ? icons[f.key] + " " : ""}{t(ABOUT[f.key] || f.key)}</label>
+            <label className="kind"><input type="checkbox" checked={f.on} disabled={busy !== null || demo} onChange={() => flip(f)} /> {icons[f.key] ? icons[f.key] + " " : ""}{t(ABOUT[f.key] || f.key)}</label>
             {who(f) && <span className="small muted">{who(f)}</span>}
           </div>
         ))}

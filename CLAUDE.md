@@ -428,7 +428,7 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   fails early. A
   phone subscribes after the villager taps Allow and records the language it
   subscribed in; the house switches kinds off in `notify_off` (empty = all
-  nine kinds on); a steward mutes a kind for everyone in `notify_off_global`
+  all offered kinds on — a switched-off feature's kind is not offered); a steward mutes a kind for everyone in `notify_off_global`
   from the settings page, which records who and when, shown to every house in
   its own Notifications panel. Both lists are checked on
   every send. **Nothing is exempt**: the alarm kind was removed on 2026-09-06

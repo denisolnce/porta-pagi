@@ -974,9 +974,9 @@ func (s *Server) createRun(w http.ResponseWriter, r *http.Request) {
 // order strings put the typed shop after a colon or a bare preposition, so no
 // case ending is glued onto a name a house typed (docs/later.md, the
 // Slovenian case row, which the trip strings still carry).
-var runWords = map[string]struct{ icon, goes, until, moved, rides, stays, off string }{
-	"trip":  {"🚗", " drives to ", "leaves ", " changes the run to ", " — your need rides on it", "your need stays on the market, without a run", "Called off: the run to %s by %s"},
-	"order": {"📦", " orders from ", "closes ", " changes the order: ", " — your need is in it", "your need stays on the market, without the order", "Called off: the order from %s by %s"},
+var runWords = map[string]struct{ icon, goes, until, moved, became, rides, stays, off string }{
+	"trip":  {"🚗", " drives to ", "leaves ", " changes the run to ", " makes the order a run: ", " — your need rides on it", "your need stays on the market, without a run", "Called off: the run to %s by %s"},
+	"order": {"📦", " orders from ", "closes ", " changes the order: ", " makes the run an order: ", " — your need is in it", "your need stays on the market, without the order", "Called off: the order from %s by %s"},
 }
 
 // updateRun: kind, destination, cutoff_at, notes — owner or steward. The village
@@ -1032,11 +1032,17 @@ func (s *Server) updateRun(w http.ResponseWriter, r *http.Request) {
 		// rider needs to know whose car moved. Driver and editor hear nothing.
 		driver, driverID := str(before, "driver"), before["house_id"].(int64)
 		rw := runWords[kind]
+		// A flip names what the rider joined: "the order" means nothing to
+		// a house whose milk was on a car.
+		moved := rw.moved
+		if kind != str(before, "kind") {
+			moved = rw.became
+		}
 		riders, _ := s.st.Rows(r.Context(), `SELECT DISTINCT house_id FROM needs WHERE run_id=? AND state!='done' AND house_id NOT IN (?, ?)`, id, driverID, h.ID)
 		for _, n := range riders {
 			s.notifyHouse("runs", n["house_id"].(int64), func(lang string) Payload {
 				return Payload{
-					Title: rw.icon + " " + driver + tr(lang, rw.moved) + dest,
+					Title: rw.icon + " " + driver + tr(lang, moved) + dest,
 					Body:  tr(lang, rw.until) + humanWhen(at, lang, s.now()) + tr(lang, rw.rides),
 					URL:   "#/market",
 				}

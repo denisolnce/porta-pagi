@@ -73,6 +73,14 @@ export default function App() {
     const [m, hs, fs] = await Promise.all([api<Me>("/me"), api<House[]>("/houses"), api<FeatureRow[]>("/features")]);
     setMe(m); setHouses(hs); setFeatures(fs); setState("in");
   }, []);
+  // A steward may flip a switch while this phone sleeps: read them again
+  // whenever the page comes back to the front.
+  useEffect(() => {
+    if (state !== "in") return;
+    const back = () => { if (document.visibilityState === "visible") reloadFeatures().catch(() => {}); };
+    document.addEventListener("visibilitychange", back);
+    return () => document.removeEventListener("visibilitychange", back);
+  }, [state, reloadFeatures]);
   // The phone's notifications follow the language the page shows.
   useEffect(() => { if (state === "in") syncPushLang(lang); }, [state, lang]);
 
