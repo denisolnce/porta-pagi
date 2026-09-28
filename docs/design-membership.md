@@ -182,9 +182,9 @@ lines their own participants wrote around. That is an argument for exporting
 first, not for keeping the account.
 
 **One coupling to keep in view.** Deletion is the only exit and only a steward
-can press it. There is one steward today, and he is away part of the week, so a
-stay that ends badly waits for him. The second steward (`NOW.md`) is what closes
-that, not a change here.
+can press it. With one steward, a stay that ends badly waits for that steward;
+a second steward (`later.md` § Open decisions) is what closes that, not a
+change here.
 
 **The softer variant, designed and not built.** `houses.left_at` plus who set
 it, the shape `notify_off_global` already uses: devices and invite revoked, the

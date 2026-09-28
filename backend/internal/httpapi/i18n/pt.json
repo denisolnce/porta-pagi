@@ -546,5 +546,7 @@
   "In the demo the picture stays as it is.": "Na demonstração a imagem fica como está.",
   "Choose a picture": "Escolher uma imagem",
   "Back to the original": "Voltar à original",
-  "Back to the picture the portal came with?": "Voltar à imagem que veio com o portal?"
+  "Back to the picture the portal came with?": "Voltar à imagem que veio com o portal?",
+  "Replace the village's own picture? It is not kept anywhere else.": "Substituir a imagem própria da aldeia? Não fica guardada em mais lado nenhum.",
+  "Could not read that picture. Try a JPEG or PNG.": "Não foi possível ler essa imagem. Experimente um JPEG ou PNG."
 }

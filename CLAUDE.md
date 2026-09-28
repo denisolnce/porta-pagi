@@ -126,7 +126,7 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   write surface, ever** — a camper self-check-in link from park4night was asked
   for on 2026-09-06 and refused for that reason. The one public image
   is `backdrop.jpg` behind the gate — a Google Maps screenshot; the owner
-  keeps it as the default, in the demo and in his own village, knowing the
+  keeps it as the default, in the demo and in the village that built it, knowing the
   licence is Google's and accepting the risk (owner's decision 2026-09-28).
   A steward replaces it from ⚙️ settings (`PUT /api/site/backdrop`, the page
   shrinks it to 2000 px) or goes back to the built-in one (`DELETE`); a

@@ -76,9 +76,13 @@ export function Settings({ icons }: { icons: Record<string, string> }) {
   const own = site?.find((x) => x.name === "backdrop");
   const upload = async (file: File | undefined) => {
     if (!file) return;
+    // The village's own picture has no copy anywhere else: replacing it is
+    // asked, like going back to the original.
+    if (own && !confirm(t("Replace the village's own picture? It is not kept anywhere else."))) return;
     setPicErr("");
+    let blob: Blob;
+    try { blob = await shrink(file, 2000); } catch { setPicErr(t("Could not read that picture. Try a JPEG or PNG.")); return; }
     try {
-      const blob = await shrink(file, 2000);
       const r = await fetch(API + "/site/backdrop", { method: "PUT", headers: { Authorization: "Bearer " + (getToken() || ""), "Content-Type": "image/jpeg" }, body: blob });
       if (!r.ok) throw new Error(String(r.status));
       await loadSite(); setBust(Date.now());

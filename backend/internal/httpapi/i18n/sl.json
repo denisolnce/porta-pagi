@@ -546,5 +546,7 @@
   "In the demo the picture stays as it is.": "V predstavitvi slika ostane, kakršna je.",
   "Choose a picture": "Izberi sliko",
   "Back to the original": "Nazaj na izvirno",
-  "Back to the picture the portal came with?": "Nazaj na sliko, ki je prišla s portalom?"
+  "Back to the picture the portal came with?": "Nazaj na sliko, ki je prišla s portalom?",
+  "Replace the village's own picture? It is not kept anywhere else.": "Zamenjam lastno sliko vasi? Nikjer drugje ni shranjena.",
+  "Could not read that picture. Try a JPEG or PNG.": "Te slike ni bilo mogoče prebrati. Poskusi JPEG ali PNG."
 }
