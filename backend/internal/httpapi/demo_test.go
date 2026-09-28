@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"fmt"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -10,48 +11,66 @@ import (
 	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
 )
 
-// TestDemoSeed: the demo village lands whole on an empty ground, dated off
-// the day it runs, every house it names defined, and never on top of a
-// village that exists.
-func TestDemoSeed(t *testing.T) {
+// Lisbon: a clock change sits between September and the winter anchors,
+// which is how an hour became a day once.
+func lisbon(t *testing.T) *time.Location {
+	t.Helper()
+	loc, err := time.LoadLocation("Europe/Lisbon")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return loc
+}
+
+// seedAt seeds the demo into a fresh database as if it ran at now.
+func seedAt(t *testing.T, now time.Time) (*Server, *store.Store) {
+	t.Helper()
 	st, err := store.Open(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer st.Close()
+	t.Cleanup(func() { st.Close() })
 	srv := New(st, config.Config{Languages: []string{"pt", "en"}, VillageName: "Sobreiro Torto"})
-	// Lisbon: a clock change sits between September and the winter anchors,
-	// which is how an hour became a day once.
-	lisbon, err := time.LoadLocation("Europe/Lisbon")
-	if err != nil {
-		t.Fatal(err)
-	}
-	now := time.Date(2026, 9, 23, 10, 0, 0, 0, lisbon)
 	if err := srv.SeedDemo(now); err != nil {
-		t.Fatal(err)
+		t.Fatalf("seeded at %s: %v", now, err)
 	}
+	return srv, st
+}
+
+// value reads one column of one row, "" when there is none.
+func value(t *testing.T, st *store.Store, q string, args ...any) string {
+	t.Helper()
+	row, err := st.One(t.Context(), q, args...)
+	if err != nil {
+		t.Fatalf("%s: %v", q, err)
+	}
+	if row == nil || row["v"] == nil {
+		return ""
+	}
+	return fmt.Sprint(row["v"])
+}
+
+// TestDemoSeed: the demo village lands whole on an empty ground, dated off
+// the day it runs, every house it names defined, and never on top of a
+// village that exists.
+func TestDemoSeed(t *testing.T) {
+	now := time.Date(2026, 9, 23, 10, 0, 0, 0, lisbon(t))
+	srv, st := seedAt(t, now)
 	if err := srv.SeedDemo(now); err == nil {
 		t.Fatal("the demo seeded on top of itself")
 	}
-	count := func(table string) int64 {
+	for table, min := range map[string]int{"houses": 11, "posts": 60, "events": 18, "event_signups": 120, "comments": 60, "runs": 2, "needs": 12, "offers": 8, "away": 6, "tools": 15, "wishes": 3, "wish_options": 4, "projects": 5, "project_tasks": 18, "camp_takings": 6, "contacts": 12, "codex_sections": 5, "codex_texts": 10, "map_files": 2} {
 		row, err := st.One(t.Context(), `SELECT count(*) AS n FROM `+table)
 		if err != nil {
 			t.Fatal(err)
 		}
-		return row["n"].(int64)
-	}
-	for table, min := range map[string]int64{"houses": 10, "posts": 20, "events": 12, "event_signups": 40, "comments": 8, "runs": 2, "needs": 5, "offers": 3, "away": 3, "tools": 8, "wishes": 2, "projects": 3, "project_tasks": 8, "camp_takings": 3, "contacts": 6, "codex_sections": 5, "codex_texts": 10, "map_files": 2} {
-		if n := count(table); n < min {
+		if n := row["n"].(int64); n < int64(min) {
 			t.Errorf("%s: %d rows, expected at least %d", table, n, min)
 		}
 	}
 	// A past event and a future one, off the seed's day; a wall clock, not UTC.
 	if row, _ := st.One(t.Context(), `SELECT min(starts_at) AS a, max(starts_at) AS b FROM events`); row == nil || row["a"].(string) > "2026-09-23" || row["b"].(string) < "2026-09-24" || !strings.Contains(row["a"].(string), "T") {
 		t.Fatalf("events are not spread around the seed's day: %v", row)
-	}
-	// A tool on loan long enough for the return nudge to have something to say.
-	if row, _ := st.One(t.Context(), `SELECT count(*) AS n FROM tools WHERE held_by IS NOT NULL AND held_since < ?`, now.AddDate(0, 0, -7).UTC().Format("2006-01-02 15:04:05")); row["n"].(int64) == 0 {
-		t.Fatal("no tool has been out for a week")
 	}
 	// Every switch is on in the demo: it shows every room.
 	for _, f := range Features {
@@ -60,10 +79,10 @@ func TestDemoSeed(t *testing.T) {
 		}
 	}
 	// The steward exists and the common place is not a house.
-	if row, _ := st.One(t.Context(), `SELECT count(*) AS n FROM houses WHERE is_steward=1`); row["n"].(int64) != 1 {
+	if n := value(t, st, `SELECT count(*) AS v FROM houses WHERE is_steward=1`); n != "1" {
 		t.Fatal("the demo needs exactly one steward house")
 	}
-	if row, _ := st.One(t.Context(), `SELECT count(*) AS n FROM houses WHERE kind='common'`); row["n"].(int64) != 1 {
+	if n := value(t, st, `SELECT count(*) AS v FROM houses WHERE kind='common'`); n != "1" {
 		t.Fatal("the demo needs its square")
 	}
 	// Anchors land on their calendar day whatever the clock did in between:
@@ -78,41 +97,34 @@ func TestDemoSeed(t *testing.T) {
 		// Two spans across the year end: the holiday ahead and last New Year.
 		{`SELECT from_date || '..' || to_date AS v FROM away WHERE notes LIKE 'France%'`, "2026-12-20..2027-01-10"},
 		{`SELECT from_date || '..' || to_date AS v FROM away WHERE notes LIKE 'Scotland%'`, "2025-12-27..2026-01-04"},
+		// A row dated off an event moves with it: the vindima's call four
+		// days before is written this morning at 12:40, so at 10:00 it is not.
+		{`SELECT count(*) AS v FROM posts WHERE body LIKE 'Vindima no dia 27%'`, "0"},
+		// The council whose time moved: three answers were given for the old one.
+		{`SELECT count(*) AS v FROM event_signups s JOIN events e ON e.id=s.event_id WHERE e.starts_at='2026-10-04T19:00' AND s.answered_version < e.time_version`, "3"},
+		// A number corrected by a house other than the one that wrote it down.
+		{`SELECT h.name AS v FROM contacts c JOIN houses h ON h.id=c.edited_by WHERE c.name='Junta de Freguesia'`, "Casa das Oliveiras"},
+		// The codex section a house rewrote after the council.
+		{`SELECT h.name || ' ' || substr(c.updated_at, 1, 10) AS v FROM codex_sections c JOIN houses h ON h.id=c.updated_by`, "Casa da Ribeira 2026-08-14"},
 	} {
-		if row, _ := st.One(t.Context(), c.q); row == nil || row["v"] != c.want {
-			t.Errorf("%s: got %v, want %s", c.q, row, c.want)
+		if v := value(t, st, c.q); v != c.want {
+			t.Errorf("%s: got %q, want %s", c.q, v, c.want)
 		}
 	}
 	// Seeded a week into that absence, the span has begun — not jumped a year.
-	st2, err := store.Open(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer st2.Close()
-	srv2 := New(st2, config.Config{Languages: []string{"pt", "en"}, VillageName: "Sobreiro Torto"})
-	if err := srv2.SeedDemo(time.Date(2026, 10, 20, 10, 0, 0, 0, lisbon)); err != nil {
-		t.Fatal(err)
-	}
-	if row, _ := st2.One(t.Context(), `SELECT from_date, to_date FROM away WHERE notes LIKE 'Lisboa%'`); row == nil || row["from_date"] != "2026-10-13" || row["to_date"] != "2026-11-09" {
-		t.Fatalf("an absence that has begun: %v", row)
+	_, st2 := seedAt(t, time.Date(2026, 10, 20, 10, 0, 0, 0, lisbon(t)))
+	if v := value(t, st2, `SELECT from_date || '..' || to_date AS v FROM away WHERE notes LIKE 'Lisboa%'`); v != "2026-10-13..2026-11-09" {
+		t.Fatalf("an absence that has begun: %v", v)
 	}
 	// Seeded inside the holiday span, past the year end: the span ahead has
 	// begun and last New Year's has just ended, neither thrown a year off.
-	st3, err := store.Open(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer st3.Close()
-	srv3 := New(st3, config.Config{Languages: []string{"pt", "en"}, VillageName: "Sobreiro Torto"})
-	if err := srv3.SeedDemo(time.Date(2027, 1, 5, 10, 0, 0, 0, lisbon)); err != nil {
-		t.Fatal(err)
-	}
+	_, st3 := seedAt(t, time.Date(2027, 1, 5, 10, 0, 0, 0, lisbon(t)))
 	for _, c := range []struct{ q, want string }{
 		{`SELECT from_date || '..' || to_date AS v FROM away WHERE notes LIKE 'France%'`, "2026-12-20..2027-01-10"},
 		{`SELECT from_date || '..' || to_date AS v FROM away WHERE notes LIKE 'Scotland%'`, "2026-12-27..2027-01-04"},
 	} {
-		if row, _ := st3.One(t.Context(), c.q); row == nil || row["v"] != c.want {
-			t.Errorf("seeded 2027-01-05, %s: got %v, want %s", c.q, row, c.want)
+		if v := value(t, st3, c.q); v != c.want {
+			t.Errorf("seeded 2027-01-05, %s: got %v, want %s", c.q, v, c.want)
 		}
 	}
 
@@ -121,5 +133,143 @@ func TestDemoSeed(t *testing.T) {
 	srv.Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/api/status", nil))
 	if rec.Code != 200 || !strings.Contains(rec.Body.String(), `"houses":11`) {
 		t.Fatalf("status after the seed: %d %s", rec.Code, rec.Body.String())
+	}
+}
+
+// TestDemoSeasons: what the land decides moves as one thing — a harvest
+// keeps its thread for the days after it, then gives its place to next
+// year's, which has no thread yet; a project anchored in April is still
+// being built in April.
+func TestDemoSeasons(t *testing.T) {
+	loc := lisbon(t)
+	at := func(y int, m time.Month, d int) *store.Store {
+		_, st := seedAt(t, time.Date(y, m, d, 10, 0, 0, 0, loc))
+		return st
+	}
+	thanks := `SELECT count(*) AS v FROM comments c JOIN events e ON e.id=c.subject_id AND c.subject='event' WHERE e.title='Vindima' AND c.body LIKE 'Obrigada a todos%'`
+	for _, c := range []struct {
+		st      *store.Store
+		when    string
+		q, want string
+	}{
+		// Three days after the vindima: it stayed, with the thanks under it
+		// and the call before it on the board.
+		{at(2026, 9, 30), "2026-09-30", `SELECT starts_at AS v FROM events WHERE title='Vindima'`, "2026-09-27T08:00"},
+		{at(2026, 9, 30), "2026-09-30", thanks, "1"},
+		{at(2026, 9, 30), "2026-09-30", `SELECT count(*) AS v FROM posts WHERE body LIKE 'Vindima no dia 27%'`, "1"},
+		// Two weeks after, next year's vindima is on the calendar, bare.
+		{at(2026, 10, 10), "2026-10-10", `SELECT starts_at AS v FROM events WHERE title='Vindima'`, "2027-09-27T08:00"},
+		{at(2026, 10, 10), "2026-10-10", thanks, "0"},
+		// The olive harvest: kept six days after, next year's sixteen days after.
+		{at(2026, 11, 20), "2026-11-20", `SELECT starts_at AS v FROM events WHERE title LIKE 'Apanha%'`, "2026-11-14T08:30"},
+		{at(2026, 11, 30), "2026-11-30", `SELECT starts_at AS v FROM events WHERE title LIKE 'Apanha%'`, "2027-11-14T08:30"},
+		// The chicken fence in April: begun on the 1st, its second work party
+		// ahead, the door not built yet, the project not finished.
+		{at(2026, 4, 10), "2026-04-10", `SELECT state AS v FROM projects WHERE title LIKE 'Vedação%'`, "open"},
+		{at(2026, 4, 10), "2026-04-10", `SELECT starts_at AS v FROM events WHERE title LIKE 'Galinheiro: porta%'`, "2026-04-25T09:00"},
+		{at(2026, 4, 10), "2026-04-10", `SELECT state AS v FROM project_tasks WHERE title LIKE 'Porta com fecho%'`, "open"},
+		// And in September it is done, on the day it was.
+		{at(2026, 9, 23), "2026-09-23", `SELECT state || ' ' || substr(done_at, 1, 10) AS v FROM projects WHERE title LIKE 'Vedação%'`, "done 2026-05-01"},
+	} {
+		if v := value(t, c.st, c.q); v != c.want {
+			t.Errorf("seeded %s, %s: got %q, want %s", c.when, c.q, v, c.want)
+		}
+	}
+}
+
+// TestDemoAnyDay: whenever the hour reseeds it, the demo shows every
+// feature a visitor can open in the rooms, and never a line written in the
+// future. Twice a month through a year, at three in the morning (before
+// the day's lines exist) and late in the evening.
+func TestDemoAnyDay(t *testing.T) {
+	loc := lisbon(t)
+	for m := time.January; m <= time.December; m++ {
+		for _, d := range []int{1, 16} {
+			for _, hh := range []int{3, 22} {
+				now := time.Date(2027, m, d, hh, 30, 0, 0, loc)
+				t.Run(now.Format("01-02T15"), func(t *testing.T) { demoShowsEverything(t, now) })
+			}
+		}
+	}
+}
+
+func demoShowsEverything(t *testing.T, now time.Time) {
+	_, st := seedAt(t, now)
+	utcNow := now.UTC().Format("2006-01-02 15:04:05")
+	wallNow := now.Format("2006-01-02T15:04")
+	today := now.Format("2006-01-02")
+	// The windows the rooms list by: sixty days of events, runs from a day
+	// back, done needs and give-aways for a week, absences three days on.
+	since60 := now.AddDate(0, 0, -60).Format("2006-01-02")
+	runCut := now.AddDate(0, 0, -1).Format("2006-01-02T15:04")
+	week := now.AddDate(0, 0, -7).UTC().Format("2006-01-02 15:04:05")
+	awayCut := now.AddDate(0, 0, -3).Format("2006-01-02")
+	for _, table := range []string{"posts", "comments", "needs", "offers", "wishes", "wish_options", "camp_takings", "contacts", "project_tasks", "events", "event_signups", "away", "projects", "runs"} {
+		col := "created_at"
+		if table == "event_signups" {
+			col = "answered_at"
+		}
+		if v := value(t, st, `SELECT count(*) AS v FROM `+table+` WHERE `+col+` > ?`, utcNow); v != "0" {
+			t.Errorf("%s: %s rows written after now", table, v)
+		}
+	}
+	for what, q := range map[string]string{
+		"a pinned post":                           `SELECT count(*) AS v FROM posts WHERE pinned=1`,
+		"a reply on the board":                    `SELECT count(*) AS v FROM posts WHERE parent_id IS NOT NULL`,
+		"a past event with a thread":              `SELECT count(*) AS v FROM events e WHERE starts_at >= '` + since60 + `' AND starts_at < '` + wallNow + `' AND EXISTS (SELECT 1 FROM comments c WHERE c.subject='event' AND c.subject_id=e.id)`,
+		"an event ahead with a thread":            `SELECT count(*) AS v FROM events e WHERE starts_at > '` + wallNow + `' AND EXISTS (SELECT 1 FROM comments c WHERE c.subject='event' AND c.subject_id=e.id)`,
+		"a work party listed":                     `SELECT count(*) AS v FROM events WHERE kind='work' AND starts_at >= '` + since60 + `'`,
+		"an ordinary event listed":                `SELECT count(*) AS v FROM events WHERE kind='event' AND starts_at >= '` + since60 + `'`,
+		"a no listed":                             `SELECT count(*) AS v FROM event_signups s JOIN events e ON e.id=s.event_id WHERE s.state='no' AND e.starts_at >= '` + since60 + `'`,
+		"a maybe listed":                          `SELECT count(*) AS v FROM event_signups s JOIN events e ON e.id=s.event_id WHERE s.state='maybe' AND e.starts_at >= '` + since60 + `'`,
+		"a moved event with struck answers":       `SELECT count(*) AS v FROM event_signups s JOIN events e ON e.id=s.event_id WHERE s.answered_version < e.time_version AND e.edited_by IS NOT NULL AND e.starts_at >= '` + since60 + `'`,
+		"an event on a project's task":            `SELECT count(*) AS v FROM events WHERE task_id IS NOT NULL AND starts_at >= '` + since60 + `'`,
+		"a reply inside a thread":                 `SELECT count(*) AS v FROM comments WHERE parent_id IS NOT NULL`,
+		"a run ahead with needs on it":            `SELECT count(*) AS v FROM runs r WHERE cutoff_at >= '` + runCut + `' AND EXISTS (SELECT 1 FROM needs n WHERE n.run_id=r.id AND n.state!='done')`,
+		"an open need":                            `SELECT count(*) AS v FROM needs WHERE state='open'`,
+		"a taken need":                            `SELECT count(*) AS v FROM needs WHERE state='taken'`,
+		"a done need still listed":                `SELECT count(*) AS v FROM needs WHERE state='done' AND created_at >= '` + week + `'`,
+		"an open give-away":                       `SELECT count(*) AS v FROM offers WHERE state='open'`,
+		"a claimed give-away":                     `SELECT count(*) AS v FROM offers WHERE state='claimed'`,
+		"a done give-away still listed":           `SELECT count(*) AS v FROM offers WHERE state='done' AND created_at >= '` + week + `'`,
+		"seeds":                                   `SELECT count(*) AS v FROM offers WHERE tag='seeds' AND state!='done'`,
+		"surplus":                                 `SELECT count(*) AS v FROM offers WHERE tag='surplus' AND state!='done'`,
+		"a joint order":                           `SELECT count(*) AS v FROM offers WHERE tag='joint' AND state!='done'`,
+		"a house away now, watched, talked about": `SELECT count(*) AS v FROM away a WHERE from_date <= '` + today + `' AND to_date >= '` + today + `' AND watcher IS NOT NULL AND EXISTS (SELECT 1 FROM comments c WHERE c.subject='away' AND c.subject_id=a.id)`,
+		"a house away soon":                       `SELECT count(*) AS v FROM away WHERE from_date > '` + today + `'`,
+		"an absence with nobody watching":         `SELECT count(*) AS v FROM away WHERE watcher IS NULL AND to_date >= '` + awayCut + `'`,
+		"an absence just over":                    `SELECT count(*) AS v FROM away WHERE to_date < '` + today + `' AND to_date >= '` + awayCut + `'`,
+		"a camper arrived":                        `SELECT count(*) AS v FROM camp_takings WHERE state='arrived'`,
+		"a camper's money held":                   `SELECT count(*) AS v FROM camp_takings WHERE state='held' AND held_by IS NOT NULL`,
+		"a camper's money handed":                 `SELECT count(*) AS v FROM camp_takings WHERE state='handed'`,
+		"a tool out over a week":                  `SELECT count(*) AS v FROM tools WHERE held_by IS NOT NULL AND held_since < '` + now.AddDate(0, 0, -7).Format("2006-01-02") + `'`,
+		"a tool in the shed":                      `SELECT count(*) AS v FROM tools WHERE held_by IS NULL`,
+		"a wish with findings and a thread":       `SELECT count(*) AS v FROM wishes w WHERE EXISTS (SELECT 1 FROM wish_options o WHERE o.wish_id=w.id) AND EXISTS (SELECT 1 FROM comments c WHERE c.subject='wish' AND c.subject_id=w.id) AND EXISTS (SELECT 1 FROM wish_wants x WHERE x.wish_id=w.id)`,
+		"a planned project":                       `SELECT count(*) AS v FROM projects WHERE state='planned'`,
+		"a project in progress":                   `SELECT count(*) AS v FROM projects WHERE state='open'`,
+		"a finished project":                      `SELECT count(*) AS v FROM projects WHERE state='done'`,
+		"a free task":                             `SELECT count(*) AS v FROM project_tasks WHERE state='open' AND assigned_to IS NULL`,
+		"a task another house holds":              `SELECT count(*) AS v FROM project_tasks WHERE state='open' AND assigned_to IS NOT NULL AND assigned_to != house_id`,
+		"a task done with a note":                 `SELECT count(*) AS v FROM project_tasks WHERE state='done' AND closing_note != ''`,
+		"a task with a due date":                  `SELECT count(*) AS v FROM project_tasks WHERE state='open' AND due_at IS NOT NULL`,
+		"a number with a thread":                  `SELECT count(*) AS v FROM contacts c WHERE EXISTS (SELECT 1 FROM comments m WHERE m.subject='contact' AND m.subject_id=c.id)`,
+		"a number corrected":                      `SELECT count(*) AS v FROM contacts WHERE edited_by IS NOT NULL`,
+		"a number written down a year ago":        `SELECT count(*) AS v FROM contacts WHERE created_at < '` + now.AddDate(0, 0, -300).UTC().Format("2006-01-02") + `'`,
+		"a number written down lately":            `SELECT count(*) AS v FROM contacts WHERE created_at > '` + now.AddDate(0, 0, -90).UTC().Format("2006-01-02") + `'`,
+		"a codex section a house rewrote":         `SELECT count(*) AS v FROM codex_sections WHERE updated_by IS NOT NULL`,
+	} {
+		if v := value(t, st, q); v == "0" || v == "" {
+			t.Errorf("nothing shows %s", what)
+		}
+	}
+	// Every subject that takes a thread has one.
+	for _, s := range commentSubjects {
+		if v := value(t, st, `SELECT count(*) AS v FROM comments WHERE subject=?`, s); v == "0" {
+			t.Errorf("no %s has a thread", s)
+		}
+	}
+	// No plate, no amount, no nationality on a camper.
+	if v := value(t, st, `SELECT count(*) AS v FROM camp_takings WHERE from_who != '' OR notes GLOB '*[0-9]*€*' OR notes GLOB '*€*'`); v != "0" {
+		t.Errorf("%s camp rows carry a label or an amount", v)
 	}
 }

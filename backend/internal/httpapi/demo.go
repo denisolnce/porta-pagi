@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"bytes"
 	"context"
 	"embed"
 	"encoding/json"
@@ -21,19 +22,42 @@ import (
 //go:embed demo/*
 var demoFS embed.FS
 
-// The seed's shape. A row is dated one of two ways. "day" is an offset from
-// the seed's day (negative = past): for the last few weeks and the next,
-// where "three days ago" is the point. "on" is a calendar anchor, "MM-DD",
-// resolved to its most recent occurrence — or, with "ahead", to its next —
-// for anything the land decides: the olive harvest, the frost, São João, so
-// a demo reseeded in March does not pick grapes. Clocks are the village's
-// wall clock. The one seam this leaves: a post written for the weeks before
-// an anchored event ahead is relative, and in March it precedes a September
-// vindima by half a year. The demo is truest around the month it was written.
+// The seed's shape. A top-level row is dated one of three ways:
+//
+//   - "day" alone is an offset from the seed's day (negative = past), for
+//     what could happen in any month: the boar at the bins, a lift to town.
+//   - "on" is a calendar anchor, "MM-DD", for what the land decides — the
+//     olive harvest, the frost, São João — so a demo reseeded in March does
+//     not pick grapes. With "day" beside it, the row sits that many days off
+//     the anchor, and the pair resolves as one date. It resolves to its most
+//     recent occurrence, or with "ahead" to its next; "keep" lets an
+//     occurrence stay that many days after it passed, so a harvest just done
+//     keeps its thread for a week before the next year's takes its place.
+//   - "at" names a keyed project or event, and the row is "day" days off it,
+//     so a post announcing the grape harvest moves with the harvest.
+//
+// A row inside another — a reply, a comment, a need on a run, a task, a
+// wish's finding — has only "day", and it counts from its parent's day.
+//
+// Words are never written in the future: a post, comment, need or task whose
+// moment has not come yet is not seeded, and neither is what hangs off it. A
+// work party eleven months ahead therefore has no thread yet, and the one
+// three days ahead has the lines people wrote before it. A row that is a
+// container — an event, a run, a project, an absence — is seeded whenever it
+// falls, with the moment it was created pulled back into the past. Clocks are
+// the village's wall clock.
+//
+// The seam this leaves: an anchored absence does not silence its house's
+// rows dated off today, so in the fortnight around the year end the house
+// in France for the holidays also thanks Amarela for last night's film.
+// TestDemoAnyDay proves every room shows its features on any day; it does
+// not prove every day is coherent.
 type demoWhen struct {
 	Day   int
 	On    string
 	Ahead bool
+	Keep  int
+	At    string
 	Time  string
 }
 
@@ -47,6 +71,10 @@ type demoSeed struct {
 		Adopted  int // days ago
 		Sections []struct {
 			Texts map[string]codexText
+			// A section a house rewrote after the council adopted it: which
+			// house, and how many days ago.
+			EditedBy string
+			Edited   int
 		}
 	}
 	Posts []struct {
@@ -57,10 +85,17 @@ type demoSeed struct {
 	}
 	Events []struct {
 		demoWhen
-		House, Kind, Title, Place, Notes, Project string
-		Start, End                                string
-		Answers                                   map[string]string // house key -> yes/no/maybe
-		Comments                                  []demoComment
+		Key, House, Kind, Title, Place, Notes string
+		Project, Task                         string // a project's key, and one of its tasks by title
+		Start, End                            string
+		Answers                               map[string]string // house key -> yes/no/maybe
+		// A house that edited the event after it was called. With "moved",
+		// the edit moved its time that many days off the event, and the
+		// answers in "stale" were given before it — the room strikes them.
+		EditedBy string
+		Moved    int
+		Stale    map[string]string
+		Comments []demoComment
 	}
 	Runs []struct {
 		demoWhen
@@ -77,7 +112,7 @@ type demoSeed struct {
 		From, To              int
 		OnFrom, OnTo          string
 		Ahead                 bool
-		Comments              []demoComment
+		Comments              []demoComment // days count from the first day away
 	}
 	Tools []struct {
 		House, Name, Notes, Category, HeldBy string
@@ -87,27 +122,32 @@ type demoSeed struct {
 		demoWhen
 		House, Text string
 		Wants       []string
-		Options     []struct{ House, Text, URL string }
-		Comments    []demoComment
+		Options     []struct {
+			Day              int
+			House, Text, URL string
+		}
+		Comments []demoComment
 	}
 	Projects []struct {
 		demoWhen
 		Key, House, Title, Notes, State string
-		DoneDay                         int
-		DoneOn                          string
+		Done, Due                       int // days off the project's day; 0 = not done, no due date
 		Tasks                           []struct {
-			demoWhen
-			House, Title, Notes, AssignedTo, State, ClosingNote string
-			DoneDay                                             int
-			DoneOn                                              string
+			Day                                          int
+			House, Title, Notes, AssignedTo, ClosingNote string
+			Done, Due                                    int // days off the project's day
 		}
 	}
 	Camp []struct {
 		demoWhen
-		House, FromWho, Notes, State, HeldBy string
+		House, Notes, State, HeldBy string
 	}
 	Contacts []struct {
+		demoWhen
 		House, Name, Phone, Notes, Type string
+		EditedBy                        string
+		Edited                          int // days after it was written down
+		Comments                        []demoComment
 	}
 }
 
@@ -116,9 +156,13 @@ type demoNeed struct {
 	House, Text, State, TakenBy string
 }
 
+// A comment, a reply to a post, or a reply to a comment (one level, as the
+// thread has). Its day counts from its parent's.
 type demoComment struct {
-	demoWhen
+	Day                 int
+	Time                string
 	House, Author, Body string
+	Replies             []demoComment
 }
 
 // SeedDemo writes the demo village into an empty database, in one
@@ -151,7 +195,11 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		return nil, err
 	}
 	var seed demoSeed
-	if err := json.Unmarshal(raw, &seed); err != nil {
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	// A misspelt field would otherwise be dropped without a word, and the
+	// row would seed without the thing it was written to show.
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&seed); err != nil {
 		return nil, fmt.Errorf("demo/seed.json: %w", err)
 	}
 	// The demo shows every room, so every switch is on. A visitor who is the
@@ -175,23 +223,43 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		}
 		return t
 	}
-	// dayOf resolves a row's date to an offset from today: the anchor's most
-	// recent occurrence (or its next, when the row is ahead), the plain offset
-	// when it has none.
+	// keyed holds the day of every project and event with a key, for the
+	// rows dated "at" one.
+	keyed := map[string]int{}
+	// dayOf resolves a top-level row's date to an offset from today.
 	dayOf := func(w demoWhen) int {
+		if w.At != "" {
+			base, ok := keyed[w.At]
+			if !ok {
+				panic("demo seed: a row is dated at " + w.At + ", which no project or event before it is keyed as")
+			}
+			return base + w.Day
+		}
 		if w.On == "" {
 			return w.Day
 		}
-		t := parse(w.On, now.Year())
-		off := daysFrom(t)
-		if w.Ahead && off < 0 {
-			off = daysFrom(t.AddDate(1, 0, 0))
-		} else if !w.Ahead && off > 0 {
-			off = daysFrom(t.AddDate(-1, 0, 0))
+		at := func(y int) int { return daysFrom(parse(w.On, y).AddDate(0, 0, w.Day)) }
+		if w.Ahead {
+			for y := now.Year() - 1; ; y++ {
+				if d := at(y); d >= -w.Keep {
+					return d
+				}
+			}
 		}
-		return off
+		for y := now.Year() + 1; ; y-- {
+			if d := at(y); d <= 0 {
+				return d
+			}
+		}
 	}
-	anchor := func(day int, on string, ahead bool) int { return dayOf(demoWhen{Day: day, On: on, Ahead: ahead}) }
+	// A row inside another counts from its parent, and nothing else.
+	child := func(w demoWhen) int {
+		if w.On != "" || w.At != "" || w.Ahead || w.Keep != 0 {
+			panic("demo seed: a row inside another is dated by its day alone")
+		}
+		return w.Day
+	}
+	anchor := func(on string, ahead bool) int { return dayOf(demoWhen{On: on, Ahead: ahead}) }
 	// span resolves an away's two ends as one thing: one end by its anchor,
 	// the other in that end's year, so a span that has already begun is not
 	// thrown a year ahead by its own start date. For a span, "ahead" means
@@ -207,14 +275,14 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 			panic("demo seed: an away anchors both ends or neither")
 		}
 		if ahead {
-			t := anchor(0, onTo, true)
+			t := anchor(onTo, true)
 			f := parse(onFrom, today.AddDate(0, 0, t).Year())
 			if daysFrom(f) > t {
 				f = f.AddDate(-1, 0, 0)
 			}
 			return daysFrom(f), t
 		}
-		f := anchor(0, onFrom, false)
+		f := anchor(onFrom, false)
 		t := parse(onTo, today.AddDate(0, 0, f).Year())
 		if daysFrom(t) < f {
 			t = t.AddDate(1, 0, 0)
@@ -230,12 +298,36 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		return today.AddDate(0, 0, day).Format("2006-01-02") + "T" + clock
 	}
 	date := func(day int) string { return today.AddDate(0, 0, day).Format("2006-01-02") }
-	stamp := func(day int, clock string) string {
+	moment := func(day int, clock string) time.Time {
 		t, err := time.ParseInLocation("2006-01-02T15:04", wall(day, clock), now.Location())
 		if err != nil {
-			t = today.AddDate(0, 0, day)
+			panic("demo seed: bad time " + clock)
 		}
-		return t.UTC().Format("2006-01-02 15:04:05")
+		return t
+	}
+	utc := func(t time.Time) string { return t.UTC().Format("2006-01-02 15:04:05") }
+	// written is the stamp of something a villager wrote, and false when its
+	// moment has not come yet: such a row is not seeded.
+	written := func(day int, clock string) (string, bool) {
+		t := moment(day, clock)
+		return utc(t), !t.After(now)
+	}
+	// past is the stamp of something the database recorded — a row created,
+	// an answer given — pulled back to half an hour ago when it would fall
+	// later, because a container is seeded whenever it falls.
+	past := func(day int, clock string) string {
+		t := moment(day, clock)
+		if lim := now.Add(-30 * time.Minute); t.After(lim) {
+			t = lim
+		}
+		return utc(t)
+	}
+	// after refuses a row that precedes what it hangs off: a reply before
+	// its post reads as a village that answers questions nobody asked.
+	after := func(what, s, parent string) {
+		if s < parent {
+			panic(fmt.Sprintf("demo seed: %s at %s comes before what it answers (%s)", what, s, parent))
+		}
 	}
 	houses := map[string]int64{}
 	id := func(key string) any {
@@ -249,17 +341,35 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		return v
 	}
 	counts := map[string]int{}
-	comments := func(subject string, sid int64, cs []demoComment) error {
+	// comments writes a thread off its subject's day, replies one level down.
+	var comments func(subject string, sid int64, base int, parentStamp string, parent any, cs []demoComment) error
+	comments = func(subject string, sid int64, base int, parentStamp string, parent any, cs []demoComment) error {
 		for _, c := range cs {
-			if _, err := tx.Exec(ctx, `INSERT INTO comments(subject, subject_id, house_id, author, body, created_at) VALUES (?,?,?,?,?,?)`, subject, sid, id(c.House), c.Author, c.Body, stamp(dayOf(c.demoWhen), c.Time)); err != nil {
+			day := base + c.Day
+			s, ok := written(day, orDefault(c.Time, "20:00"))
+			if !ok {
+				continue
+			}
+			after(subject+" comment", s, parentStamp)
+			cid, err := tx.Exec(ctx, `INSERT INTO comments(subject, subject_id, house_id, parent_id, author, body, created_at) VALUES (?,?,?,?,?,?,?)`, subject, sid, id(c.House), parent, c.Author, c.Body, s)
+			if err != nil {
 				return err
+			}
+			counts["comments"]++
+			if len(c.Replies) > 0 {
+				if parent != nil {
+					panic("demo seed: a thread has one reply level")
+				}
+				if err := comments(subject, sid, day, s, cid, c.Replies); err != nil {
+					return err
+				}
 			}
 		}
 		return nil
 	}
 	for _, h := range seed.Houses {
 		kind, crest, color := orDefault(h.Kind, "house"), orDefault(h.Crest, "🏠"), orDefault(h.Color, "#b5651d")
-		hid, err := tx.Exec(ctx, `INSERT INTO houses(name, crest, color, kind, is_steward, created_at) VALUES (?,?,?,?,?,?)`, h.Name, crest, color, kind, b2i(h.Steward), stamp(-400, "10:00"))
+		hid, err := tx.Exec(ctx, `INSERT INTO houses(name, crest, color, kind, is_steward, created_at) VALUES (?,?,?,?,?,?)`, h.Name, crest, color, kind, b2i(h.Steward), past(-400, "10:00"))
 		if err != nil {
 			return nil, err
 		}
@@ -286,9 +396,14 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 			return nil, err
 		}
 	}
-	// The codex, adopted by the council on a day, no house.
+	// The codex, adopted by the council on a day, no house; a section a
+	// house rewrote since names that house and that day.
 	for i, sec := range seed.Codex.Sections {
-		sid, err := tx.Exec(ctx, `INSERT INTO codex_sections(ord, updated_at, updated_by) VALUES (?,?,NULL)`, i+1, date(-seed.Codex.Adopted)+" 12:00:00")
+		stamp, by, rev := date(-seed.Codex.Adopted)+" 12:00:00", any(nil), 0
+		if sec.EditedBy != "" {
+			stamp, by, rev = past(-sec.Edited, "21:40"), id(sec.EditedBy), 1
+		}
+		sid, err := tx.Exec(ctx, `INSERT INTO codex_sections(ord, rev, updated_at, updated_by) VALUES (?,?,?,?)`, i+1, rev, stamp, by)
 		if err != nil {
 			return nil, err
 		}
@@ -297,41 +412,63 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		}
 		counts["codex sections"]++
 	}
-	for _, p := range seed.Posts {
-		pid, err := tx.Exec(ctx, `INSERT INTO posts(house_id, author, body, pinned, created_at) VALUES (?,?,?,?,?)`, id(p.House), p.Author, p.Body, b2i(p.Pinned), stamp(dayOf(p.demoWhen), p.Time))
-		if err != nil {
-			return nil, err
-		}
-		counts["posts"]++
-		for _, r := range p.Replies {
-			if _, err := tx.Exec(ctx, `INSERT INTO posts(house_id, parent_id, author, body, created_at) VALUES (?,?,?,?,?)`, id(r.House), pid, r.Author, r.Body, stamp(dayOf(r.demoWhen), r.Time)); err != nil {
-				return nil, err
-			}
-			counts["posts"]++
+	// Projects before events, and both before anything dated "at" them.
+	for _, p := range seed.Projects {
+		if p.Key != "" {
+			keyed[p.Key] = dayOf(p.demoWhen)
 		}
 	}
-	projects := map[string]int64{}
-	for _, p := range seed.Projects {
-		state := orDefault(p.State, "planned")
-		var done any
-		if state == "done" {
-			done = stamp(anchor(p.DoneDay, p.DoneOn, false), "17:00")
+	for _, e := range seed.Events {
+		if e.Key != "" {
+			keyed[e.Key] = dayOf(e.demoWhen)
 		}
-		pid, err := tx.Exec(ctx, `INSERT INTO projects(house_id, title, notes, state, done_at, created_at) VALUES (?,?,?,?,?,?)`, id(p.House), p.Title, p.Notes, state, done, stamp(dayOf(p.demoWhen), "20:00"))
+	}
+	projects, tasks, named := map[string]int64{}, map[string]int64{}, map[string]bool{}
+	for _, p := range seed.Projects {
+		day := dayOf(p.demoWhen)
+		created := past(day, "20:00")
+		// A project marked done whose day has not come is still in progress.
+		state := orDefault(p.State, "planned")
+		var done, due any
+		if state == "done" {
+			if s, ok := written(day+p.Done, "17:00"); ok {
+				done = s
+			} else {
+				state = "open"
+			}
+		}
+		if p.Due != 0 {
+			due = date(day + p.Due)
+		}
+		pid, err := tx.Exec(ctx, `INSERT INTO projects(house_id, title, notes, state, due_at, done_at, created_at) VALUES (?,?,?,?,?,?,?)`, id(p.House), p.Title, p.Notes, state, due, done, created)
 		if err != nil {
 			return nil, err
 		}
 		projects[p.Key] = pid
 		counts["projects"]++
 		for _, t := range p.Tasks {
-			ts := orDefault(t.State, "open")
-			var tdone any
-			if ts == "done" {
-				tdone = stamp(anchor(t.DoneDay, t.DoneOn, false), "16:00")
+			named[p.Key+"/"+t.Title] = true
+			ts, ok := written(day+t.Day, "20:10")
+			if !ok {
+				continue
 			}
-			if _, err := tx.Exec(ctx, `INSERT INTO project_tasks(project_id, house_id, title, notes, assigned_to, state, done_at, closing_note, created_at) VALUES (?,?,?,?,?,?,?,?,?)`, pid, id(t.House), t.Title, t.Notes, id(t.AssignedTo), ts, tdone, t.ClosingNote, stamp(dayOf(t.demoWhen), "20:10")); err != nil {
+			after("task", ts, created)
+			state, closing := "open", ""
+			var tdone, tdue any
+			if t.Done != 0 {
+				if s, ok := written(day+t.Done, "16:00"); ok {
+					after("a task done", s, ts)
+					state, closing, tdone = "done", t.ClosingNote, s
+				}
+			}
+			if t.Due != 0 {
+				tdue = date(day + t.Due)
+			}
+			tid, err := tx.Exec(ctx, `INSERT INTO project_tasks(project_id, house_id, title, notes, assigned_to, due_at, state, done_at, closing_note, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)`, pid, id(t.House), t.Title, t.Notes, id(t.AssignedTo), tdue, state, tdone, closing, ts)
+			if err != nil {
 				return nil, err
 			}
+			tasks[p.Key+"/"+t.Title] = tid
 			counts["tasks"]++
 		}
 	}
@@ -341,79 +478,177 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		if e.End != "" {
 			end = wall(day, e.End)
 		}
-		var proj any
+		var proj, task any
 		if e.Project != "" {
+			if _, ok := projects[e.Project]; !ok {
+				panic("demo seed: an event belongs to a project it never defined: " + e.Project)
+			}
 			proj = projects[e.Project]
 		}
-		eid, err := tx.Exec(ctx, `INSERT INTO events(house_id, title, kind, starts_at, ends_at, place, notes, project_id, created_at) VALUES (?,?,?,?,?,?,?,?,?)`, id(e.House), e.Title, orDefault(e.Kind, "event"), wall(day, e.Start), end, e.Place, e.Notes, proj, stamp(day-9, "19:30"))
+		if e.Task != "" {
+			if !named[e.Project+"/"+e.Task] {
+				panic("demo seed: an event belongs to a task its project does not have: " + e.Task)
+			}
+			// A task not written yet leaves the event on the project alone.
+			if v, ok := tasks[e.Project+"/"+e.Task]; ok {
+				task = v
+			}
+		}
+		// Called nine days before, or before the first line written on it.
+		createdDay := day - 9
+		for _, c := range e.Comments {
+			if d := day + c.Day - 1; d < createdDay {
+				createdDay = d
+			}
+		}
+		if e.Moved != 0 && day+e.Moved-1 < createdDay {
+			createdDay = day + e.Moved - 1
+		}
+		created := past(createdDay, "19:30")
+		var editedBy, editedAt, changedAt any
+		version := 0
+		if e.EditedBy != "" {
+			editedBy, editedAt = id(e.EditedBy), past(createdDay+2, "10:00")
+			if e.Moved != 0 {
+				editedAt, changedAt, version = past(day+e.Moved, "10:00"), past(day+e.Moved, "10:00"), 1
+			}
+		} else if e.Moved != 0 || len(e.Stale) > 0 {
+			panic("demo seed: an event whose time moved names the house that moved it: " + e.Title)
+		}
+		eid, err := tx.Exec(ctx, `INSERT INTO events(house_id, title, kind, starts_at, ends_at, place, notes, project_id, task_id, edited_by, edited_at, time_changed_at, time_version, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, id(e.House), e.Title, orDefault(e.Kind, "event"), wall(day, e.Start), end, e.Place, e.Notes, proj, task, editedBy, editedAt, changedAt, version, created)
 		if err != nil {
 			return nil, err
 		}
 		counts["events"]++
-		// The caller answers yes in the same breath, like the app does.
-		answers := map[string]string{e.House: "yes"}
-		for k, v := range e.Answers {
-			answers[k] = v
+		// The caller answers yes in the same breath, like the app does. An
+		// answer given before the time moved is stale; one given after is not.
+		type answer struct {
+			state, at string
+			version   int
 		}
-		for k, v := range answers {
-			if _, err := tx.Exec(ctx, `INSERT INTO event_signups(event_id, house_id, state, answered_at, answered_version) VALUES (?,?,?,?,0)`, eid, id(k), v, stamp(day-7, "21:00")); err != nil {
+		answers := map[string]answer{}
+		fresh := past(createdDay+2, "21:00")
+		if e.Moved != 0 {
+			fresh = past(day+e.Moved+1, "21:00")
+		}
+		answers[e.House] = answer{"yes", created, 0}
+		for k, v := range e.Stale {
+			answers[k] = answer{v, past(createdDay, "21:00"), 0}
+		}
+		for k, v := range e.Answers {
+			answers[k] = answer{v, fresh, version}
+		}
+		for k, a := range answers {
+			if _, err := tx.Exec(ctx, `INSERT INTO event_signups(event_id, house_id, state, answered_at, answered_version) VALUES (?,?,?,?,?)`, eid, id(k), a.state, a.at, a.version); err != nil {
 				return nil, err
 			}
 		}
-		if err := comments("event", eid, e.Comments); err != nil {
+		if err := comments("event", eid, day, created, nil, e.Comments); err != nil {
 			return nil, err
+		}
+	}
+	for _, p := range seed.Posts {
+		day := dayOf(p.demoWhen)
+		s, ok := written(day, p.Time)
+		if !ok {
+			continue
+		}
+		pid, err := tx.Exec(ctx, `INSERT INTO posts(house_id, author, body, pinned, created_at) VALUES (?,?,?,?,?)`, id(p.House), p.Author, p.Body, b2i(p.Pinned), s)
+		if err != nil {
+			return nil, err
+		}
+		counts["posts"]++
+		for _, r := range p.Replies {
+			if len(r.Replies) > 0 {
+				panic("demo seed: the board has one reply level")
+			}
+			rs, ok := written(day+r.Day, r.Time)
+			if !ok {
+				continue
+			}
+			after("reply", rs, s)
+			if _, err := tx.Exec(ctx, `INSERT INTO posts(house_id, parent_id, author, body, created_at) VALUES (?,?,?,?,?)`, id(r.House), pid, r.Author, r.Body, rs); err != nil {
+				return nil, err
+			}
+			counts["posts"]++
 		}
 	}
 	for _, r := range seed.Runs {
 		day := dayOf(r.demoWhen)
-		rid, err := tx.Exec(ctx, `INSERT INTO runs(house_id, destination, cutoff_at, notes, created_at) VALUES (?,?,?,?,?)`, id(r.House), r.Destination, wall(day, r.Time), r.Notes, stamp(day-2, "08:15"))
+		createdDay := day - 2
+		for _, n := range r.Needs {
+			if d := day + child(n.demoWhen); d < createdDay {
+				createdDay = d
+			}
+		}
+		created := past(createdDay, "08:15")
+		rid, err := tx.Exec(ctx, `INSERT INTO runs(house_id, destination, cutoff_at, notes, created_at) VALUES (?,?,?,?,?)`, id(r.House), r.Destination, wall(day, r.Time), r.Notes, created)
 		if err != nil {
 			return nil, err
 		}
 		counts["runs"]++
 		for _, n := range r.Needs {
-			if _, err := tx.Exec(ctx, `INSERT INTO needs(house_id, text, state, taken_by, run_id, created_at) VALUES (?,?,?,?,?,?)`, id(n.House), n.Text, orDefault(n.State, "open"), id(n.TakenBy), rid, stamp(dayOf(n.demoWhen), "09:40")); err != nil {
+			s, ok := written(day+child(n.demoWhen), orDefault(n.Time, "09:40"))
+			if !ok {
+				continue
+			}
+			after("need", s, created)
+			if _, err := tx.Exec(ctx, `INSERT INTO needs(house_id, text, state, taken_by, run_id, created_at) VALUES (?,?,?,?,?,?)`, id(n.House), n.Text, orDefault(n.State, "open"), id(n.TakenBy), rid, s); err != nil {
 				return nil, err
 			}
 			counts["needs"]++
 		}
 	}
 	for _, n := range seed.Needs {
-		if _, err := tx.Exec(ctx, `INSERT INTO needs(house_id, text, state, taken_by, created_at) VALUES (?,?,?,?,?)`, id(n.House), n.Text, orDefault(n.State, "open"), id(n.TakenBy), stamp(dayOf(n.demoWhen), "11:20")); err != nil {
+		s, ok := written(dayOf(n.demoWhen), orDefault(n.Time, "11:20"))
+		if !ok {
+			continue
+		}
+		if _, err := tx.Exec(ctx, `INSERT INTO needs(house_id, text, state, taken_by, created_at) VALUES (?,?,?,?,?)`, id(n.House), n.Text, orDefault(n.State, "open"), id(n.TakenBy), s); err != nil {
 			return nil, err
 		}
 		counts["needs"]++
 	}
 	for _, o := range seed.Offers {
-		if _, err := tx.Exec(ctx, `INSERT INTO offers(house_id, text, tag, state, claimed_by, created_at) VALUES (?,?,?,?,?,?)`, id(o.House), o.Text, orDefault(o.Tag, "giveaway"), orDefault(o.State, "open"), id(o.ClaimedBy), stamp(dayOf(o.demoWhen), "17:50")); err != nil {
+		s, ok := written(dayOf(o.demoWhen), orDefault(o.Time, "17:50"))
+		if !ok {
+			continue
+		}
+		if _, err := tx.Exec(ctx, `INSERT INTO offers(house_id, text, tag, state, claimed_by, created_at) VALUES (?,?,?,?,?,?)`, id(o.House), o.Text, orDefault(o.Tag, "giveaway"), orDefault(o.State, "open"), id(o.ClaimedBy), s); err != nil {
 			return nil, err
 		}
 		counts["offers"]++
 	}
 	for _, a := range seed.Away {
 		from, to := span(a.From, a.To, a.OnFrom, a.OnTo, a.Ahead)
-		aid, err := tx.Exec(ctx, `INSERT INTO away(house_id, from_date, to_date, notes, watcher, created_at) VALUES (?,?,?,?,?,?)`, id(a.House), date(from), date(to), a.Notes, id(a.Watcher), stamp(from-5, "20:30"))
+		created := past(from-5, "20:30")
+		aid, err := tx.Exec(ctx, `INSERT INTO away(house_id, from_date, to_date, notes, watcher, created_at) VALUES (?,?,?,?,?,?)`, id(a.House), date(from), date(to), a.Notes, id(a.Watcher), created)
 		if err != nil {
 			return nil, err
 		}
 		counts["away"]++
-		if err := comments("away", aid, a.Comments); err != nil {
+		if err := comments("away", aid, from, created, nil, a.Comments); err != nil {
 			return nil, err
 		}
 	}
 	for _, t := range seed.Tools {
+		// held_since is a date, the way the room's "I take it" writes it.
 		var held, since any
 		if t.HeldBy != "" {
-			held, since = id(t.HeldBy), stamp(-t.HeldDays, "16:00")
+			held, since = id(t.HeldBy), date(-t.HeldDays)
 		}
-		if _, err := tx.Exec(ctx, `INSERT INTO tools(house_id, name, notes, category, held_by, held_since, created_at) VALUES (?,?,?,?,?,?,?)`, id(t.House), t.Name, t.Notes, orDefault(t.Category, "other"), held, since, stamp(-300, "12:00")); err != nil {
+		if _, err := tx.Exec(ctx, `INSERT INTO tools(house_id, name, notes, category, held_by, held_since, created_at) VALUES (?,?,?,?,?,?,?)`, id(t.House), t.Name, t.Notes, orDefault(t.Category, "other"), held, since, past(-300, "12:00")); err != nil {
 			return nil, err
 		}
 		counts["tools"]++
 	}
 	for _, w := range seed.Wishes {
 		day := dayOf(w.demoWhen)
-		wid, err := tx.Exec(ctx, `INSERT INTO wishes(house_id, text, created_at) VALUES (?,?,?)`, id(w.House), w.Text, stamp(day, "21:15"))
+		s, ok := written(day, orDefault(w.Time, "21:15"))
+		if !ok {
+			continue
+		}
+		wid, err := tx.Exec(ctx, `INSERT INTO wishes(house_id, text, created_at) VALUES (?,?,?)`, id(w.House), w.Text, s)
 		if err != nil {
 			return nil, err
 		}
@@ -424,34 +659,67 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 			}
 		}
 		for _, o := range w.Options {
-			if _, err := tx.Exec(ctx, `INSERT INTO wish_options(wish_id, house_id, text, url, created_at) VALUES (?,?,?,?,?)`, wid, id(o.House), o.Text, o.URL, stamp(day+2, "22:00")); err != nil {
+			os, ok := written(day+o.Day, "22:00")
+			if !ok {
+				continue
+			}
+			after("a wish's finding", os, s)
+			if _, err := tx.Exec(ctx, `INSERT INTO wish_options(wish_id, house_id, text, url, created_at) VALUES (?,?,?,?,?)`, wid, id(o.House), o.Text, o.URL, os); err != nil {
 				return nil, err
 			}
 		}
-		if err := comments("wish", wid, w.Comments); err != nil {
+		if err := comments("wish", wid, day, s, nil, w.Comments); err != nil {
 			return nil, err
 		}
 	}
 	for _, c := range seed.Camp {
 		day := dayOf(c.demoWhen)
+		s, ok := written(day, orDefault(c.Time, "17:30"))
+		if !ok {
+			continue
+		}
+		// The room writes the camper into the note and leaves from_who empty,
+		// so the demo does too: no amount, no plate, no nationality.
 		state := orDefault(c.State, "arrived")
 		var held, heldAt, handed any
 		if state == "held" || state == "handed" {
-			held, heldAt = id(orDefault(c.HeldBy, c.House)), stamp(day, "18:00")
+			held, heldAt = id(orDefault(c.HeldBy, c.House)), past(day, "18:00")
 		}
 		if state == "handed" {
-			handed = stamp(day+2, "19:00")
+			// Two days to reach the box; a stay that has not had them is
+			// still held.
+			if hs, ok := written(day+2, "19:00"); ok {
+				handed = hs
+			} else {
+				state = "held"
+			}
 		}
-		if _, err := tx.Exec(ctx, `INSERT INTO camp_takings(house_id, from_who, taken_on, notes, state, held_by, held_at, handed_at, created_at) VALUES (?,?,?,?,?,?,?,?,?)`, id(c.House), c.FromWho, date(day), c.Notes, state, held, heldAt, handed, stamp(day, "17:30")); err != nil {
+		if _, err := tx.Exec(ctx, `INSERT INTO camp_takings(house_id, from_who, taken_on, notes, state, held_by, held_at, handed_at, created_at) VALUES (?,'',?,?,?,?,?,?,?)`, id(c.House), date(day), c.Notes, state, held, heldAt, handed, s); err != nil {
 			return nil, err
 		}
 		counts["camp rows"]++
 	}
 	for _, c := range seed.Contacts {
-		if _, err := tx.Exec(ctx, `INSERT INTO contacts(house_id, name, phone, notes, type, created_at) VALUES (?,?,?,?,?,?)`, id(c.House), c.Name, c.Phone, c.Notes, c.Type, stamp(-120, "13:00")); err != nil {
+		day := dayOf(c.demoWhen)
+		s, ok := written(day, orDefault(c.Time, "13:00"))
+		if !ok {
+			continue
+		}
+		var editedBy, editedAt any
+		if c.EditedBy != "" {
+			if es, ok := written(day+c.Edited, "20:00"); ok {
+				after("a contact's correction", es, s)
+				editedBy, editedAt = id(c.EditedBy), es
+			}
+		}
+		cid, err := tx.Exec(ctx, `INSERT INTO contacts(house_id, name, phone, notes, type, created_at, edited_by, edited_at) VALUES (?,?,?,?,?,?,?,?)`, id(c.House), c.Name, c.Phone, c.Notes, c.Type, s, editedBy, editedAt)
+		if err != nil {
 			return nil, err
 		}
 		counts["contacts"]++
+		if err := comments("contact", cid, day, s, nil, c.Comments); err != nil {
+			return nil, err
+		}
 	}
 	return counts, nil
 }
