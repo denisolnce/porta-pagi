@@ -219,7 +219,7 @@ The village's context file (in its deploy repo) gets one line per room. CLAUDE.m
 ### Duty roster
 
 Built 2026-09-28 behind the `roster` switch, off by default
-(`docs/commercial.md` § Decided): `027_roster.sql`, `roster.go`,
+(the business plan's Decided block, `porta-pagi-cloud/docs/commercial.md`): `027_roster.sql`, `roster.go`,
 `rooms/Roster.tsx`. The villager job, in one line: **whose turn is it to mow,
 and does every house carry its share** — the question a WhatsApp group
 answers once a year, with a fight. With the switch off the room, its routes

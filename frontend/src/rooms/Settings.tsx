@@ -14,7 +14,7 @@ const ABOUT: Record<string, string> = {
 };
 // The rooms that count. The portal counts nothing between houses by default,
 // so switching one of these on is a change of what the village is, and the
-// steward is asked once more (docs/commercial.md § Decided).
+// steward is asked once more (the business plan's Decided block, porta-pagi-cloud).
 const COUNTING = ["dues", "roster"];
 
 type Prefs = { kinds: string[]; global_off: string[]; global_detail: { kind: string; set_by: string | null; set_at: string }[] };

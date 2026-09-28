@@ -18,7 +18,7 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
 ## Invariants
 
 - **Switches: a village turns some rooms on or off, one binary for all**
-  (owner's decision 2026-09-23, `docs/commercial.md` § Decided). The list is
+  (owner's decision 2026-09-23, the business plan's Decided block, kept privately in `porta-pagi-cloud/docs/commercial.md`). The list is
   `Features` in `backend/internal/httpapi/features.go`, each with a default;
   the defaults are the village that built the portal, and most are off. A
   row in `features` exists only for a switch a steward flipped, with who

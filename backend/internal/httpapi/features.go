@@ -8,7 +8,7 @@ import (
 
 // Feature is one switch: a room or a behaviour a village turns on or off.
 // The defaults are the village that built the portal, and most are off
-// (docs/commercial.md, the Decided block). A switched-off feature is absent,
+// (the business plan's Decided block, porta-pagi-cloud). A switched-off feature is absent,
 // not disabled: its routes answer 404, its MCP tools are not listed, its
 // push kind is not offered, and the page does not draw its door.
 type Feature struct {
