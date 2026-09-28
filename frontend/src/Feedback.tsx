@@ -39,7 +39,7 @@ export function Feedback({ rooms }: { rooms: readonly Room[] }) {
   return (
     <div className="parchment">
       <h2>✉️ {t("Feedback")} <span className="sub">{t("to whoever builds the portal")}</span></h2>
-      <p className="small muted">{t("It goes to whoever builds the portal, not to the village.")}</p>
+      <p className="small muted">{t("It goes to whoever builds the portal, not to the village.")} {t("Your house's name goes with it.")}</p>
       {state === "sent" ? (
         <p className="ok">{t("Sent. Thank you.")} <button className="lesser" onClick={() => setState("")}>{t("Write another")}</button></p>
       ) : (

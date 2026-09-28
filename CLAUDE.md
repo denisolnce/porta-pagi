@@ -640,9 +640,10 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   it went, so a village or the demo loses nothing before email is wired. A
   failed send is a 502 the page shows as "try again later", and the message
   is logged with the cause. The demo hands anyone a house, so the door is
-  public there: 5 per IP per hour, and past 50 a day village-wide a message
-  is logged instead of emailed, so a script can neither spend the Resend
-  account's quota nor shut the door on the houses. The reply address
+  public there: 5 per IP per hour, and past 50 emailed a day village-wide
+  a message is logged, not emailed, and the house is told to try tomorrow —
+  never told it went. Both caps are in memory: per container, reset by a
+  restart. The form says the house's name travels with the message. The reply address
   and the text leave for Resend, a processor — the privacy note owes a line
   (`docs/later.md`).
 

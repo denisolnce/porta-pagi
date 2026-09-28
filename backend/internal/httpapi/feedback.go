@@ -21,8 +21,9 @@ import (
 // server log otherwise, so a village or the demo loses nothing before email
 // is wired. The demo hands anyone a house, so this door is public there:
 // a per-IP cap, and a village-wide daily one past which the message is
-// logged rather than emailed, so a script cannot spend the Resend account's
-// quota.
+// logged, not emailed, and the house is told to try tomorrow — never told
+// it went. Both caps live in this process's memory: per container, and a
+// restart resets them.
 
 // A section is one short line. The page offers the rooms and a few doors;
 // anything else a client sends is taken as its own words.
@@ -64,15 +65,16 @@ func (s *Server) feedback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	msg := s.composeFeedback(houseFrom(r).Name, section, lang, reply, text)
+	if s.cfg.ResendKey != "" && s.cfg.FeedbackTo != "" && !s.tries.allow("feedback", 50, 24*time.Hour) {
+		// Over the village's daily cap: the log keeps the words, the Resend
+		// quota is spared, and the house is told the truth — it did not go.
+		log.Printf("FEEDBACK (not emailed: over 50 today) subject=%q reply_to=%q\n%s", msg.Subject, msg.ReplyTo, msg.Text)
+		writeErr(w, http.StatusTooManyRequests, "the builder's mailbox is full for today, try tomorrow")
+		return
+	}
 	why := ""
-	switch {
-	case s.cfg.ResendKey == "" || s.cfg.FeedbackTo == "":
+	if s.cfg.ResendKey == "" || s.cfg.FeedbackTo == "" {
 		why = "not emailed: RESEND_API_KEY or FEEDBACK_TO unset"
-	case !s.tries.allow("feedback", 50, 24*time.Hour):
-		// Over the village's daily cap the message goes to the log instead:
-		// the log spends no Resend quota, and a script cannot shut the door
-		// on the houses.
-		why = "not emailed: over 50 today"
 	}
 	if why != "" {
 		log.Printf("FEEDBACK (%s) subject=%q reply_to=%q\n%s", why, msg.Subject, msg.ReplyTo, msg.Text)

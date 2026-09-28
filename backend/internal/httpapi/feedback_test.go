@@ -153,7 +153,7 @@ func TestFeedbackRefuses(t *testing.T) {
 	c.must(429, code, "over the cap")
 
 	// Over the village's daily cap a message is logged, not emailed, and the
-	// house is still told it went. The sender here would fail if called.
+	// house is told so. The sender here would fail if called.
 	srv.cfg.ResendKey, srv.cfg.FeedbackTo = "re_test", "owner@example.org"
 	srv.mail = func(context.Context, mailer.Message) error { return errors.New("over the cap, yet sent") }
 	for i := 0; i < 50; i++ {
@@ -165,7 +165,7 @@ func TestFeedbackRefuses(t *testing.T) {
 	req.Header.Set("X-Forwarded-For", "198.51.100.7") // another phone: this one spent its own cap above
 	rec := httptest.NewRecorder()
 	srv.Handler().ServeHTTP(rec, req)
-	c.must(204, rec.Code, "over the village cap")
+	c.must(429, rec.Code, "over the village cap")
 	if out := buf.String(); !strings.Contains(out, "over 50 today") || !strings.Contains(out, "past the cap") {
 		t.Fatalf("village cap log:\n%s", out)
 	}
