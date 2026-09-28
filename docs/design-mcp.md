@@ -137,7 +137,9 @@ a state, and an agent that deletes has no confirm), no devices, pairing or
 push (a key must not mint keys), no `PUT /api/houses/{id}` (rename, crest,
 colour, the map mark: a house does that itself, once), no steward route. With
 the fence, this table is not a menu: **what is not here, a key cannot do**.
-46 tools; `TestMCPSurface` pins the count so a change is a visible decision.
+48 tools; `TestMCPSurface` pins the count so a change is a visible decision.
+A tool whose room is behind a switch carries `Feature` and is absent — not
+listed, and a call is "no such tool" — while that switch is off.
 
 | Tool | Route | Notes the description carries |
 | --- | --- | --- |
@@ -160,6 +162,7 @@ the fence, this table is not a menu: **what is not here, a key cannot do**.
 | `list_camp` · `create_camp` · `update_camp` | `/api/camp` | One row is one camper's stay; no amount, no total, no plate or nationality in the label — the handler refuses nothing here, so the description carries the rule |
 | `list_codex` · `create_codex_section` · `update_codex_section` | `/api/codex` | Send the `rev` you read; a 409 means another house wrote first |
 | `list_contacts` · `create_contact` · `update_contact` | `/api/contacts` | The village phone book. `type` is a free word, not a fixed list; a spelling differing only in case folds into the one in use. The numbers belong to people outside the village who never agreed to this portal, so the description says to keep them in the conversation, as `list_away`'s does. Nothing here pushes |
+| `list_dues` · `mark_due` | `GET /api/dues`, `PUT /api/dues/{id}/houses/{house_id}` | Behind the `dues` switch. Totals are per due, never a house's across dues; only the collecting house marks, so an agent marks only when its house holds the money. Writing a due is a steward's, and a key is never one |
 
 Off the surface, each with its argument:
 
@@ -380,7 +383,7 @@ key last acted).
   `is_steward`, so a steward's key reads 0 while that house's phone reads 1.
 - `TestMCPSurface`: no tool deletes, none reaches devices, pairing, push,
   `/api/me/*`, export, a house write or a steward route; every tool lands on
-  a registered handler; the count is pinned at 46; unknown tool, unknown
+  a registered handler; the count is pinned at 48; unknown tool, unknown
   method, a batch and garbage are refused.
 - `TestMCPKeyLifecycle`: a common place cannot mint, a key cannot mint,
   Remove turns the key into a 401.

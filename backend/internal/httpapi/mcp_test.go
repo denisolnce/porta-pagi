@@ -89,8 +89,15 @@ func TestMCPFlow(t *testing.T) {
 
 	_, out = rpc(t, srv, key, "tools/list", nil)
 	tools := out["result"].(map[string]any)["tools"].([]any)
-	if len(tools) != len(mcpTools) {
-		t.Fatalf("tools/list: %d of %d", len(tools), len(mcpTools))
+	// A tool behind a switch that is off is not listed.
+	listed := 0
+	for _, tl := range mcpTools {
+		if tl.Feature == "" || srv.feature(t.Context(), tl.Feature) {
+			listed++
+		}
+	}
+	if len(tools) != listed || listed == len(mcpTools) {
+		t.Fatalf("tools/list: %d, want %d of %d", len(tools), listed, len(mcpTools))
 	}
 
 	isErr, text := call(t, srv, key, "whoami", nil)
@@ -225,9 +232,13 @@ func TestMCPFence(t *testing.T) {
 // delete, no device, pairing, push or house write, no steward route; and every
 // tool reaches a registered route.
 func TestMCPSurface(t *testing.T) {
-	srv, _, _, volk := newVillage(t)
+	srv, _, steward, volk := newVillage(t)
 	key, _ := mintKey(t, volk, "agent")
-	want := map[string]bool{"list_away": true, "create_away": true, "update_away": true, "list_camp": true, "create_camp": true, "update_camp": true, "list_contacts": true, "create_contact": true, "update_contact": true, "add_project_photo": true, "whoami": true, "weather": true}
+	// Every switch on, so every tool is on the surface to be walked.
+	for _, f := range Features {
+		steward.do("PUT", "/api/features/"+f.Key, map[string]any{"on": true})
+	}
+	want := map[string]bool{"list_dues": true, "mark_due": true, "list_away": true, "create_away": true, "update_away": true, "list_camp": true, "create_camp": true, "update_camp": true, "list_contacts": true, "create_contact": true, "update_contact": true, "add_project_photo": true, "whoami": true, "weather": true}
 	seen := map[string]bool{}
 	for _, tl := range mcpTools {
 		seen[tl.Name] = true
@@ -246,7 +257,7 @@ func TestMCPSurface(t *testing.T) {
 			t.Fatalf("%s carries bytes without the image flag", tl.Name)
 		}
 		// Every tool lands on a handler: never the /api/ catch-all, never 405.
-		args := map[string]any{"id": 1, "project_id": 1, "subject": "event", "data": "AAAA", "content_type": "image/png"}
+		args := map[string]any{"id": 1, "house_id": 1, "project_id": 1, "subject": "event", "data": "AAAA", "content_type": "image/png"}
 		isErr, text := call(t, srv, key, tl.Name, args)
 		if strings.Contains(text, "no such endpoint") || (isErr && strings.Contains(text, "405")) {
 			t.Fatalf("%s reaches no route: %s", tl.Name, text)
@@ -257,7 +268,7 @@ func TestMCPSurface(t *testing.T) {
 			t.Fatalf("tool missing from the table: %s", name)
 		}
 	}
-	if len(mcpTools) != 46 {
+	if len(mcpTools) != 48 {
 		t.Fatalf("the surface moved: %d tools — a visible decision, update this pin and docs/design-mcp.md", len(mcpTools))
 	}
 	// Unknown tool, unknown method, a batch, garbage.

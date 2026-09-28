@@ -53,6 +53,9 @@ type mcpTool struct {
 	Method, Path string
 	Schema       map[string]any
 	Image        bool // body is base64 `data` with `content_type`, not JSON
+	// Feature is the switch the tool belongs to, "" for none. A tool whose
+	// switch is off is absent: not listed, and a call is "no such tool".
+	Feature string
 }
 
 // The two clocks, said once here and pointed at from every time field.
@@ -176,6 +179,12 @@ var mcpTools = []mcpTool{
 		Schema: schema([]string{"texts"}, map[string]any{"texts": prop("object", "Per language: {\"sl\": {\"title\": …, \"body\": …}}")})},
 	{Name: "update_codex_section", Desc: "Edit a section; it then names your house and today. Only the languages in texts change; an empty title and body removes that language. Send the rev you read: a 409 means another house wrote first — read again, then decide. Without rev the write lands as it is.", Method: "PUT", Path: "/api/codex/{id}",
 		Schema: schema([]string{"id"}, map[string]any{"id": idProp, "rev": prop("integer", "The rev from list_codex"), "texts": prop("object", "Per language: {\"sl\": {\"title\": …, \"body\": …}}")})},
+	// Dues, behind the dues switch. Writing a due is a steward's and a key is
+	// never a steward, so an agent reads the ledger and, for the house that
+	// collects a due, marks who paid.
+	{Name: "list_dues", Feature: "dues", Desc: "The dues ledger: what the village asked of its houses (title, amount per house in cents with the currency as written, due_on), the house that collects each, and per house whether it paid, when, and who marked it. owed/paid count houses; expected_cents/collected_cents are that due's totals. Never add up a house's payments across dues — the ledger counts a due, not a house. The portal records; it moves no money.", Method: "GET", Path: "/api/dues", Schema: schema(nil, map[string]any{})},
+	{Name: "mark_due", Feature: "dues", Desc: "Mark one house paid (paid=true) or not paid (paid=false) on one due. Only the house that collects that due may, so only when your house has the money in hand. Nothing is pushed.", Method: "PUT", Path: "/api/dues/{id}/houses/{house_id}",
+		Schema: schema([]string{"id", "house_id", "paid"}, map[string]any{"id": prop("integer", "Due id"), "house_id": prop("integer", "The house that paid"), "paid": prop("boolean", "")})},
 }
 
 // ---- the key --------------------------------------------------------------
@@ -290,6 +299,9 @@ func (s *Server) mcp(w http.ResponseWriter, r *http.Request) {
 	case "tools/list":
 		list := make([]map[string]any, 0, len(mcpTools))
 		for _, t := range mcpTools {
+			if t.Feature != "" && !s.feature(r.Context(), t.Feature) {
+				continue
+			}
 			list = append(list, map[string]any{"name": t.Name, "description": t.Desc, "inputSchema": t.Schema})
 		}
 		rpcReply(w, req.ID, map[string]any{"tools": list}, nil)
@@ -303,7 +315,7 @@ func (s *Server) mcp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		tool := mcpToolByName(p.Name)
-		if tool == nil {
+		if tool == nil || (tool.Feature != "" && !s.feature(r.Context(), tool.Feature)) {
 			rpcReply(w, req.ID, nil, &rpcError{-32602, "no such tool: " + p.Name})
 			return
 		}

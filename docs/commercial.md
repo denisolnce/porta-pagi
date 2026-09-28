@@ -163,7 +163,7 @@ follow from it.
 | Nightly `VACUUM INTO` backups, `GET /api/export` full JSON dump | Working | High. "Your data, out, in one click" is a sales line most competitors cannot say |
 | Nine rooms with a real opinion behind each | Working | The product. Not replicable by a generic tool |
 | Cadastral map as the home screen, terrain-modelled watercourses | Working, **Slovenia-specific** | The differentiator **and** the biggest per-country cost. See §11 |
-| MCP door — 46 tools, the API as an agent surface | Working | Genuinely novel. No competitor has it. Small audience today, good press |
+| MCP door — 48 tools, the API as an agent surface | Working | Genuinely novel. No competitor has it. Small audience today, good press |
 | Slovenian + English, `t()` everywhere, 379-line flat dictionary | Working | Cheap to extend, but "Slovenian first" is an invariant that must become "the village's language first" |
 | Web push, quiet hours, per-phone consent, per-house kind filters | Working | High. Notification manners are a real feature nobody markets |
 | **No LICENSE file** | **Missing** | **Blocking.** A public repo with no licence is all-rights-reserved: nobody may legally run it. See §11 |

@@ -160,6 +160,43 @@ The plan's rule protects neighbour-to-neighbour reciprocity: counted favours tur
 
 > QUESTION FOR THE OWNER: who is the treasurer, and is there a cash box or a bank account? "Handed over" needs a "to whom", or it is a state with no meaning. `TBD` until the collective answers.
 
+### Dues ledger
+
+Built 2026-09-28 behind the `dues` switch, off by default (`026_dues.sql`,
+`dues.go`, `rooms/Dues.tsx`). **The villager job: "who paid the water this
+quarter"** — the collector asks it before the bill comes, a house asks "did
+we pay?". With the duty roster, the one room that counts, and only because a
+village switched it on.
+
+Decisions, each with the option rejected:
+
+- **An amount is a number in cents plus the currency as text.** A ledger is allowed a total, collected against expected, and a total needs a number.
+  *Rejected: free text* ("40 € or two hours of work") — reads well, and can never be added up, which is the one thing this room is for.
+- **One amount per house per due, and it is optional.** A due with no amount is a paid / not-paid list.
+  *Rejected: an amount per house* — a village whose shares differ writes two dues; a row with its own figure per house is a billing system.
+- **A steward writes a due and names the house that collects it** (the steward's own by default). Asking every house for money is the village's decision, taken at its meeting.
+  *Rejected: any house, like an event* — an event asks for hands and can be declined; a due cannot, and one house must not bill the others.
+- **The collecting house, or a steward, marks a house paid; a house never marks itself.** Whoever holds the money knows it arrived — the Campground's answer to "who has the money".
+  *Rejected: self-marking, or a two-step sent / received* — the first is a ledger of claims, the second doubles every tap for what the collector confirms anyway.
+- **Every house sees every due, who paid, and the due's totals.** The collective's money is common, and hidden sums breed suspicion (the Campground's own table, above).
+  *Rejected: the collector and stewards only* — a number only a steward sees is the first step to a private ledger.
+- **Totals per due, never per house across dues.** No "this house paid 400 € this year", no balance a house owes: the ledger counts a due, not a house.
+  *Rejected: a running balance per house* — the tally of a neighbour this portal refuses everywhere else; the switch buys a due's total, not a score.
+- **The portal records, it never moves money.** No payment link, no account-number field, no card anything; how to pay goes in the notes, in the village's words.
+  *Rejected: an IBAN field* — a portal holding payment details is a target and a payment surface. Nothing polices the notes.
+- **Nothing pushes.** Money should not buzz phones (the Campground's first rule); the collector says it in the Tavern in its own words.
+  *Rejected: a `dues` kind to the houses asked* — a lock screen reading "you owe 35 €" is the room's worst line. It can come when a village asks.
+- **A house that leaves takes its unpaid rows and leaves its paid ones, without a name** (`ON DELETE SET NULL`, and a trigger for the unpaid). The ledger keeps what came in.
+  *Rejected: cascade everything* — the collected total would drop under money already in the box; *keep everything* — a debt nobody can collect stays open forever. The cost: settle with a house before its stay ends.
+- **A house that has paid cannot be dropped from a due** (409): mark it unpaid first, so money never leaves the ledger by a side door. Paid is a day, not an amount.
+  *Rejected: partial payments* — a second number per row for a village of neighbours; editing the amount later moves both totals, and the card shows it.
+- **On the agent surface: `list_dues` and `mark_due`**, absent while the switch is off. A key is never a steward, so an agent cannot write a due; the collector's agent can mark who paid.
+  *Rejected: no tools* — every room is on the surface, and "have we paid the water?" is exactly what a house asks its assistant.
+
+Not built, each until a village asks: a Home badge for a house that has not
+paid (Home fetches every room at once, and a switched-off room's 404 would
+take the whole tile row down), a thread per due, a push.
+
 ## What changes elsewhere when this is built
 
 The village's context file (in its deploy repo) gets one line per room. CLAUDE.md gets the eighth kind, the campground invariant and the `nav: false` note. `i18n.tsx` gets Slovenian labels: `TBD`, ask a Slovenian-speaking house ("Projekti" and "Kamp" are guesses). `README.md` gets the new routes. The export gets three tables. Old notification links do not change.

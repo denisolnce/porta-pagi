@@ -453,3 +453,11 @@ a.card:hover { background: #fff8e4; }
 /* One column of full-width doors: on a phone a ragged wrap of ten widths is harder to hit. */
 .demo-doors { display: grid; gap: .5rem; margin-top: .8rem; }
 .demo-doors button { display: flex; align-items: center; gap: .5rem; justify-content: flex-start; }
+
+/* Dues: one line per house, the mark button at the right end where a thumb
+   reaches it on a phone held in one hand. */
+.due-sum { margin: .2rem 0; font-family: "IM Fell English", serif; color: var(--wood2); }
+.due-houses { list-style: none; margin: .3rem 0 0; padding: 0; }
+.due-houses li { display: flex; align-items: center; gap: .4rem; padding: .25rem 0; border-top: 1px dotted var(--parch3); }
+.due-house { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.due-houses button { white-space: nowrap; }
