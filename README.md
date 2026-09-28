@@ -68,7 +68,12 @@ OpenStreetMap's URL carries it — with `WEATHER_LOCATION` as the place name the
 panel prints) or `arso` (Slovenia, `WEATHER_LOCATION` is the ARSO place name),
 and the panel is off while either is unset — `PAGI_BOOTSTRAP_CODE` (a fixed
 first-steward code; unset means generated and logged), `DATA_DIR`, `PORT`,
-`BIND`, `TZ`. The picture behind the gate is the built-in `backdrop.jpg` until
+`BIND`, `TZ`. Feedback from the ✉️ chip at the foot of Home is written to
+the container log under `FEEDBACK` until email is set up: `RESEND_API_KEY` (a
+Resend API key) and `FEEDBACK_TO` (the address that reads it) send it through
+Resend instead, from `EMAIL_FROM` — a sender on a domain verified in Resend,
+e.g. `Porta Pagi <feedback@example.org>`; unset, it is
+`Porta Pagi <feedback@<PUBLIC_URL's host>>`. The picture behind the gate is the built-in `backdrop.jpg` until
 a village imports its own (`/server site-import backdrop < picture.jpg`, a row
 in `site_files`). The founding text enters once with `/server codex-import <
 codex.json` (shape in `backend/internal/httpapi/codex.go`).

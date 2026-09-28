@@ -14,6 +14,7 @@ import { Camp } from "./rooms/Camp";
 import { Codex } from "./rooms/Codex";
 import { Contacts } from "./rooms/Contacts";
 import { Changelog } from "./Changelog";
+import { Feedback } from "./Feedback";
 import { InstallBanner } from "./Install";
 import { Weather } from "./Weather";
 import { isOver, When } from "./rooms/shared";
@@ -121,6 +122,7 @@ export default function App() {
 // choice: a device that keeps it on top opens the portal on the village's
 // values every time.
 type Topper = "map" | "weather" | "tavern" | "codex";
+type Foot = "" | "changelog" | "feedback";
 
 function Home({ me, houses }: { me: Me; houses: House[] }) {
   const { t } = useT();
@@ -129,11 +131,12 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
     return "tavern";
   });
   const pick = (v: Topper) => { setTop(v); try { localStorage.setItem("potok.top", v); } catch { /* ignore */ } };
-  // The row at the foot of Home mirrors the one at its head, with one chip so
-  // far: the changelog, shown under it when the chip is on. Off by default —
-  // a list of what the builder did is for whoever scrolls down to ask.
-  const [foot, setFoot] = useState<boolean>(() => { try { return localStorage.getItem("potok.foot") === "changelog"; } catch { return false; } });
-  const pickFoot = () => { setFoot(!foot); try { localStorage.setItem("potok.foot", foot ? "" : "changelog"); } catch { /* ignore */ } };
+  // The row at the foot of Home mirrors the one at its head: the changelog,
+  // and the feedback form that asks for the next change. One shows at a time
+  // under the row, per device; a tap on the lit chip closes it. Off by
+  // default — both are for whoever scrolls down to ask.
+  const [foot, setFoot] = useState<Foot>(() => { try { const v = localStorage.getItem("potok.foot"); if (v === "changelog" || v === "feedback") return v; } catch { /* ignore */ } return ""; });
+  const pickFoot = (v: Foot) => { const n = foot === v ? "" : v; setFoot(n); try { localStorage.setItem("potok.foot", n); } catch { /* ignore */ } };
   // One badge per building, built as a finished sentence so a room can say two
   // things at once (the shed: how many are in it, how many are out).
   const [badges, setBadges] = useState<Record<string, string>>({});
@@ -191,9 +194,11 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
         ))}
       </div>
       <div className="topper-pick foot">
-        <button className={"chip" + (foot ? " on" : "")} onClick={pickFoot} title={t("this device only")}>🔨 {t("Changelog")}</button>
+        <button className={"chip" + (foot === "changelog" ? " on" : "")} onClick={() => pickFoot("changelog")} title={t("this device only")}>🔨 {t("Changelog")}</button>
+        <button className={"chip" + (foot === "feedback" ? " on" : "")} onClick={() => pickFoot("feedback")} title={t("this device only")}>✉️ {t("Feedback")}</button>
       </div>
-      {foot && <Changelog />}
+      {foot === "changelog" && <Changelog />}
+      {foot === "feedback" && <Feedback rooms={ROOMS} />}
     </>
   );
 }

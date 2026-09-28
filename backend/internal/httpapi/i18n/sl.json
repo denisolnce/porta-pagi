@@ -428,5 +428,21 @@
   "The village on one page.": "Vas na eni strani.",
   "Enter as a house": "Vstopi kot hiša",
   "This is a demo village. Nobody lives here; pick a house and walk in as them.": "To je vzorčna vas. Nihče ne živi tukaj; izberite hišo in vstopite kot ona.",
-  "Everything you change is wiped on the hour.": "Vse, kar spremenite, se ob polni uri izbriše."
+  "Everything you change is wiped on the hour.": "Vse, kar spremenite, se ob polni uri izbriše.",
+  "Feedback": "Odziv",
+  "to whoever builds the portal": "tistemu, ki gradi portal",
+  "It goes to whoever builds the portal, not to the village.": "Gre tistemu, ki gradi portal, ne vasi.",
+  "About": "Tema",
+  "Something else": "Nekaj drugega",
+  "Your email (optional)": "Vaš e-naslov (neobvezno)",
+  "Only used to answer this message.": "Uporabljen bo samo za odgovor na to sporočilo.",
+  "Message": "Sporočilo",
+  "what is wrong, what is missing, what you would change": "kaj ne dela, kaj manjka, kaj bi spremenili",
+  "Send": "Pošlji",
+  "Sending…": "Pošiljam…",
+  "Sent. Thank you.": "Poslano. Hvala.",
+  "Write another": "Novo sporočilo",
+  "Could not send, try again later.": "Pošiljanje ni uspelo, poskusite znova pozneje.",
+  "Too many messages, try again later.": "Preveč sporočil, poskusite znova pozneje.",
+  "Check the email address and the message.": "Preverite e-naslov in sporočilo."
 }

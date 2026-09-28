@@ -1,4 +1,5 @@
-// Package config reads the process environment once. Nothing here is a secret.
+// Package config reads the process environment once. One value is a secret,
+// RESEND_API_KEY, and it comes from the environment only, never the repo.
 // Four knobs name the village and have no default, because a default would
 // name one village in every binary: VILLAGE_NAME, PUBLIC_URL, PUSH_SUBJECT,
 // LANGUAGES.
@@ -21,6 +22,9 @@ type Config struct {
 	WeatherLocation string   // the place named on the panel; for arso also the query. Unset turns the panel off
 	WeatherCoords   string   // "lat,lon" for open-meteo; unset turns the panel off
 	PublicURL       string   // where the portal answers: invite links are printed under it, and it is the contact in outgoing User-Agents
+	ResendKey       string   // optional: with FeedbackTo set, the feedback door emails through Resend; unset = it logs the message
+	FeedbackTo      string   // optional: the address the feedback door writes to
+	EmailFrom       string   // optional: the sender; unset = "Porta Pagi <feedback@<PUBLIC_URL's host>>", a domain verified in Resend
 	Debug           bool
 }
 
@@ -37,6 +41,9 @@ func Load() Config {
 		WeatherLocation: os.Getenv("WEATHER_LOCATION"),
 		WeatherCoords:   os.Getenv("WEATHER_COORDS"),
 		PublicURL:       os.Getenv("PUBLIC_URL"),
+		ResendKey:       os.Getenv("RESEND_API_KEY"),
+		FeedbackTo:      os.Getenv("FEEDBACK_TO"),
+		EmailFrom:       os.Getenv("EMAIL_FROM"),
 		Debug:           os.Getenv("DEBUG") == "1",
 	}
 }
