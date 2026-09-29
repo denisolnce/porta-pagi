@@ -34,7 +34,7 @@ own deploy repo.
   origin on its own domain.
 - **Backend:** Go, stdlib HTTP, SQLite (pure Go), VAPID web push, one binary,
   nightly backups in-process. Image built by CI to
-  `ghcr.io/dennislapchenko/porta-pagi`, tagged `sha-<commit>` and `latest`.
+  `ghcr.io/denisolnce/porta-pagi`, tagged `sha-<commit>` and `latest`.
 - **Map data:** two rows in the database (`map_files`), entered once from a
   file — `/server map-import parcels <source> <YYYY-MM-DD>` and `/server
   map-import water` — so the SQLite backup is the whole village and one image
@@ -53,7 +53,7 @@ task fe:dev     # frontend on :5173 against the local backend
 
 ## Running a village
 
-One container, one volume. Pull `ghcr.io/dennislapchenko/porta-pagi:<tag>`,
+One container, one volume. Pull `ghcr.io/denisolnce/porta-pagi:<tag>`,
 mount a data directory at `/data`, put a TLS proxy in front, and set the
 environment below. The first steward's bootstrap code is printed to the
 container log on first boot; `docker exec <container> /server code "<house>"`
@@ -89,7 +89,7 @@ codex.json` (shape in `backend/internal/httpapi/codex.go`).
 English — dated off the day it runs. Run it with `LANGUAGES=pt,en` and
 `VILLAGE_NAME="Sobreiro Torto"`. Nothing in it is real: the land is a
 synthetic mesh, the numbers are `000` patterns. The demo image —
-`ghcr.io/dennislapchenko/porta-pagi-demo`, built with `-tags demo` — adds
+`ghcr.io/denisolnce/porta-pagi-demo`, built with `-tags demo` — adds
 the door with no code: a visitor picks a house in the top bar and is in as
 that house, and the village resets on the hour. A village's image has no
 such door; `/server code "<house>"` is the way in there.

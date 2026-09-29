@@ -679,7 +679,7 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
   village is wiped and seeded again on the hour, and the demo build seeds
   itself on boot when the ground is empty (its data dir is a tmpfs). In every village's binary
   that file is not compiled — `demodoor_test.go` pins the 404 — and CI ships
-  the demo as its own image, `ghcr.io/dennislapchenko/porta-pagi-demo`, so no
+  the demo as its own image, `ghcr.io/denisolnce/porta-pagi-demo`, so no
   village can pull the door by mistake. Not seeded: project pictures and tool
   photos, because a picture of an invented village would have to be
   fabricated; the strips stay empty.
@@ -748,7 +748,7 @@ docs/               design docs the owner and the assistant decide on together (
                     and `design-mcp.md` — the API as MCP tools for agents: built, with the options rejected and their costs);
                     `later.md` = the one home for what is brainstormed, designed-and-set-aside, or still undecided
 docs/diagrams/      hand-drawn SVG sketches belonging to those docs
-.github/workflows/  build-backend: the image to GHCR (ghcr.io/dennislapchenko/porta-pagi), sha-<commit> and latest; nothing deploys from here
+.github/workflows/  build-backend: the image to GHCR (ghcr.io/denisolnce/porta-pagi), sha-<commit> and latest; nothing deploys from here
 backend/internal/httpapi/maps.go   serves and imports the map rows; a village's seed files live in its deploy repo
 backend/internal/httpapi/demo.go   the demo village: demo/seed.json (the words), demo/parcels.geojson + water.json (nobody's land),
                     seeded by /server demo-seed into an empty database
