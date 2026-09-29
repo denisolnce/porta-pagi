@@ -16,9 +16,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dennislapchenko/porta-pagi/backend/internal/config"
-	"github.com/dennislapchenko/porta-pagi/backend/internal/mailer"
-	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
+	"github.com/denisolnce/porta-pagi/backend/internal/config"
+	"github.com/denisolnce/porta-pagi/backend/internal/mailer"
+	"github.com/denisolnce/porta-pagi/backend/internal/store"
 )
 
 type Server struct {

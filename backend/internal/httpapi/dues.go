@@ -8,7 +8,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
+	"github.com/denisolnce/porta-pagi/backend/internal/store"
 )
 
 // Dues: who paid the water this quarter. Behind the `dues` switch — one of

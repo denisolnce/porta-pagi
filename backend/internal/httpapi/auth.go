@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
+	"github.com/denisolnce/porta-pagi/backend/internal/store"
 )
 
 // House is the identity attached to every authenticated request. All members

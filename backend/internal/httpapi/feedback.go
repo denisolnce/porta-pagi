@@ -12,7 +12,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/dennislapchenko/porta-pagi/backend/internal/mailer"
+	"github.com/denisolnce/porta-pagi/backend/internal/mailer"
 )
 
 // The feedback door: a house writes to whoever builds the portal, from the

@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dennislapchenko/porta-pagi/backend/internal/config"
-	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
+	"github.com/denisolnce/porta-pagi/backend/internal/config"
+	"github.com/denisolnce/porta-pagi/backend/internal/store"
 )
 
 // answerOf: the sign-up row of one house, by name. The list carries every

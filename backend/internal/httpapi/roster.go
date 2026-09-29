@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
+	"github.com/denisolnce/porta-pagi/backend/internal/store"
 )
 
 // Duty roster, behind the `roster` switch: the village's recurring chores —

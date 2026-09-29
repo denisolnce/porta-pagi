@@ -17,9 +17,9 @@ import (
 	// Set TZ in the compose file to pick it up.
 	_ "time/tzdata"
 
-	"github.com/dennislapchenko/porta-pagi/backend/internal/config"
-	"github.com/dennislapchenko/porta-pagi/backend/internal/httpapi"
-	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
+	"github.com/denisolnce/porta-pagi/backend/internal/config"
+	"github.com/denisolnce/porta-pagi/backend/internal/httpapi"
+	"github.com/denisolnce/porta-pagi/backend/internal/store"
 )
 
 func main() {

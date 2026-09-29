@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
+	"github.com/denisolnce/porta-pagi/backend/internal/store"
 )
 
 // The door with no code, compiled into the demo image only (-tags demo). A

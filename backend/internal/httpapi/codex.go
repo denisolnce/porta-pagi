@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"slices"
 
-	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
+	"github.com/denisolnce/porta-pagi/backend/internal/store"
 )
 
 // The Codex is the village's own text: the values and agreements the council

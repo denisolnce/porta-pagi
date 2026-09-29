@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
+	"github.com/denisolnce/porta-pagi/backend/internal/store"
 )
 
 // The demo village: a year of an invented collective's life, written into an

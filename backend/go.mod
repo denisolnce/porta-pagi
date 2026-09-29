@@ -1,4 +1,4 @@
-module github.com/dennislapchenko/porta-pagi/backend
+module github.com/denisolnce/porta-pagi/backend
 
 go 1.24.0
 

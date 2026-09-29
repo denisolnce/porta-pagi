@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dennislapchenko/porta-pagi/backend/internal/config"
-	"github.com/dennislapchenko/porta-pagi/backend/internal/store"
+	"github.com/denisolnce/porta-pagi/backend/internal/config"
+	"github.com/denisolnce/porta-pagi/backend/internal/store"
 )
 
 // TestDemoDoor (demo build only): a visitor lists the houses and enters one
