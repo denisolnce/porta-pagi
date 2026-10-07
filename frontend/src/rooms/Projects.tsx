@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, type Me } from "../api";
 import { useT } from "../i18n";
 import { EventCard } from "./EventCard";
-import { Crest, Empty, When, canEdit, isOver, useList } from "./shared";
+import { Crest, Empty, When, ahead, canEdit, isOver, useList } from "./shared";
 import { DatePicker } from "../DatePicker";
 import { photoURL, uploadPhoto } from "../photo";
 
@@ -192,10 +192,10 @@ export function Project({ me, houses: allHouses }: { me: Me; houses: { id: numbe
         {events.length === 0 && <Empty text={t("No dates yet.")} />}
         {/* isOver, never a date comparison: a work party that ended this
             morning belongs under "Happened", and the card greys itself off the
-            same answer. */}
-        {events.filter((e) => !isOver(e)).map((e) => <EventCard key={e.id} ev={e} me={me} reload={load} linkToTavern />)}
-        {events.some((e) => isOver(e)) && <h3 className="small" style={{ marginTop: ".8rem" }}>{t("Happened")}</h3>}
-        {events.filter((e) => isOver(e)).map((e) => <EventCard key={e.id} ev={e} me={me} reload={load} linkToTavern />)}
+            same answer. A series stands ahead by its next day. */}
+        {ahead(events).map((e) => <EventCard key={e.id + (e.occurs_on || "")} ev={e} me={me} reload={load} linkToTavern />)}
+        {events.some((e) => !e.recur && isOver(e)) && <h3 className="small" style={{ marginTop: ".8rem" }}>{t("Happened")}</h3>}
+        {events.filter((e) => !e.recur && isOver(e)).map((e) => <EventCard key={e.id} ev={e} me={me} reload={load} linkToTavern />)}
       </div>
     </>
   );

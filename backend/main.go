@@ -119,6 +119,7 @@ func main() {
 	defer stop()
 	go st.RunNightlyBackups(ctx)
 	go srv.RunToolReminders(ctx)
+	go srv.RunCalendar(ctx)
 	if httpapi.DemoStart != nil { // the demo build only: the hourly reset
 		go httpapi.DemoStart(ctx, srv)
 	}

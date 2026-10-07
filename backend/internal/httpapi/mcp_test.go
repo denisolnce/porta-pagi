@@ -242,7 +242,7 @@ func TestMCPSurface(t *testing.T) {
 	for _, f := range Features {
 		switchOn(t, steward, f.Key)
 	}
-	want := map[string]bool{"list_dues": true, "mark_due": true, "list_away": true, "create_away": true, "update_away": true, "list_camp": true, "create_camp": true, "update_camp": true, "list_contacts": true, "create_contact": true, "update_contact": true, "add_project_photo": true, "whoami": true, "weather": true}
+	want := map[string]bool{"list_dues": true, "mark_due": true, "list_away": true, "create_away": true, "update_away": true, "list_camp": true, "create_camp": true, "update_camp": true, "list_contacts": true, "create_contact": true, "update_contact": true, "add_project_photo": true, "whoami": true, "weather": true, "list_almanac": true}
 	seen := map[string]bool{}
 	for _, tl := range mcpTools {
 		seen[tl.Name] = true
@@ -275,7 +275,7 @@ func TestMCPSurface(t *testing.T) {
 			t.Fatalf("tool missing from the table: %s", name)
 		}
 	}
-	if len(mcpTools) != 51 {
+	if len(mcpTools) != 52 {
 		t.Fatalf("the surface moved: %d tools — a visible decision, update this pin and docs/design-mcp.md", len(mcpTools))
 	}
 	// Unknown tool, unknown method, a batch, garbage.

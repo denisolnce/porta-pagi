@@ -9,7 +9,8 @@ inside.
 
 Closed web portal for the houses of one small community: a cadastral map as
 the home screen, and seven rooms — Tavern (pinned notices, the month calendar
-with work-bee sign-ups, and the message board), Market (needs, give-aways,
+with work-bee sign-ups, events that repeat, birthdays and the sky's almanac,
+and the message board), Market (needs, give-aways,
 shop runs and orders), Watchtower (who is away), Tool shed (what the village lends),
 Projects (long jobs split into takable tasks), Campground (who collected from
 which camper) and Contacts (who to call) — plus the Codex, the village's
@@ -70,7 +71,9 @@ Optional: the weather — `WEATHER_PROVIDER` is `open-meteo` (the default:
 anywhere, from `WEATHER_COORDS=lat,lon` — the pair any map gives,
 OpenStreetMap's URL carries it — with `WEATHER_LOCATION` as the place name the
 panel prints) or `arso` (Slovenia, `WEATHER_LOCATION` is the ARSO place name),
-and the panel is off while either is unset — `PAGI_BOOTSTRAP_CODE` (a fixed
+and the panel is off while either is unset; the same place gives the
+calendar's almanac its eclipses and the seasons' sunrise and sunset, and
+without one the almanac lists moons and seasons only — `PAGI_BOOTSTRAP_CODE` (a fixed
 first-steward code; unset means generated and logged), `DATA_DIR`, `PORT`,
 `BIND`, `TZ`. Feedback from the ✉️ chip at the foot of Home is written to
 the container log under `FEEDBACK` until email is set up: `RESEND_API_KEY` (a
@@ -117,7 +120,7 @@ Other clients, `.mcp.json` shape:
 What the agent can do: read and write in every room — board, calendar and
 answers, threads, shop runs and needs, give-aways, the Watchtower, the shed
 and its wishlist, projects, tasks and a picture on a project, the campground,
-the codex, the weather, and — where the village switched them on — the
+the codex, the weather, the almanac (to read and talk about), and — where the village switched them on — the
 campground, the dues ledger and the duty roster. What it cannot: delete anything, mint keys or touch
 devices, edit the house itself, or do a steward's work. **The key opens
 `/api/mcp` and nothing else** — `curl` with it gets a 403 — so the tool list

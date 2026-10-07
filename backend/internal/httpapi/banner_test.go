@@ -75,6 +75,11 @@ func TestNotificationBanners(t *testing.T) {
 			map[string]any{"title": "Košnja skupnega travnika", "kind": "work", "starts_at": "2026-09-05T08:30", "place": "pri mlinu"},
 			[2]string{"🤝 Košnja skupnega travnika", "jutri ob 8:30 · pri mlinu"},
 			[2]string{"🤝 Košnja skupnega travnika", "tomorrow at 8:30 · pri mlinu"}},
+		// A series says how it repeats, after the first day.
+		{"weekly work party", "POST", "/api/events",
+			map[string]any{"title": "Skupno kuhanje", "kind": "work", "starts_at": "2026-09-05T08:30", "recur": "weekly"},
+			[2]string{"🤝 Skupno kuhanje", "jutri ob 8:30 · vsak teden"},
+			[2]string{"🤝 Skupno kuhanje", "tomorrow at 8:30 · every week"}},
 		{"project", "POST", "/api/projects",
 			map[string]any{"title": "Ograja okoli travnika", "notes": "300 m"},
 			[2]string{"📋 House Zeleni Volk načrtuje: Ograja okoli travnika", "300 m"},

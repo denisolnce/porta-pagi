@@ -319,3 +319,55 @@ Not built: a Home badge ("mowing due") — Home loads every badge in one
 request batch, which a switched-off room would fail, and the switch filtering
 on Home is its own change; a per-house "joined" mark beside the counts; a
 reminder when a duty is due.
+
+## The calendar grows: the sky, birthdays, repeats
+
+Built 2026-10-07 on the owner's ask, decisions taken the same day. Three
+things in the Tavern's calendar, none of them a room: they sit in the month
+grid beside the events, so the door is the one the village already uses.
+
+**The sky** — `almanac` table, `almanac.go`, `internal/astro`. The villager
+job, in one line: **when is the full moon, and when is the eclipse — seen
+from here** — what an almanac on the kitchen wall answered, and a WhatsApp
+group answers with a link to a site full of ads. New and full moons, the
+equinoxes and solstices, and the eclipses the village can see; the owner
+added solstices and eclipses to the moons and equinoxes asked for, and the
+place is the one the weather already has (owner's line: "the location is
+there for the weather"). Left out to keep the grid quiet: quarter moons,
+supermoons, planets, meteor showers, the old cross-quarter days. A row is
+written by the backend once a year, never created, edited or answered;
+comments ring the houses already in that thread. Options refused for who
+hears a comment: nobody (a "nice moon tonight" would go unanswered), every
+house (noise under `events`).
+
+| What the page says | Where it comes from |
+| --- | --- |
+| A line per full moon of the northern year (the harvest moon, Easter's rule, the lowest summer moon) | `rooms/Almanac.tsx`, words per language; south of the equator one line every full moon shares |
+| The four seasons' turn, and here the day's sunrise and sunset | Meeus ch.27 and the place |
+| An eclipse: partial, annular or total as seen here, the greatest part seen, the visible window, "the sun sets during it", the glasses warning | Meeus ch.54 for candidates, the local circumstances from topocentric sun and moon |
+
+**Birthdays** — kind `birthday` on `events`. The villager job: **whose
+birthday is it, without scrolling back to last year's congratulations**. A
+date for the village to know, not a party: no answers, no place, no crest,
+because it belongs to no house — the owner did not want birthdays attributed
+to houses, and anyone may write theirs down. The owner asked for **the year
+and, when known, the hour of the birth** to be kept, for the houses that
+read horoscopes; the page shows the birth and no age. It rings every house
+on the morning of the day under its own kind `birthdays`, and **never when
+written down** (owner's decision). The owner expects it may be unpopular;
+the kind's opt-out is the brake.
+
+**Repeats** — `events.recur`: one-off (default), weekly, monthly, yearly.
+The villager job: **the yoga on the porch every Monday, without calling it
+every week**. Answers are **per day** (`event_signups.occurs_on`), so a
+weekly work party still has a headcount for one day that dies with that day
+— the owner's pick over "no answers on a series" (a weekly work party could
+not count hands) and "one answer for the whole series" (a yes for every
+Saturday forever is not a headcount). The caller's own yes goes to the first
+day only.
+
+Not built, each until a village asks: an end date or a skipped day for a
+series; an almanac line for a southern village's months; a minimum visible
+time for an eclipse that the village sees only for minutes before moonset
+(listed as it is today, with "the moon sets during it").
+

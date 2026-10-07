@@ -70,7 +70,7 @@
   --parch: #f1e4c6; --parch2: #e4d2a8; --parch3: #d6c08f;
   --ink: #2c2416; --ink2: #5a4a34; --ink3: #857055;
   --brass: #c7a24a; --brass2: #e0c072;
-  --red: #8a2f2f; --green: #4a7c3f; --blue: #3f5f8a;
+  --red: #8a2f2f; --green: #4a7c3f; --blue: #3f5f8a; --plum: #7a4a6b;
   --shadow: 0 2px 0 #1a100a, 0 6px 14px rgba(0,0,0,.35);
 }
 * { box-sizing: border-box; }
@@ -142,6 +142,10 @@ main { flex: 1; max-width: 1100px; width: 100%; margin: 0 auto; padding: 1rem 1r
 .tag { display: inline-block; font-size: .78rem; padding: 0 .5rem; border-radius: 999px; background: var(--parch3); color: var(--ink2); }
 .tag.open { background: #dfe8cf; } .tag.taken, .tag.claimed { background: #f0d9a8; } .tag.done { background: #ddd; }
 .tag.alarm { background: #f2c2c2; color: var(--red); } .tag.work { background: #cfe0c2; }
+.tag.birthday { background: #ecd6e2; color: var(--plum); }
+.tag.sky { background: #d5dde9; color: var(--blue); }
+.card.sky .body p { margin: .15rem 0; }
+.dp-years select { font: inherit; background: transparent; border: 0; color: inherit; padding: 0 .1rem; }
 /* DatePicker: a field-shaped button and a small parchment popover that reuses
    the calendar grid classes, so a date looks the same everywhere. */
 .dp { position: relative; display: block; }

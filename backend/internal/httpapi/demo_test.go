@@ -69,7 +69,8 @@ func TestDemoSeed(t *testing.T) {
 		}
 	}
 	// A past event and a future one, off the seed's day; a wall clock, not UTC.
-	if row, _ := st.One(t.Context(), `SELECT min(starts_at) AS a, max(starts_at) AS b FROM events`); row == nil || row["a"].(string) > "2026-09-23" || row["b"].(string) < "2026-09-24" || !strings.Contains(row["a"].(string), "T") {
+	// A birthday starts in the year of the birth and is left out.
+	if row, _ := st.One(t.Context(), `SELECT min(starts_at) AS a, max(starts_at) AS b FROM events WHERE kind != 'birthday'`); row == nil || row["a"].(string) > "2026-09-23" || row["b"].(string) < "2026-09-24" || !strings.Contains(row["a"].(string), "T") {
 		t.Fatalf("events are not spread around the seed's day: %v", row)
 	}
 	// Every switch is on in the demo: it shows every room.
@@ -274,6 +275,11 @@ func demoShowsEverything(t *testing.T, now time.Time) {
 		"a number written down a year ago":                   `SELECT count(*) AS v FROM contacts WHERE created_at < '` + now.AddDate(0, 0, -300).UTC().Format("2006-01-02") + `'`,
 		"a number written down lately":                       `SELECT count(*) AS v FROM contacts WHERE created_at > '` + now.AddDate(0, 0, -90).UTC().Format("2006-01-02") + `'`,
 		"a codex section a house rewrote":                    `SELECT count(*) AS v FROM codex_sections WHERE updated_by IS NOT NULL`,
+		"a series answered for its next day":                 `SELECT count(*) AS v FROM event_signups s JOIN events e ON e.id=s.event_id WHERE e.recur IN ('weekly', 'monthly') AND s.occurs_on >= '` + today + `'`,
+		"a series answered for a day gone":                   `SELECT count(*) AS v FROM event_signups s JOIN events e ON e.id=s.event_id WHERE e.recur IN ('weekly', 'monthly') AND s.occurs_on < '` + today + `' AND s.occurs_on >= '` + since60 + `'`,
+		"a birthday with the hour of birth":                  `SELECT count(*) AS v FROM events WHERE kind='birthday' AND length(starts_at) > 10`,
+		"a birthday talked about":                            `SELECT count(*) AS v FROM events e WHERE kind='birthday' AND EXISTS (SELECT 1 FROM comments c WHERE c.subject='event' AND c.subject_id=e.id)`,
+		"the sky listed":                                     `SELECT count(*) AS v FROM almanac WHERE starts_at >= '` + since60 + `'`,
 	} {
 		if v := value(t, st, q); v == "0" || v == "" {
 			t.Errorf("nothing shows %s", what)

@@ -107,6 +107,7 @@ func (s *Server) routes() {
 	m.HandleFunc("DELETE /api/events/{id}", s.requireHouse(s.deleteRow("events")))
 	m.HandleFunc("POST /api/events/{id}/signup", s.requireHouse(s.signUp))
 	m.HandleFunc("DELETE /api/events/{id}/signup", s.requireHouse(s.signOff))
+	m.HandleFunc("GET /api/almanac", s.requireHouse(s.listAlmanac))
 	// Comment threads: one shape for every room that has them (threads.go).
 	m.HandleFunc("GET /api/threads/{subject}/{id}", s.requireHouse(s.listThread))
 	m.HandleFunc("POST /api/threads/{subject}/{id}", s.requireHouse(s.createThreadComment))
@@ -793,15 +794,19 @@ func (s *Server) updatePost(w http.ResponseWriter, r *http.Request) {
 func (s *Server) listEvents(w http.ResponseWriter, r *http.Request) {
 	// Sixty days back, off s.now() — the third list to leave SQLite's clock,
 	// after runs and away notices, for the same reason: a test cannot move it.
+	// A series comes whatever its first day: a birthday starts in the year of
+	// the birth and a weekly work party lands this Saturday too. Its answers
+	// carry the day they are for; signups and mine count a one-off's only,
+	// and the page counts a series' per day from signup_list.
 	since := s.now().AddDate(0, 0, -60).Format("2006-01-02")
 	rows, err := s.st.Rows(r.Context(), `SELECT e.*,`+houseJoin+`, pr.title AS project_title, tk.title AS task_title,
-		(SELECT count(*) FROM event_signups s WHERE s.event_id=e.id AND s.state='yes' AND s.answered_version >= e.time_version) AS signups,
-		(SELECT json_group_array(json_object('house_id', h2.id, 'name', h2.name, 'crest', h2.crest, 'state', s.state, 'stale', CASE WHEN s.answered_version < e.time_version THEN 1 ELSE 0 END)) FROM event_signups s JOIN houses h2 ON h2.id=s.house_id WHERE s.event_id=e.id) AS signup_list,
-		(SELECT s.state FROM event_signups s WHERE s.event_id=e.id AND s.house_id=?) AS mine,
+		(SELECT count(*) FROM event_signups s WHERE s.event_id=e.id AND s.occurs_on='' AND s.state='yes' AND s.answered_version >= e.time_version) AS signups,
+		(SELECT json_group_array(json_object('house_id', h2.id, 'name', h2.name, 'crest', h2.crest, 'state', s.state, 'occurs_on', s.occurs_on, 'stale', CASE WHEN s.answered_version < e.time_version THEN 1 ELSE 0 END)) FROM event_signups s JOIN houses h2 ON h2.id=s.house_id WHERE s.event_id=e.id) AS signup_list,
+		(SELECT s.state FROM event_signups s WHERE s.event_id=e.id AND s.occurs_on='' AND s.house_id=?) AS mine,
 		(SELECT count(*) FROM comments c WHERE c.subject='event' AND c.subject_id=e.id) AS comments,
 		ed.name AS edited_by_name
 		FROM events e JOIN houses h ON h.id=e.house_id LEFT JOIN projects pr ON pr.id=e.project_id LEFT JOIN project_tasks tk ON tk.id=e.task_id LEFT JOIN houses ed ON ed.id=e.edited_by
-		WHERE e.starts_at >= ? ORDER BY e.starts_at LIMIT 500`, houseFrom(r).ID, since)
+		WHERE e.starts_at >= ? OR e.recur != '' ORDER BY e.starts_at LIMIT 500`, houseFrom(r).ID, since)
 	if err != nil {
 		fail(w, err)
 		return
@@ -819,11 +824,21 @@ func (s *Server) createEvent(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, "ends_at is before starts_at")
 		return
 	}
-	// Two kinds only. The alarm was removed on 2026-09-06: a real emergency
-	// gets a phone call, and a notification nobody is holding is worse than one.
+	// An event, a work party or a birthday. The alarm was removed on
+	// 2026-09-06: a real emergency gets a phone call, and a notification
+	// nobody is holding is worse than one.
 	kind := str(m, "kind")
-	if kind != "work" {
+	if kind != "work" && kind != "birthday" {
 		kind = "event"
+	}
+	recur := str(m, "recur")
+	if !contains(recurs, recur) {
+		writeErr(w, 400, "recur is weekly, monthly, yearly or empty")
+		return
+	}
+	if kind == "birthday" {
+		s.createBirthday(w, r, m)
+		return
 	}
 	// An event may belong to a project, and to one of that project's tasks.
 	// The task decides the project; a task from another project is refused.
@@ -839,8 +854,8 @@ func (s *Server) createEvent(w http.ResponseWriter, r *http.Request) {
 		}
 		taskID, projectID = int64(v), tk["project_id"]
 	}
-	id, err := s.st.Exec(r.Context(), `INSERT INTO events(house_id, title, kind, starts_at, ends_at, place, notes, project_id, task_id) VALUES (?,?,?,?,?,?,?,?,?)`,
-		houseFrom(r).ID, str(m, "title"), kind, str(m, "starts_at"), nullIfEmpty(str(m, "ends_at")), str(m, "place"), str(m, "notes"), projectID, taskID)
+	id, err := s.st.Exec(r.Context(), `INSERT INTO events(house_id, title, kind, starts_at, ends_at, place, notes, project_id, task_id, recur) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+		houseFrom(r).ID, str(m, "title"), kind, str(m, "starts_at"), nullIfEmpty(str(m, "ends_at")), str(m, "place"), str(m, "notes"), projectID, taskID, recur)
 	if err != nil {
 		fail(w, err)
 		return
@@ -848,11 +863,17 @@ func (s *Server) createEvent(w http.ResponseWriter, r *http.Request) {
 	// Whoever calls a work party is at it: the creator answers yes for its own
 	// house, so a headcount of one is never mistaken for nobody answering. Any
 	// of the three answers can replace it afterwards, like any other house's.
-	s.st.Exec(r.Context(), `INSERT INTO event_signups(event_id, house_id, state, answered_at, answered_version) VALUES (?,?, 'yes', datetime('now'), 0)`, id, houseFrom(r).ID)
+	// A series gets that yes for its first day only: the caller of a weekly
+	// work party answers each later Saturday like every other house.
+	first := ""
+	if recur != "" {
+		first = firstN(str(m, "starts_at"), 10)
+	}
+	s.st.Exec(r.Context(), `INSERT INTO event_signups(event_id, house_id, occurs_on, state, answered_at, answered_version) VALUES (?,?,?, 'yes', datetime('now'), 0)`, id, houseFrom(r).ID, first)
 
 	icon := map[string]string{"event": "🔔", "work": "🤝"}[kind]
 	s.notify("events", houseFrom(r).ID, func(lang string) Payload {
-		body := join(" · ", humanWhen(str(m, "starts_at"), lang, s.now()), str(m, "place"))
+		body := join(" · ", humanWhen(str(m, "starts_at"), lang, s.now()), tr(lang, recurWords[recur]), str(m, "place"))
 		if n := str(m, "notes"); n != "" {
 			body = join(" — ", body, snippet(n, 70))
 		}
@@ -876,10 +897,23 @@ func (s *Server) updateEvent(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, "bad json")
 		return
 	}
-	before, err := s.st.One(r.Context(), `SELECT starts_at, ends_at FROM events WHERE id=?`, id)
+	before, err := s.st.One(r.Context(), `SELECT starts_at, ends_at, kind, recur FROM events WHERE id=?`, id)
 	if err != nil {
 		fail(w, err)
 		return
+	}
+	// A birthday stays a birthday and a gathering stays a gathering: one has
+	// answers and a place, the other a person's date, and a row that switched
+	// would carry the wrong half.
+	if k, ok := m["kind"]; ok && (k == "birthday") != (before["kind"] == "birthday") {
+		writeErr(w, 400, "a birthday stays a birthday")
+		return
+	}
+	if _, ok := m["recur"]; ok {
+		if rc := str(m, "recur"); !contains(recurs, rc) || (before["kind"] == "birthday" && rc != "yearly") {
+			writeErr(w, 400, "recur is weekly, monthly, yearly or empty; a birthday is yearly")
+			return
+		}
 	}
 	starts, ends := str(before, "starts_at"), str(before, "ends_at")
 	if _, ok := m["starts_at"]; ok {
@@ -892,16 +926,17 @@ func (s *Server) updateEvent(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, "ends_at is before starts_at")
 		return
 	}
-	for _, k := range []string{"title", "kind", "starts_at", "ends_at", "place", "notes"} {
+	for _, k := range []string{"title", "kind", "starts_at", "ends_at", "place", "notes", "recur"} {
 		if _, ok := m[k]; ok {
 			s.st.Exec(r.Context(), `UPDATE events SET `+k+`=? WHERE id=?`, str(m, k), id)
 		}
 	}
 	// Moving the date invalidates the answers: a headcount for a day that no
 	// longer exists is worse than no headcount. Answers are not deleted, they
-	// are marked older than the change and the room says so.
+	// are marked older than the change and the room says so. Changing how a
+	// series repeats moves its days, so it counts as a move too.
 	moved := false
-	for _, k := range []string{"starts_at", "ends_at"} {
+	for _, k := range []string{"starts_at", "ends_at", "recur"} {
 		if v, ok := m[k]; ok {
 			old, _ := before[k].(string)
 			if str(map[string]any{k: v}, k) != old {
@@ -1352,7 +1387,7 @@ func (s *Server) updateAway(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) export(w http.ResponseWriter, r *http.Request) {
 	out := map[string]any{"exported_at": time.Now().UTC().Format(time.RFC3339)}
-	for _, t := range []string{"houses", "house_parcels", "house_homes", "posts", "events", "event_signups", "runs", "needs", "offers", "away", "tools", "wishes", "wish_wants", "wish_options", "comments", "projects", "project_tasks", "project_photos", "camp_takings", "dues", "dues_owed", "codex_sections", "codex_texts", "contacts", "roster_duties", "roster_turns", "map_files", "site_files", "features"} {
+	for _, t := range []string{"houses", "house_parcels", "house_homes", "posts", "events", "event_signups", "almanac", "runs", "needs", "offers", "away", "tools", "wishes", "wish_wants", "wish_options", "comments", "projects", "project_tasks", "project_photos", "camp_takings", "dues", "dues_owed", "codex_sections", "codex_texts", "contacts", "roster_duties", "roster_turns", "map_files", "site_files", "features"} {
 		cols := "*"
 		switch t { // photos are bytes, not text — they stay in the SQLite backup
 		case "tools":
@@ -1390,13 +1425,24 @@ func (s *Server) signUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	m, _ := readJSON(r)
-	ev, err := s.st.One(r.Context(), `SELECT house_id, title FROM events WHERE id=?`, id)
+	ev, err := s.st.One(r.Context(), `SELECT house_id, title, kind, starts_at, recur FROM events WHERE id=?`, id)
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	if ev == nil {
 		writeErr(w, 404, "no such event")
+		return
+	}
+	// A birthday is a date to know, not a gathering to come to.
+	if ev["kind"] == "birthday" {
+		writeErr(w, 400, "a birthday takes no answers")
+		return
+	}
+	// A series is answered one day at a time, and only on a day it lands on.
+	on, ok := s.occurrence(ev, str(m, "occurs_on"))
+	if !ok {
+		writeErr(w, 400, "occurs_on is a day this event lands on")
 		return
 	}
 	// An answer is one of three words and nothing else. A sign-up carries no
@@ -1406,15 +1452,18 @@ func (s *Server) signUp(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, "unknown answer")
 		return
 	}
-	if _, err := s.st.Exec(r.Context(), `INSERT INTO event_signups(event_id, house_id, state, answered_at, answered_version)
-		VALUES (?,?,?,datetime('now'), COALESCE((SELECT time_version FROM events WHERE id=?),0))
-		ON CONFLICT(event_id, house_id) DO UPDATE SET state=excluded.state, answered_at=excluded.answered_at, answered_version=excluded.answered_version`,
-		id, h.ID, state, id); err != nil {
+	if _, err := s.st.Exec(r.Context(), `INSERT INTO event_signups(event_id, house_id, occurs_on, state, answered_at, answered_version)
+		VALUES (?,?,?,?,datetime('now'), COALESCE((SELECT time_version FROM events WHERE id=?),0))
+		ON CONFLICT(event_id, house_id, occurs_on) DO UPDATE SET state=excluded.state, answered_at=excluded.answered_at, answered_version=excluded.answered_version`,
+		id, h.ID, on, state, id); err != nil {
 		fail(w, err)
 		return
 	}
 	if owner := ev["house_id"].(int64); owner != h.ID {
 		title := ev["title"].(string)
+		if on != "" {
+			title += " · " + on
+		}
 		word := map[string]string{"yes": " is coming", "no": " cannot come", "maybe": " might come"}[state]
 		icon := map[string]string{"yes": "🙋", "no": "🚫", "maybe": "🤔"}[state]
 		s.notifyHouse("events", owner, func(lang string) Payload {
@@ -1430,7 +1479,8 @@ func (s *Server) signOff(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, "bad id")
 		return
 	}
-	if _, err := s.st.Exec(r.Context(), `DELETE FROM event_signups WHERE event_id=? AND house_id=?`, id, houseFrom(r).ID); err != nil {
+	// A series' answer is taken back for one day: ?on=YYYY-MM-DD.
+	if _, err := s.st.Exec(r.Context(), `DELETE FROM event_signups WHERE event_id=? AND house_id=? AND occurs_on=?`, id, houseFrom(r).ID, r.URL.Query().Get("on")); err != nil {
 		fail(w, err)
 		return
 	}

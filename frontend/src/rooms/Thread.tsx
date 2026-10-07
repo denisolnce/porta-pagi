@@ -9,7 +9,7 @@ import { Crest, When } from "./shared";
 //
 // The button that opens one is "💬 Comments" and carries the count only when
 // there is one to carry — the same in every room that has a thread.
-export function Thread({ subject, id, me, onChanged }: { subject: "event" | "wish" | "away" | "contact"; id: number; me: Me; onChanged?: () => void }) {
+export function Thread({ subject, id, me, onChanged }: { subject: "event" | "wish" | "away" | "contact" | "almanac"; id: number; me: Me; onChanged?: () => void }) {
   const { t } = useT();
   const [items, setItems] = useState<any[]>([]);
   const [body, setBody] = useState("");

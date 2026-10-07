@@ -2,18 +2,26 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, type House, type Me } from "../api";
 import { localeOf, useT } from "../i18n";
-import { isOver, useList, When } from "./shared";
-import { EventCard, ICON } from "./EventCard";
+import { ahead as aheadOf, instances, isOver, useList, When } from "./shared";
+import { EventCard, ICON, REPEATS } from "./EventCard";
+import { SkyCard, skyIcon } from "./Almanac";
 import { DatePicker } from "../DatePicker";
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
+const blank = { title: "", kind: "event", starts_at: "", ends_at: "", place: "", notes: "", project_id: "", task_id: "", recur: "" };
+
 // The village calendar: a month grid with the events sitting in their day, then
-// the chosen day (or everything ahead) as cards you can sign up to.
+// the chosen day (or everything ahead) as cards you can sign up to. A series
+// sits on every day it lands on; the sky — moons, equinoxes, solstices,
+// eclipses — sits beside the events, written by the portal and only talked
+// about, never answered.
 export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
   const { t, lang } = useT();
   const { items, reload } = useList("/events");
-  const [f, setF] = useState({ title: "", kind: "event", starts_at: "", ends_at: "", place: "", notes: "", project_id: "", task_id: "" });
+  const sky = useList("/almanac");
+  const [f, setF] = useState(blank);
+  const birthday = f.kind === "birthday";
   const [open, setOpen] = useState(false);
   // Projects for the "belongs to" select; ?project=ID (from a project page)
   // opens the form with that project chosen.
@@ -54,6 +62,14 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
   };
   const set = (k: string) => (e: React.ChangeEvent<any>) => {
     const v = e.target.value;
+    // A birthday's date is the birth, not a day of this month at nine: the
+    // field starts empty, and leaving the kind brings the usual hours back.
+    if (k === "kind" && (v === "birthday") !== birthday) {
+      const d = defaultDay();
+      setF(v === "birthday" ? { ...f, kind: v, starts_at: "", ends_at: "", recur: "", project_id: "", task_id: "" } : { ...f, kind: v, starts_at: d + "T09:00", ends_at: d + "T17:00" });
+      setEndTouched(false);
+      return;
+    }
     if (k === "starts_at" && !endTouched && v.length >= 10) {
       setF({ ...f, starts_at: v, ends_at: v.slice(0, 10) + (f.ends_at.slice(10) || "T17:00") });
       return;
@@ -70,21 +86,10 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     await api("/events", { method: "POST", body: { ...f, project_id: f.project_id ? Number(f.project_id) : undefined, task_id: f.task_id ? Number(f.task_id) : undefined } });
-    setF({ title: "", kind: "event", starts_at: "", ends_at: "", place: "", notes: "", project_id: "", task_id: "" });
+    setF(blank);
     setOpen(false);
     reload();
   };
-
-  // An event occupies every day from its start to its end.
-  const byDay = useMemo(() => {
-    const m: Record<string, any[]> = {};
-    for (const ev of items) {
-      const from = new Date(ev.starts_at.slice(0, 10) + "T00:00");
-      const to = new Date((ev.ends_at || ev.starts_at).slice(0, 10) + "T00:00");
-      for (const d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) (m[iso(d)] ||= []).push(ev);
-    }
-    return m;
-  }, [items]);
 
   // Monday-first grid, six rows so the layout never jumps between months.
   const cells = useMemo(() => {
@@ -98,6 +103,25 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
     });
   }, [cursor]);
 
+  // What the grid shows: the events, a series as one copy per day it lands
+  // on within the six weeks, and the sky beside them, marked as such.
+  const shownItems = useMemo(() => {
+    const evs = instances(items, iso(cells[0]), iso(cells[41]));
+    const rows = sky.items.map((x: any) => ({ ...x, sky: true }));
+    return [...evs, ...rows].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+  }, [items, sky.items, cells]);
+
+  // An event occupies every day from its start to its end.
+  const byDay = useMemo(() => {
+    const m: Record<string, any[]> = {};
+    for (const ev of shownItems) {
+      const from = new Date(ev.starts_at.slice(0, 10) + "T00:00");
+      const to = new Date((ev.ends_at || ev.starts_at).slice(0, 10) + "T00:00");
+      for (const d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) (m[iso(d)] ||= []).push(ev);
+    }
+    return m;
+  }, [shownItems]);
+
   const today = iso(new Date());
   // Without a picked day the list holds THIS MONTH's events that are still to
   // come — not everything ahead forever. The grid above already says which
@@ -106,16 +130,22 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
   // list and stays in its day cell.
   const monthKey = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}`;
   const inMonth = (ev: any) => ev.starts_at.slice(0, 7) <= monthKey && (ev.ends_at || ev.starts_at).slice(0, 7) >= monthKey;
-  const shown = day ? byDay[day] || [] : items.filter((ev) => inMonth(ev) && !isOver(ev));
+  const shown = day ? byDay[day] || [] : shownItems.filter((ev) => inMonth(ev) && !isOver(ev));
   // Leaving the month drops the picked day with it — the list below belongs to
   // the month on screen, so a day from the month you just left must not hold it.
   const page = (by: number, to?: Date) => { setDay(null); setCursor(to || new Date(cursor.getFullYear(), cursor.getMonth() + by, 1)); };
   // Month-scoping must not hide that anything exists outside the month — Home
   // counts every event ahead, so the room has to account for the difference.
   // Whenever something ahead sits outside the shown month, a tail line says how
-  // many and jumps to the closest one.
-  const ahead = items.filter((ev) => !isOver(ev)).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-  const outside = ahead.filter((ev) => !inMonth(ev));
+  // many and jumps to the closest one. Ahead is what Home counts: gatherings,
+  // a series by its next day — never the sky or a birthday, which are always
+  // somewhere ahead.
+  const ahead = aheadOf(items);
+  // A series stands ahead by its next day, but sits in this month whenever
+  // one of its days still to come does: the Mondays of a weekly yoga are in
+  // the list, and only a series whose days here have all passed points on.
+  const inShown = (ev: any) => (ev.recur ? shownItems.some((x) => !x.sky && x.id === ev.id && inMonth(x) && !isOver(x)) : inMonth(ev));
+  const outside = ahead.filter((ev) => !inShown(ev));
   const pointer = day ? null : outside[0] || null;
   const backwards = pointer ? pointer.starts_at.slice(0, 7) < monthKey : false;
   const weekdays = useMemo(() => {
@@ -136,9 +166,15 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
       {open && (
         <form className="inline" onSubmit={save}>
           <div className="row">
-            <label>{t("Title")}<input value={f.title} onChange={set("title")} required maxLength={120} /></label>
-            <label>{t("Kind")}<select value={f.kind} onChange={set("kind")}><option value="event">🔔 {t("event")}</option><option value="work">🤝 {t("work")}</option></select></label>
+            <label>{birthday ? t("Name") : t("Title")}<input value={f.title} onChange={set("title")} required maxLength={120} /></label>
+            <label>{t("Kind")}<select value={f.kind} onChange={set("kind")}><option value="event">🔔 {t("event")}</option><option value="work">🤝 {t("work")}</option><option value="birthday">🎂 {t("birthday")}</option></select></label>
           </div>
+          {birthday ? (<>
+            <div className="row">
+              <label>{t("Born")}<DatePicker time timeOptional anyMinute years required value={f.starts_at} onChange={(v) => setF({ ...f, starts_at: v })} placeholder={t("date of birth")} /></label>
+            </div>
+            <p className="small muted">{t("A date for the village to know, not a party: every house sees the date and the year, and the hour if you give it. Write someone's down only with their yes. It rings every house on the morning of the day.")}</p>
+          </>) : (<>
           <div className="row">
             <label>{t("Starts")}<DatePicker time required value={f.starts_at} onChange={(v) => set("starts_at")({ target: { value: v } } as any)} /></label>
             <label>{t("Ends")}<DatePicker time min={f.starts_at} value={f.ends_at} onChange={(v) => set("ends_at")({ target: { value: v } } as any)} defaultTime="17:00" /></label>
@@ -157,6 +193,7 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
                 {houses.map((h) => <option key={h.id} value={h.name}>{h.crest} {h.name}</option>)}
               </select>
             </span>
+            <label>{t("Repeats")}<select value={f.recur} onChange={set("recur")}>{REPEATS.map((r) => <option key={r.value} value={r.value}>{t(r.label)}</option>)}</select></label>
           </div>
           {/* Every project not finished, planned ones included: the work
               party that starts a project is exactly the event it needs. */}
@@ -166,6 +203,7 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
               {f.project_id && tasks.length > 0 && <label>{t("Task")}<select value={f.task_id} onChange={set("task_id")}><option value="">—</option>{tasks.map((x) => <option key={x.id} value={x.id}>{x.title}</option>)}</select></label>}
             </div>
           )}
+          </>)}
           <label>{t("Notes")}<textarea value={f.notes} onChange={set("notes")} maxLength={2000} /></label>
           <div className="submit"><button className="primary" type="submit">{t("Save")}</button></div>
         </form>
@@ -187,7 +225,7 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
               <button key={key} className={"cal-day" + (other ? " other" : "") + (key === today ? " today" : "") + (key === day ? " picked" : "")}
                 onClick={() => setDay(key === day ? null : key)}>
                 <span className="n">{d.getDate()}</span>
-                <span className={"marks m" + Math.min(evs.length, 4)}>{evs.slice(0, 4).map((e, i) => <span key={i}>{ICON[e.kind]}</span>)}{evs.length > 4 ? <span className="more">+{evs.length - 4}</span> : null}</span>
+                <span className={"marks m" + Math.min(evs.length, 4)}>{evs.slice(0, 4).map((e, i) => <span key={i}>{e.sky ? skyIcon(e) : ICON[e.kind]}</span>)}{evs.length > 4 ? <span className="more">+{evs.length - 4}</span> : null}</span>
               </button>
             );
           })}
@@ -205,7 +243,9 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
           </button>
         </p>
       )}
-      {shown.map((ev) => <EventCard key={ev.id + "-" + (day || "")} ev={ev} me={me} reload={reload} />)}
+      {shown.map((ev) => ev.sky
+        ? <SkyCard key={"sky" + ev.id + "-" + (day || "")} row={ev} me={me} reload={sky.reload} />
+        : <EventCard key={ev.id + "-" + (ev.occurs_on || "") + "-" + (day || "")} ev={ev} me={me} reload={reload} />)}
     </div>
   );
 }

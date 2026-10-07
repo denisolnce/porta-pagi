@@ -20,7 +20,7 @@ import { Changelog } from "./Changelog";
 import { Feedback } from "./Feedback";
 import { InstallBanner } from "./Install";
 import { Weather } from "./Weather";
-import { isOver, When } from "./rooms/shared";
+import { ahead, answersFor, When } from "./rooms/shared";
 import { FeaturesContext, useFeatures, type FeatureRow } from "./features";
 
 export type Session = { me: Me; houses: House[]; refresh: () => Promise<void>; logout: () => void };
@@ -200,7 +200,7 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
           // Two counts, never blended: a house that is out now and a house that
           // told us it will be are different answers to "who is away".
           "/watch": [num(a.filter((x) => x.from_date <= today && x.to_date >= today).length, "away now"), num(a.filter((x) => x.from_date > today).length, "away soon")].filter(Boolean).join(" · "),
-          "/tavern": [num(e.filter((x) => !isOver(x)).length, "events ahead"), num(p.filter((x) => x.pinned).length, "pinned")].filter(Boolean).join(" · "),
+          "/tavern": [num(ahead(e).length, "events ahead"), num(p.filter((x) => x.pinned).length, "pinned")].filter(Boolean).join(" · "),
           // The shed is two rooms in one door, so its badge says both: the tools
           // that exist, and the ones the village still lacks.
           "/shed": [num(tools.length - out, "in the shed"), num(out, "out"), num(wishes.length, "in the wishlist")].filter(Boolean).join(" · "),
@@ -299,7 +299,7 @@ function HallPeek() {
   const [events, setEvents] = useState<any[]>([]);
   useEffect(() => {
     api<any[]>("/posts").then((p) => setPosts(p.filter((x) => x.pinned && !x.parent_id).slice(0, 3))).catch(() => {});
-    api<any[]>("/events").then((e) => setEvents(e.filter((x) => !isOver(x)).slice(0, 4))).catch(() => {});
+    api<any[]>("/events").then((e) => setEvents(ahead(e).slice(0, 4))).catch(() => {});
   }, []);
   const ICON: Record<string, string> = { event: "🔔", work: "🤝", alarm: "🚨" };
   // How much of a title fits depends on the time and the answers beside it, so
@@ -331,10 +331,11 @@ function HallPeek() {
   // Three answers, three counts, and a state with nobody in it says nothing.
   // Stale answers are left out, the same ones the yes count already ignores:
   // they were given for a day that no longer exists.
+  // A series' next day is the line, and its answers are that day's.
   const tally = (e: any) => {
-    const list = JSON.parse(e.signup_list || "[]") as any[];
+    const list = answersFor(e);
     const n = (state: string) => list.filter((x) => x.state === state && !x.stale).length;
-    return [e.signups > 0 ? `🙋 ${e.signups}` : "", n("no") ? `❌ ${n("no")}` : "", n("maybe") ? `🤔 ${n("maybe")}` : ""].filter(Boolean).join(" ");
+    return [n("yes") ? `🙋 ${n("yes")}` : "", n("no") ? `❌ ${n("no")}` : "", n("maybe") ? `🤔 ${n("maybe")}` : ""].filter(Boolean).join(" ");
   };
   return (
     <div className="parchment peek">
@@ -348,7 +349,7 @@ function HallPeek() {
         // asking for hands" is half the line, and goes on an ordinary event,
         // where the room is what matters and the title needs the width. A
         // phone gives this row about 20 characters.
-        <Link key={e.id} to={`/tavern?day=${e.starts_at.slice(0, 10)}`} className="peek-row">{e.kind === "work" ? <span className="crest" style={{ backgroundColor: e.house_color }}>{e.house_crest}</span> : null}
+        <Link key={e.id + (e.occurs_on || "")} to={`/tavern?day=${e.starts_at.slice(0, 10)}`} className="peek-row">{e.kind === "work" ? <span className="crest" style={{ backgroundColor: e.house_color }}>{e.house_crest}</span> : null}
           <span className="peek-text" ref={(el) => { rows.current[i] = el; }}>{ICON[e.kind]} {e.title}</span>
           <span className="when"><When iso={e.starts_at} /></span>
           {tally(e) && <span className="small tally">{tally(e)}</span>}</Link>

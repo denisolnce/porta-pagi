@@ -137,7 +137,9 @@ a state, and an agent that deletes has no confirm), no devices, pairing or
 push (a key must not mint keys), no `PUT /api/houses/{id}` (rename, crest,
 colour, the map mark: a house does that itself, once), no steward route. With
 the fence, this table is not a menu: **what is not here, a key cannot do**.
-51 tools; `TestMCPSurface` pins the count so a change is a visible decision.
+52 tools; `TestMCPSurface` pins the count so a change is a visible decision.
+The 52nd, `list_almanac` (2026-10-07), reads the calendar's sky; nobody writes
+it, so it has no write tool, and `comment` takes `almanac` as a subject.
 A tool of a room behind a switch carries its `Feature` (the campground's
 three carry `camp`, the roster's three `roster`, the ledger's two `dues`): while the switch is off the tool is neither listed nor
 callable, as absent as the room's routes, and the count is of the table, not

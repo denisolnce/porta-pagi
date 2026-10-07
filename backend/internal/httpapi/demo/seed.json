@@ -1348,6 +1348,66 @@
           "body": "fotos?"
         }
       ]
+    },
+    {
+      "house": "amarela",
+      "kind": "event",
+      "title": "Ioga no alpendre / yoga on the porch",
+      "day": -100,
+      "start": "08:00",
+      "end": "09:00",
+      "place": "Casa Amarela",
+      "recur": "weekly",
+      "notes": "tragam uma manta. se chover fazemos no celeiro.\nbring a blanket. if it rains we do it in the barn.",
+      "next": {
+        "nova": "yes",
+        "ribeira": "maybe",
+        "barraca": "no"
+      },
+      "last": {
+        "nova": "yes",
+        "horta": "yes",
+        "ribeira": "yes"
+      },
+      "comments": [
+        {
+          "day": 88,
+          "time": "19:40",
+          "house": "ribeira",
+          "author": "Pieter",
+          "body": "Could we start at 8:30 once it gets dark in the mornings? / Dá para começar às 8:30 quando as manhãs ficarem escuras?",
+          "replies": [
+            {
+              "day": 0,
+              "time": "21:05",
+              "house": "amarela",
+              "body": "pode ser, a partir de novembro. ok from November."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "house": "forno",
+      "kind": "event",
+      "title": "Feira de trocas no Largo",
+      "day": -75,
+      "start": "10:00",
+      "end": "13:00",
+      "place": "Largo",
+      "recur": "monthly",
+      "notes": "Sementes, roupa, ferramentas, compotas. Cada um traz o que tem a mais e leva o que lhe faz falta.\nEN: swap market — seeds, clothes, tools, jam. Bring what you have too much of.",
+      "next": {
+        "eira": "yes",
+        "horta": "yes",
+        "moinho": "maybe"
+      },
+      "last": {
+        "horta": "yes",
+        "pedra": "yes",
+        "oliveiras": "yes",
+        "nova": "yes"
+      }
     }
   ],
   "runs": [
@@ -2925,6 +2985,87 @@
           "house": "ribeira",
           "body": "Para os gatos é este. O de Ourique não vem a casa.\nEN: for the cats, this one. The Ourique vet doesn't come to the house.",
           "author": "Joana"
+        }
+      ]
+    }
+  ],
+  "birthdays": [
+    {
+      "house": "ribeira",
+      "name": "Joana",
+      "day": 6,
+      "year": 1988,
+      "time": "04:40"
+    },
+    {
+      "house": "horta",
+      "name": "Avó Lurdes",
+      "day": -9,
+      "year": 1941,
+      "notes": "gosta de flores do campo, não de bolo.",
+      "comments": [
+        {
+          "day": 0,
+          "time": "09:15",
+          "house": "eira",
+          "body": "Parabéns, avó Lurdes! Continua a ser a primeira na horta todas as manhãs.",
+          "replies": [
+            {
+              "day": 0,
+              "time": "20:30",
+              "house": "horta",
+              "body": "ela agradece a todos. as flores ficaram na mesa a semana inteira."
+            }
+          ]
+        },
+        {
+          "day": 0,
+          "time": "12:40",
+          "house": "nova",
+          "author": "Camille",
+          "body": "Happy birthday from Casa Nova! Théo made her a drawing, it is on its way."
+        }
+      ]
+    },
+    {
+      "house": "barraca",
+      "name": "Ewan",
+      "day": 41,
+      "year": 1979
+    },
+    {
+      "house": "nova",
+      "name": "Théo",
+      "day": 118,
+      "year": 1991,
+      "time": "23:55",
+      "notes": "five minutes later and it would have been the next day, his mother says."
+    }
+  ],
+  "place": "37.65,-8.22",
+  "sky": [
+    {
+      "kind": "full_moon",
+      "comments": [
+        {
+          "day": 0,
+          "time": "22:10",
+          "house": "barraca",
+          "body": "Moon's up over the ridge, bright enough to count the sheep on the far hill. Worth stepping outside.",
+          "replies": [
+            {
+              "day": 0,
+              "time": "22:35",
+              "house": "amarela",
+              "body": "vi da janela. tão clara que a coruja do celeiro nem saiu. (saw it from the window — so bright the barn owl stayed in.)"
+            }
+          ]
+        },
+        {
+          "day": 1,
+          "time": "08:20",
+          "house": "horta",
+          "body": "lua cheia: hoje semeio as favas, como fazia a minha avó. quem quiser sementes, há na estufa."
         }
       ]
     }

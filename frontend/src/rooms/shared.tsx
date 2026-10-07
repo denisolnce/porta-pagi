@@ -55,6 +55,65 @@ export function isOver(ev: { starts_at: string; ends_at?: string | null }): bool
   return (end.length <= 10 ? end + "T23:59" : end) < stamp();
 }
 
+// A series — weekly, monthly, yearly — lands on its first day's weekday, day of
+// the month or date. A monthly 31st lands on a shorter month's last day and a
+// yearly 29 February on the 28th, so no month or year goes without it. The
+// backend asks the same question (recur.go) before it takes an answer.
+const utc = (day: string) => Date.UTC(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10));
+const dayOf = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+const lastDay = (y: number, m: number) => new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+export function landsOn(start: string, recur: string, day: string): boolean {
+  const s = start.slice(0, 10);
+  if (day < s) return false;
+  const [y, m, d] = [+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10)];
+  const sd = +s.slice(8, 10);
+  switch (recur) {
+    case "weekly": return Math.round((utc(day) - utc(s)) / 864e5) % 7 === 0;
+    case "monthly": return d === Math.min(sd, lastDay(y, m));
+    case "yearly": return m === +s.slice(5, 7) - 1 && d === Math.min(sd, lastDay(y, m));
+    default: return day === s;
+  }
+}
+
+// instances lays the events out over the days from..to (YYYY-MM-DD): a one-off
+// is itself, a series becomes one copy per day it lands on, moved to that day
+// with its hours and its length kept. A copy carries occurs_on, the day its
+// answers are for, and series, the row as written — the form edits that. A
+// birthday's copy is the whole day; the birth itself stays in series.
+export function instances(items: any[], from: string, to: string): any[] {
+  const out: any[] = [];
+  for (const ev of items) {
+    if (!ev.recur) { out.push(ev); continue; }
+    const start = ev.starts_at.slice(0, 10);
+    const span = ev.ends_at ? parse(ev.ends_at).getTime() - parse(ev.starts_at).getTime() : 0;
+    for (let ms = Math.max(utc(from), utc(start)); ms <= utc(to); ms += 864e5) {
+      const day = dayOf(ms);
+      if (!landsOn(start, ev.recur, day)) continue;
+      const starts_at = ev.kind === "birthday" ? day : day + ev.starts_at.slice(10);
+      const ends_at = ev.kind !== "birthday" && ev.ends_at ? stamp(new Date(parse(starts_at).getTime() + span)) : null;
+      out.push({ ...ev, starts_at, ends_at, occurs_on: day, series: ev });
+    }
+  }
+  return out.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+}
+
+// ahead: the gatherings still to come — events and work parties, a series by
+// its next day only. What Home counts and the tavern peek lists; a birthday or
+// the sky is not something to come to.
+export function ahead(items: any[]): any[] {
+  const today = stamp().slice(0, 10);
+  const year = dayOf(utc(today) + 400 * 864e5);
+  const gatherings = items.filter((ev) => ev.kind !== "birthday");
+  const all = instances(gatherings, today, year).filter((ev) => !isOver(ev));
+  const seen = new Set<number>();
+  return all.filter((ev) => !ev.recur || (!seen.has(ev.id) && seen.add(ev.id)));
+}
+
+// answersFor: the answers given for this copy's day — a series is answered one
+// day at a time, a one-off's answers carry no day.
+export const answersFor = (ev: any): any[] =>
+  (JSON.parse(ev.signup_list || "[]") as any[]).filter((x) => (x.occurs_on || "") === (ev.occurs_on || ""));
+
 // house_id is nullable because a contact outlives the house that added it:
 // nobody but a steward then matches, which is the intent.
 export const canEdit = (me: { id: number; is_steward: number }, row: { house_id: number | null }) => row.house_id === me.id || me.is_steward === 1;

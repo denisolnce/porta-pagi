@@ -12,6 +12,12 @@ import { localeOf, useT } from "./i18n";
 // disabled day, a disabled hour — because a picker that silently moves the day
 // you pressed is worse than one that shows you the door is shut. It is the
 // only guard the form needs; the server refuses a backwards range anyway.
+//
+// A birth date asks three more things of it: `years` puts a year select in the
+// head, because nobody pages back forty years a month at a time; `anyMinute`
+// offers every minute, because a birth is not on the quarter hour; and
+// `timeOptional` lets the hour stay unknown — "––" in the hour select keeps
+// the value a plain date.
 
 // Kept in step with the width in `.dp-pop`: the popup is measured before it
 // has been laid out, to place it without a visible jump.
@@ -19,8 +25,9 @@ const POP_W = (): number => Math.min(320, window.innerWidth - 24);
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-export function DatePicker({ value, onChange, time, placeholder, required, defaultTime = "09:00", min }: {
+export function DatePicker({ value, onChange, time, placeholder, required, defaultTime = "09:00", min, years, anyMinute, timeOptional }: {
   value: string; onChange: (v: string) => void; time?: boolean; placeholder?: string; required?: boolean; defaultTime?: string; min?: string;
+  years?: boolean; anyMinute?: boolean; timeOptional?: boolean;
 }) {
   const { t, lang } = useT();
   const locale = localeOf(lang);
@@ -31,7 +38,7 @@ export function DatePicker({ value, onChange, time, placeholder, required, defau
   // the field's right edge instead.
   const [flip, setFlip] = useState(false);
   const wrap = useRef<HTMLSpanElement>(null);
-  const datePart = value.slice(0, 10), timePart = time ? value.slice(11, 16) || defaultTime : "";
+  const datePart = value.slice(0, 10), timePart = time ? value.slice(11, 16) || (timeOptional ? "" : defaultTime) : "";
   const [cursor, setCursor] = useState(() => (datePart ? new Date(datePart + "T00:00") : new Date()));
   useEffect(() => { if (open) setCursor(datePart ? new Date(datePart + "T00:00") : new Date()); }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -60,7 +67,7 @@ export function DatePicker({ value, onChange, time, placeholder, required, defau
 
   const pick = (d: Date) => {
     const day = iso(d);
-    const v = time ? `${day}T${timePart}` : day;
+    const v = time && timePart ? `${day}T${timePart}` : day;
     // Only reachable on the boundary day itself, whose cell stays open: the
     // day is allowed, the hour still standing in the field is not.
     onChange(early(v) ? min! : v);
@@ -75,9 +82,11 @@ export function DatePicker({ value, onChange, time, placeholder, required, defau
   const swallow = (e: React.MouseEvent) => e.preventDefault();
 
   const shown = datePart
-    ? new Date(datePart + "T00:00").toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "short" }) + (time ? ` · ${timePart}` : "")
+    ? new Date(datePart + "T00:00").toLocaleDateString(locale, years ? { day: "numeric", month: "short", year: "numeric" } : { weekday: "short", day: "numeric", month: "short" }) + (time && timePart ? ` · ${timePart}` : "")
     : "";
   const [hh, mm] = (timePart || defaultTime).split(":");
+  const minutes = anyMinute ? Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0")) : ["00", "15", "30", "45"];
+  const thisYear = new Date().getFullYear();
 
   return (
     <span className="dp" ref={wrap}>
@@ -89,7 +98,14 @@ export function DatePicker({ value, onChange, time, placeholder, required, defau
         <div className={"dp-pop" + (flip ? " flip" : "")} role="dialog" onClick={swallow}>
           <div className="cal-head">
             <button type="button" className="ghost" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}>‹</button>
-            <strong>{cursor.toLocaleDateString(locale, { month: "long", year: "numeric" })}</strong>
+            {years ? (
+              <strong className="dp-years">
+                {cursor.toLocaleDateString(locale, { month: "long" })}{" "}
+                <select aria-label={t("Year")} value={cursor.getFullYear()} onChange={(e) => setCursor(new Date(Number(e.target.value), cursor.getMonth(), 1))}>
+                  {Array.from({ length: thisYear - 1899 }, (_, i) => thisYear - i).map((y) => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </strong>
+            ) : <strong>{cursor.toLocaleDateString(locale, { month: "long", year: "numeric" })}</strong>}
             <button type="button" className="ghost" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}>›</button>
           </div>
           <div className="cal-grid dp-grid">
@@ -106,9 +122,12 @@ export function DatePicker({ value, onChange, time, placeholder, required, defau
           {time && (
             <div className="dp-time">
               🕰️
-              <select value={hh} onChange={(e) => setTime(e.target.value, mm)}>{Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")).map((h) => <option key={h} value={h} disabled={early(`${datePart || today}T${h}:${mm}`)}>{h}</option>)}</select>
+              <select value={timePart ? hh : ""} onChange={(e) => (e.target.value ? setTime(e.target.value, mm) : onChange(datePart))}>
+                {timeOptional && <option value="">––</option>}
+                {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")).map((h) => <option key={h} value={h} disabled={early(`${datePart || today}T${h}:${mm}`)}>{h}</option>)}
+              </select>
               :
-              <select value={mm} onChange={(e) => setTime(hh, e.target.value)}>{["00", "15", "30", "45"].map((m) => <option key={m} value={m} disabled={early(`${datePart || today}T${hh}:${m}`)}>{m}</option>)}</select>
+              <select value={mm} disabled={!timePart} onChange={(e) => setTime(hh, e.target.value)}>{minutes.map((m) => <option key={m} value={m} disabled={early(`${datePart || today}T${hh}:${m}`)}>{m}</option>)}</select>
             </div>
           )}
           <div className="dp-foot">

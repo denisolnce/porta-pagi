@@ -90,6 +90,11 @@ type demoSeed struct {
 		Project, Task                         string // a project's key, and one of its tasks by title
 		Start, End                            string
 		Answers                               map[string]string // house key -> yes/no/maybe
+		// A series: weekly or monthly from its day. Its answers are a day's,
+		// so a series carries none in "answers": "next" are for the next day
+		// it lands on, today included, and "last" for the one before.
+		Recur      string
+		Next, Last map[string]string
 		// A house that edited the event after it was called. With "moved",
 		// the edit moved its time that many days off the event, and the
 		// answers in "stale" were given before it — the room strikes them.
@@ -175,6 +180,23 @@ type demoSeed struct {
 		EditedBy                        string
 		Edited                          int // days after it was written down
 		Comments                        []demoComment
+	}
+	// A birthday a house wrote down: "day" is this year's day off the seed's
+	// (negative = just passed), "year" the year of the birth, "time" the hour
+	// when somebody knows it. Comments count from the day.
+	Birthdays []struct {
+		demoWhen
+		House, Name, Notes string
+		Year               int
+		Comments           []demoComment
+	}
+	// Where the invented village is, for its sky: "lat,lon".
+	Place string
+	// A thread under the sky: the latest row of that kind at least a day
+	// gone, so the words under it are never in the future.
+	Sky []struct {
+		Kind     string
+		Comments []demoComment
 	}
 }
 
@@ -550,7 +572,10 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		} else if e.Moved != 0 || len(e.Stale) > 0 {
 			panic("demo seed: an event whose time moved names the house that moved it: " + e.Title)
 		}
-		eid, err := tx.Exec(ctx, `INSERT INTO events(house_id, title, kind, starts_at, ends_at, place, notes, project_id, task_id, edited_by, edited_at, time_changed_at, time_version, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, id(e.House), e.Title, orDefault(e.Kind, "event"), wall(day, e.Start), end, e.Place, e.Notes, proj, task, editedBy, editedAt, changedAt, version, created)
+		if e.Recur != "" && (len(e.Answers) > 0 || len(e.Stale) > 0) {
+			panic("demo seed: a series is answered a day at a time, in next and last: " + e.Title)
+		}
+		eid, err := tx.Exec(ctx, `INSERT INTO events(house_id, title, kind, starts_at, ends_at, place, notes, project_id, task_id, edited_by, edited_at, time_changed_at, time_version, created_at, recur) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, id(e.House), e.Title, orDefault(e.Kind, "event"), wall(day, e.Start), end, e.Place, e.Notes, proj, task, editedBy, editedAt, changedAt, version, created, e.Recur)
 		if err != nil {
 			return nil, err
 		}
@@ -558,23 +583,50 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		// The caller answers yes in the same breath, like the app does. An
 		// answer given before the time moved is stale; one given after is not.
 		type answer struct {
-			state, at string
-			version   int
+			state, at, on string
+			version       int
 		}
 		answers := map[string]answer{}
 		fresh := past(createdDay+2, "21:00")
 		if e.Moved != 0 {
 			fresh = past(day+e.Moved+1, "21:00")
 		}
-		answers[e.House] = answer{"yes", created, 0}
+		first := ""
+		if e.Recur != "" {
+			first = date(day)
+		}
+		answers[e.House+" "+first] = answer{"yes", created, first, 0}
+		// Keyed by house and day, so a later line replaces the caller's yes
+		// for the same day, as answering again does in the app.
 		for k, v := range e.Stale {
-			answers[k] = answer{v, past(createdDay, "21:00"), 0}
+			answers[k+" "] = answer{v, past(createdDay, "21:00"), "", 0}
 		}
 		for k, v := range e.Answers {
-			answers[k] = answer{v, fresh, version}
+			answers[k+" "] = answer{v, fresh, "", version}
+		}
+		// A series' days: the next it lands on, today included, and the one
+		// before it, each answered in the days before it came.
+		if e.Recur != "" {
+			next := 0
+			for !occursOn(wall(day, e.Start), e.Recur, date(next)) {
+				next++
+			}
+			last := next - 1
+			for last >= day && !occursOn(wall(day, e.Start), e.Recur, date(last)) {
+				last--
+			}
+			for k, v := range e.Next {
+				answers[k+" "+date(next)] = answer{v, past(next-2, "20:30"), date(next), 0}
+			}
+			if last >= day {
+				for k, v := range e.Last {
+					answers[k+" "+date(last)] = answer{v, past(last-2, "20:30"), date(last), 0}
+				}
+			}
 		}
 		for k, a := range answers {
-			if _, err := tx.Exec(ctx, `INSERT INTO event_signups(event_id, house_id, state, answered_at, answered_version) VALUES (?,?,?,?,?)`, eid, id(k), a.state, a.at, a.version); err != nil {
+			house, _, _ := strings.Cut(k, " ")
+			if _, err := tx.Exec(ctx, `INSERT INTO event_signups(event_id, house_id, occurs_on, state, answered_at, answered_version) VALUES (?,?,?,?,?,?)`, eid, id(house), a.on, a.state, a.at, a.version); err != nil {
 				return nil, err
 			}
 		}
@@ -821,6 +873,61 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		}
 		counts["contacts"]++
 		if err := comments("contact", cid, day, s, nil, c.Comments); err != nil {
+			return nil, err
+		}
+	}
+	// Birthdays: the birth is this year's day in the year the person was
+	// born; a 29 February in a year without one falls on the 28th.
+	for _, b := range seed.Birthdays {
+		day := dayOf(b.demoWhen)
+		on := today.AddDate(0, 0, day)
+		born := time.Date(b.Year, on.Month(), min(on.Day(), lastDay(time.Date(b.Year, on.Month(), 1, 0, 0, 0, 0, time.UTC))), 0, 0, 0, 0, time.UTC).Format("2006-01-02")
+		if b.Time != "" {
+			born += "T" + b.Time
+		}
+		created := past(day-200, "21:00")
+		bid, err := tx.Exec(ctx, `INSERT INTO events(house_id, title, kind, starts_at, notes, recur, created_at) VALUES (?,?, 'birthday', ?,?, 'yearly', ?)`, id(b.House), b.Name, born, b.Notes, created)
+		if err != nil {
+			return nil, err
+		}
+		counts["birthdays"]++
+		if err := comments("event", bid, day, created, nil, b.Comments); err != nil {
+			return nil, err
+		}
+	}
+	// The sky, as the portal would have written it at each year's start: the
+	// year before too, so a demo seeded in January has December's full moon
+	// to talk about. The hourly reset wipes the rows and not the settings, so
+	// the mark is replaced, not added.
+	lat, lon, ok := 0.0, 0.0, false
+	if a, b, cut := strings.Cut(seed.Place, ","); cut {
+		_, err1 := fmt.Sscan(a, &lat)
+		_, err2 := fmt.Sscan(b, &lon)
+		ok = err1 == nil && err2 == nil
+	}
+	if !ok {
+		panic("demo seed: place is lat,lon")
+	}
+	// Marked as the demo's open-meteo setting names the same place, so the
+	// demo server's own round finds the year written.
+	for _, y := range []int{today.Year() - 1, today.Year(), today.Year() + 1} {
+		if err := writeAlmanac(ctx, tx, y, lat, lon, true, fmt.Sprintf("almanac:%d", y), "open-meteo:"+seed.Place); err != nil {
+			return nil, err
+		}
+	}
+	if row, err := tx.One(ctx, `SELECT count(*) AS n FROM almanac`); err == nil {
+		counts["almanac"] = int(row["n"].(int64))
+	}
+	for _, k := range seed.Sky {
+		row, err := tx.One(ctx, `SELECT id, starts_at FROM almanac WHERE kind=? AND starts_at < ? ORDER BY starts_at DESC LIMIT 1`, k.Kind, date(-1))
+		if err != nil {
+			return nil, err
+		}
+		if row == nil {
+			panic("demo seed: no " + k.Kind + " in the sky before yesterday")
+		}
+		at, _ := time.ParseInLocation("2006-01-02", row["starts_at"].(string)[:10], now.Location())
+		if err := comments("almanac", row["id"].(int64), daysFrom(at), "", nil, k.Comments); err != nil {
 			return nil, err
 		}
 	}

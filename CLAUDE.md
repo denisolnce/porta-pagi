@@ -58,6 +58,10 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
 - **A migration runs at the roll.** Rehearse it on a copy of last night's
   backup (`task vm:backup` in the village's repo) when it touches a table the
   village has rows in. The demo starts from an empty tmpfs and keeps nothing.
+- **A roll that brings a room, a kind or a calendar change updates the
+  village's `.claude/context/village.md` in the same commit** — that file
+  tells a cold start what the village has, so it changes when the village
+  gets it, not when the product does.
 - **Done means seen on the VM**, not the push: `docker inspect` shows the
   new image healthy, and `task vm:logs` in the village's repo shows the
   `migrated` lines when there were any. The village answers at
@@ -286,7 +290,7 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   GURS data: `TBD`, required before the portal moves to the collective's domain.
 - **One thread implementation.** Comments live in `comments`, keyed by
   `(subject, subject_id)`, and are rendered by `Thread.tsx` everywhere: an
-  event, a wish, an away notice, a contact. One reply level. The button that
+  event, a wish, an away notice, a contact, a row of the almanac. One reply level. The button that
   opens one says 💬 Comments and carries the count **only when there is one**,
   in every room. A new room that wants comments
   adds a subject, never a table. The push kind stays the room's own so no
@@ -297,6 +301,11 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   away notice tells only the house that is away and its watcher, and tells them
   nothing** — the banner is the anonymous watchtower one, because a comment's
   snippet on a lock screen would say what the notice itself is not allowed to.
+  **An almanac row tells the houses already in its thread** (owner's decision
+  2026-10-07): the sky has no caller and no answers, so the first word on a
+  full moon rings nobody and a reply rings whoever spoke before, under `events`.
+  A **birthday's** thread rings the house that wrote it down, like an event's
+  caller — usually the person's own house, which is who a "parabéns" is for.
   The name field starts filled from the device label this phone joined under,
   and stays optional.
 - **Wish options are findings, not votes.** Anyone may add "this model, this
@@ -308,8 +317,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   `rooms/shared.tsx` decides: an event is over when its **end** has passed, and
   an event with no end lasts until the end of its day, because dropping a work
   party a minute after it starts hides it from whoever is running late. The Home
-  badge, the tavern peek and a project's two event groups use the same function
-  — never re-derive it with a date comparison, which counts this morning's
+  badge, the tavern peek and a project's two event groups use the same function,
+  through `ahead` for what is still to come — never re-derive it with a date comparison, which counts this morning's
   finished event as ahead; the project page did exactly that until 2026-09-08.
   It takes no clock argument, so it cannot be handed an array index by
   `list.some`. **An event that is over wears `.faded`** and loses its kind
@@ -324,13 +333,21 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   itself in the same request** — whoever calls a work party is at it, and a
   headcount of nobody beside an event somebody called reads as a failure that
   did not happen. It is an ordinary answer: the caller can change it or take it
-  back like any house. Only `yes` is counted; never fold `maybe` into it.
+  back like any house. **A series is answered one day at a time** (owner's
+  decision 2026-10-07): an answer carries `occurs_on`, the day it is for, so a
+  weekly work party has a headcount per Saturday that dies with that Saturday;
+  a one-off keeps the day empty. The caller's own yes goes to the series' first
+  day only, and every later day is answered like any house answers — a caller
+  who means every week says so each week. The backend takes an answer only for
+  a day the series lands on (`occursOn`, the same rule as `landsOn` in
+  `rooms/shared.tsx`). Only `yes` is counted; never fold `maybe` into it.
   It carries **no note** — the sign-up note was removed on 2026-09-06 and the
   old ones moved into the event's thread (`013_quiet_and_notes.sql`), because a
   line only the signer can edit and nobody can answer is a worse comment. A
   POST without a valid state is a 400, never a yes.
   Moving an event's time bumps `events.time_version`, which marks every earlier
   answer stale — a headcount for a day that no longer exists is worse than none.
+  Changing how a series repeats moves its days, so it bumps the same counter.
   **An event that is over shows no answer buttons** (owner's decision
   2026-09-09): the three go once `isOver`, because a headcount for a day that
   already happened counts nobody and a faded card you can still click reads as
@@ -344,6 +361,59 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   every account today is a villager. `events.edited_by` records who, and the
   room shows it. When a reduced "viewer" role arrives for volunteers, this
   narrows to the creator and stewards.
+- **An event may repeat: one-off, weekly, monthly, yearly** (`events.recur`,
+  owner's ask 2026-10-07; one-off is the default and every older row). The
+  row is written once, with its first day; the page lays it out on every day
+  it lands on (`instances` in `rooms/shared.tsx`). A monthly 31st lands on a
+  shorter month's last day and a yearly 29 February on the 28th, so no month
+  goes without it. What Home counts and the tavern peek lists is a series by
+  its **next** day only — never one line per Saturday. Editing a day edits the
+  series, and the form says so; deleting one deletes every day, and the
+  confirm says so. There is no end date and no skipped day yet: a series
+  stops by being deleted or made a one-off. The cost, paid knowingly: the
+  project list's "next event" reads SQL and misses a series begun before today.
+- **A birthday is a date for the village to know, not a party** (owner's
+  decisions 2026-10-07, `birthdays.go`). An event of kind `birthday`, always
+  yearly, whose `starts_at` is **the birth itself** — the year, and the hour
+  when somebody knows it, because a house that keeps a horoscope wants both.
+  It **belongs to no house**: the card draws no crest, and the house that
+  wrote it down is in the row only so it, or a steward, can delete it. It
+  takes **no answers** (a POST is a 400), no place and no end, and it stays a
+  birthday — an edit cannot turn it into a gathering or back. **Writing one
+  down rings nobody; the morning of the day rings every house**, once, under
+  its own kind `birthdays`, which a house switches off like any other: the
+  ring waits for 07:00 and the day is stamped in `settings`, so a restart
+  does not ring it twice. The card prints the birth date and hour, and the
+  page shows no age. Nothing on Home counts birthdays. **It is a person's
+  data**: every house, every house's agent and the export read the year and
+  the hour, and any house may write anyone's down — so the form says the
+  village sees it and asks for the person's yes, and the privacy note owes
+  the village a line (`docs/later.md`).
+- **The sky is the portal's, not a house's** (owner's ask 2026-10-07;
+  `almanac.go`, `internal/astro`, `rooms/Almanac.tsx`). The backend writes a
+  year of new and full moons, equinoxes, solstices and **the eclipses the
+  village can see** into `almanac` once, and the next year with it, so
+  December pages into January; `settings` keeps `almanac:<year>` and the
+  setting the place came from, and a village that names a place later — or
+  another — gets the year again, its rows keeping their ids and threads. Nobody creates, edits or answers a row; any house
+  comments. Times are the village's wall clock. The math is Meeus,
+  "Astronomical Algorithms", in stdlib Go — no ephemeris dependency, pinned
+  against the book's worked examples and published 2026 times. **A moon phase
+  or an equinox is one instant for the planet; an eclipse is not**, so the
+  place comes from the weather's own setting — `WEATHER_COORDS`, or the point
+  ARSO's answer carries for `WEATHER_LOCATION` — and a village with no place
+  gets no eclipses rather than one it may never see. A place named and not
+  reached is retried, never written without its eclipses. An eclipse row says
+  what the village sees: the part with the sun or moon up, and the greatest
+  eclipse **within** that part (in Kočevje the sun of 12 August 2026 sets
+  before the maximum). Penumbral-only lunar eclipses are left out: nothing
+  shows. The words are the page's, per language: one line per full moon of
+  the northern year, the seasons' lines turned around south of the equator,
+  the solar eclipse's warning about eclipse glasses. **Easter is a date, not a
+  rule**: the church reckons with a table moon, so the backend computes
+  Gregorian Easter and the full moon before it says the day; "the first full
+  moon after the equinox" is wrong in years like 2019 and 2038. Nothing pushes. The sky
+  is not something to come to, so Home counts none of it.
 - **No tally of favours.** Work-bee sign-ups are a headcount for one day and
   die with the event. Tool loans record who holds a tool now, never how many
   times a house borrowed. Do not add a total anywhere. The **return reminder**
@@ -517,7 +587,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   its own Notifications panel. Both lists are checked on
   every send. **Nothing is exempt**: the alarm kind was removed on 2026-09-06
   because a real emergency is a phone call, and a notification nobody is holding
-  is worse than none. An event is `event` or `work`, and that is all. The author's
+  is worse than none. An event is `event`, `work` or `birthday`, and that is
+  all; a birthday rings under its own kind, on its morning only. The author's
   house never receives its own event. **A run's riders hear when it moves and
   when it is called off** (owner's decision 2026-09-08): editing a run's place
   or time, or deleting the run, pushes to the houses whose open needs sit on
@@ -549,7 +620,9 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   and no snippet. A **scheduled short trip is named** — a shop run says who drives
   and when, because the house is coming back the same day and the whole point
   is to answer it; an order says who orders and until when, and nobody
-  leaves home for it. Classify a new kind against that line; do not guess.
+  leaves home for it. A **birthday** names the person and the day, and only
+  the day: it says nothing about a house being empty. Classify a new kind
+  against that line; do not guess.
   The one other exception is the optional author name on a tavern post, which
   the poster typed themselves.
 - **Quiet hours: 21:00–07:00 nothing rings, unless a phone asked.** Everything
@@ -579,7 +652,7 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   keeps the hash and cannot show it again. **A key opens `/api/mcp` and
   nothing else**: `requireHouse` answers 403 to an agent device on every other
   route unless the request carries the `viaMCP` context mark the dispatcher
-  sets — so the tool table in `mcp.go` is the whole surface (51 tools, pinned
+  sets — so the tool table in `mcp.go` is the whole surface (52 tools, pinned
   by `TestMCPSurface`: reads and writes in every room, a project picture in,
   **no deletes**, no devices, pairing, push, house row or steward route), and
   the raw REST API is closed to a key on purpose. **And the door takes a key
@@ -624,7 +697,11 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   a label forwards a click to its first control — here the field button, which
   reopens the popup you just closed. It also anchors to the field's right edge
   when the left would hang it off a narrow screen; a popup past the edge makes
-  the page pan sideways and taps get eaten as scrolls.
+  the page pan sideways and taps get eaten as scrolls. A birth date asks three
+  more things of it, each a prop: `years` puts a year select in the head,
+  because nobody pages back forty years a month at a time; `anyMinute` offers
+  every minute instead of the quarters; `timeOptional` adds "––" to the hour,
+  which keeps the value a plain date.
 - **Two clocks live in the database, and they never compare directly.** A time a
   villager typed is local wall clock, `YYYY-MM-DDTHH:MM`. Anything
   `datetime('now')` wrote is UTC with a space and seconds — SQLite ignores the
@@ -722,7 +799,10 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   rewrote, dues (one partly paid with a payment a steward marked, one all
   paid last quarter, one with no amount) and a roster (a duty due, one not
   yet, one done when needed, a year of turns with the newcomer's few, plans
-  ahead). A due's title may say `{trimestre}`, `{trimestre passado}` or
+  ahead), a weekly and a monthly series answered for their next day and their
+  last, birthdays ahead and just passed (one with the hour of birth, one
+  talked about), and the sky over the invented village's `place` with a
+  thread under the latest full moon a day gone. A due's title may say `{trimestre}`, `{trimestre passado}` or
   `{ano}`, filled from the day it seeds. A thread on every subject `threads.go` takes, arguments in some.
   **Dates**: a plain offset for what could happen in any month; a calendar
   anchor (`on`, most recent or `ahead`, with `keep` days of grace) for what
@@ -797,7 +877,7 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
 ## Layout
 
 ```
-backend/            Go: main.go, internal/{config,store,httpapi}; migrations embedded
+backend/            Go: main.go, internal/{config,store,httpapi,astro}; migrations embedded
 frontend/           Vite + React; src/rooms/* one file per room (Projects.tsx holds list + page; Contacts.tsx holds the room, the
                     fzf-style match, the letter shelves and the type picker that is its only user). Hall.tsx = Calendar.tsx + Board.tsx
                     stacked, because the tavern is one door; src/map/VillageMap.tsx; rooms/Codex.tsx = the founding text, from the DB;
@@ -813,6 +893,9 @@ backend/internal/httpapi/i18n.go   tr() for push texts and the manifest's line, 
                     i18n_test.go refuses a translation whose verbs, end spaces or leading icon differ from its key
 backend/internal/httpapi/contacts.go  the phone book: four routes, and the one place a type's spelling is settled
 backend/internal/httpapi/roster.go    the duty roster behind its switch: duties (steward), turns (a house's own), the twelve-month count
+backend/internal/httpapi/almanac.go   the sky in the calendar: the yearly write, the place off the weather's setting, the list route;
+                    internal/astro is the arithmetic (Meeus, stdlib only); frontend rooms/Almanac.tsx words a row per language
+backend/internal/httpapi/birthdays.go a birthday's write and its morning ring; recur.go = the one rule for which days a series lands on
 backend/internal/httpapi/dues.go   the dues ledger, behind its switch: five routes, the amount parser, the one total besides the roster's
 backend/internal/httpapi/mcp.go    the door for agents: the tool table (the whole surface), the JSON-RPC endpoint, the in-process
                     dispatcher and the key route; the fence that keeps a key on /api/mcp is in auth.go

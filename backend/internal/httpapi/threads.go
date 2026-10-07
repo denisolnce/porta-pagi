@@ -8,12 +8,13 @@ import (
 
 // Comment threads, one implementation for every room that wants them: an event
 // in the calendar, a wish in the tool shed, an away notice in the watchtower,
-// a number in the phone book. One reply level, like the board.
+// a number in the phone book, a full moon in the almanac. One reply level,
+// like the board.
 //
 // Who hears about a new comment depends on the subject, and only on that — the
 // push kind stays the room's own, so nobody's opt-out changes meaning.
 
-var commentSubjects = []string{"event", "wish", "away", "contact"}
+var commentSubjects = []string{"event", "wish", "away", "contact", "almanac"}
 
 func subjectOf(r *http.Request) (string, int64, bool) {
 	s := r.PathValue("subject")
@@ -51,11 +52,16 @@ func (s *Server) createThreadComment(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, "body required")
 		return
 	}
-	table := map[string]string{"event": "events", "wish": "wishes", "away": "away", "contact": "contacts"}[subject]
+	table := map[string]string{"event": "events", "wish": "wishes", "away": "away", "contact": "contacts", "almanac": "almanac"}[subject]
 	// An away notice has no title, and must not grow one: what it says is
-	// burglary information, so nothing about it reaches a push.
-	label := map[string]string{"event": "title", "wish": "text", "away": "''", "contact": "name"}[subject]
-	owner, err := s.st.One(r.Context(), `SELECT house_id, `+label+` AS label FROM `+table+` WHERE id=?`, id)
+	// burglary information, so nothing about it reaches a push. An almanac
+	// row has no house and is worded per language, so its kind goes along.
+	label := map[string]string{"event": "title", "wish": "text", "away": "''", "contact": "name", "almanac": "kind"}[subject]
+	ownerCol := "house_id"
+	if subject == "almanac" {
+		ownerCol = "NULL"
+	}
+	owner, err := s.st.One(r.Context(), `SELECT `+ownerCol+` AS house_id, `+label+` AS label FROM `+table+` WHERE id=?`, id)
 	if err != nil {
 		fail(w, err)
 		return
@@ -131,6 +137,18 @@ func (s *Server) tellThread(r *http.Request, subject string, id int64, from *Hou
 	if subject == "wish" {
 		kind, url = "tools", "#/shed"
 		q = `SELECT DISTINCT house_id FROM wish_wants WHERE wish_id=?`
+	}
+	// The sky has no caller and no answers: whoever already talks about this
+	// full moon hears the reply, and nobody else is woken for it.
+	if subject == "almanac" {
+		key := label
+		rows, _ := s.st.Rows(r.Context(), `SELECT DISTINCT house_id FROM comments WHERE subject='almanac' AND subject_id=? AND house_id != ?`, id, from.ID)
+		for _, row := range rows {
+			s.notifyHouse(kind, row["house_id"].(int64), func(lang string) Payload {
+				return Payload{Title: icon + " " + from.Name + tr(lang, " on: ") + tr(lang, almanacTitles[key]), Body: body, URL: url}
+			})
+		}
+		return
 	}
 	rows, _ := s.st.Rows(r.Context(), q, id)
 	told := map[int64]bool{from.ID: true}

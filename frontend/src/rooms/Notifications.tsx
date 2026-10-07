@@ -5,7 +5,7 @@ import { disablePush, enablePush, pushState, type PushState } from "../push";
 
 // The push kinds in the house's words. The backend sends only the kinds this
 // village offers — a switched-off feature's kind is not in the list.
-export const KIND_LABELS: Record<string, string> = { posts: "Tavern posts", needs: "Needs", offers: "Give-aways", runs: "Runs & orders", events: "Events", away: "Away notices", tools: "Tool shed", projects: "Projects", camp: "Campground" };
+export const KIND_LABELS: Record<string, string> = { posts: "Tavern posts", needs: "Needs", offers: "Give-aways", runs: "Runs & orders", events: "Events", birthdays: "Birthdays", away: "Away notices", tools: "Tool shed", projects: "Projects", camp: "Campground" };
 
 // Notifications: this phone on/off, and the house-wide list of kinds. All kinds
 // are on until a house switches one off (the backend stores only the off list).
