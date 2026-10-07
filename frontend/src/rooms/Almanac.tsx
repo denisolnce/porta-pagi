@@ -112,7 +112,7 @@ export function SkyCard({ row, me, reload }: { row: any; me: Me; reload: () => v
     <div className={"card sky" + (over ? " faded" : "")} style={{ borderLeftColor: over ? "var(--parch3)" : "var(--blue)" }}>
       <div className="head">
         <strong>{skyIcon(row)} {t(row.title || row.kind)}</strong>
-        <span className="tag sky">{t("almanac")}</span>
+        <span className="tag sky">{t("celestial")}</span>
         <span className="when"><When iso={row.starts_at} />{eclipse && row.ends_at ? <> → <When iso={row.ends_at} /></> : null}</span>
       </div>
       <div className="body small">{lines(row, t, localeOf(lang)).map((l, i) => <p key={i}>{l}</p>)}</div>
