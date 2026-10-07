@@ -3,7 +3,11 @@
 1. Don't assume. Don't hide confusion. Surface tradeoffs.
 2. Minimum code that solves the problem. Nothing speculative.
 3. Touch only what you must. Clean up only your own mess.
-4. Define success criteria. Loop until verified (`task check` is the floor).
+4. Define success criteria. Loop until verified: `task check` is the floor,
+   and a roll is verified on the VM, never by assumption.
+5. End every turn with the docs current, technical and ideological, in every
+   repo the turn touched. A cold start reads the files, never this chat
+   (§ Docs stay current).
 
 ## What this is
 
@@ -14,6 +18,74 @@ village runs it. The collective that built it runs it from its own deploy repo
 notes; the decisions below were taken there, in that village's words, and
 still hold here. It is a **social tool for a handful of houses**: every
 feature must beat "scroll up in the WhatsApp group" or it does not ship.
+
+## The repos, all worked from here
+
+**Every session on Porta Pagi starts in this checkout** and works and rolls
+the other repos from it (owner's decision 2026-10-07; until then sessions
+started in the village's repo). They sit beside this one, `../<name>`. Each
+keeps its own `CLAUDE.md` and its rules hold inside it — read it before the
+first edit there.
+
+| Repo | Visibility | Holds | Ships by |
+| --- | --- | --- | --- |
+| `porta-pagi` | private today, written as public (§ Working rules) | the product: code, invariants, design docs, the demo seed | a push to `main`: CI builds `porta-pagi` and `porta-pagi-demo`, both `sha-<commit>` |
+| `../mokri-potok-portal` | public | the village that built it: compose and env, the tag it runs (`BE_TAG`), the map seed, `deploy/infra-log.md`, who the village is (`.claude/context/village.md`) | `task roll -- sha-<commit>` there, which writes the tag, commits and pushes |
+| `../porta-pagi-cloud` | private, and stays so | the landing page, the business plan (`docs/commercial.md`), later the control plane and its billing | a push to `main`: CI builds `porta-pagi-site:sha-<commit>` |
+| `../gaias-choice` | public | the owner's other project, which owns the shared VM: Caddy, the doco-cd controller, the secrets, and the tags the demo and the landing run (`PAGI_DEMO_TAG`, `PAGI_SITE_TAG` in `.doco-cd.yml`) | a tag edited in `.doco-cd.yml`, committed and pushed |
+
+**A release, end to end.** Commit here, `task check`, push; CI builds the
+images (a docs-only commit builds nothing, so nothing rolls) — wait for it
+with `gh run list -R denisolnce/porta-pagi --limit 1`. Each roll is a
+commit in the repo that runs the tag, and doco-cd reconciles within about
+two minutes: the village by `task roll` in its repo, the demo by
+`PAGI_DEMO_TAG`. The landing rolls by `PAGI_SITE_TAG`, and **only after the
+demo shows what the page describes** — a visitor clicks through to check.
+A roll's subject says what it carries ("deploy: porta-pagi demo rolled, the
+picker fixed"), no backticks: the Telegram deploy ping prints it.
+
+- **Every package the VM pulls is public.** It pulls anonymously. A private
+  village image leaves the village on the old container while doco-cd fails
+  quietly; an unpullable demo or site image stops the whole gaias-choice
+  stack's reconcile, the Caddy every site sits behind included. Check a tag
+  without this machine's GHCR login, as `task roll` does.
+- **A migration runs at the roll.** Rehearse it on a copy of last night's
+  backup (`task vm:backup` in the village's repo) when it touches a table the
+  village has rows in. The demo starts from an empty tmpfs and keeps nothing.
+- **Done means seen on the VM**, not the push: `docker inspect` shows the
+  new image healthy, and `task vm:logs` in the village's repo shows the
+  `migrated` lines when there were any. The village answers at
+  `vas.mokri-potok.si`, the demo at `pp-demo.gardenofatlantis.com`, the
+  landing at `porta-pagi.gardenofatlantis.com` (a test address, `noindex`
+  until the real domain).
+- **The VM belongs to gaias-choice.** A new route, poll entry or secret is a
+  commit there. A step done by hand on the box goes into that repo's
+  `deploy/infra-log.md` in the same change, and a village's own steps into
+  its own `infra-log.md`. The demo runs beside the village on this one VM by
+  the owner's choice, fenced by a tmpfs, resource caps and a network of its
+  own, until it moves to a host of its own (the plan's Decided block).
+- **The private line runs between repos.** What is in `porta-pagi-cloud` —
+  prices, the plan's numbers, later customers — is pointed at by path and
+  section, never copied into a public repo. The landing keeps what the
+  product promises first, because a buyer checks: no scripts, no counters,
+  and every screenshot from the demo village, never the real one, whose
+  crests on real parcels would publish who lives where (its `CLAUDE.md`).
+
+**Where to look on a cold start.** Pointers, not values:
+
+- **What runs where:** `BE_TAG` in `../mokri-potok-portal/.doco-cd.yml`;
+  `PAGI_DEMO_TAG` and `PAGI_SITE_TAG` in `../gaias-choice/.doco-cd.yml`.
+  Compare with `git log` here to see what is not rolled yet.
+- **What was done by hand:** `deploy/infra-log.md` in both deploy repos
+  (gaias-choice's § Third and fourth sites for the demo and the landing).
+- **Who the village is, which rooms are on there:**
+  `../mokri-potok-portal/.claude/context/village.md`.
+- **What waits on the owner:** `docs/later.md` § Open decisions here; §12
+  of `../porta-pagi-cloud/docs/commercial.md`, in the order it unblocks; the
+  feedback email's steps in `../gaias-choice/deploy/README.md` § What is NOT
+  in this repo.
+- **What the assistant owes next:** §11 of the same plan, the ordered
+  backlog.
 
 ## Invariants
 
@@ -754,8 +826,25 @@ backend/internal/httpapi/demo.go   the demo village: demo/seed.json (the words),
                     seeded by /server demo-seed into an empty database
 ```
 
-## Docs stay current, in the same change
+## Docs stay current, every turn
 
+**Every turn ends with the docs current, technical and ideological alike**
+(owner's rule, 2026-09-07, widened 2026-09-28 and 2026-10-07), so that a
+cold start reads the files and needs no chat to be fast.
+
+- **Technical** is what a thing is, where it lives, how it runs and rolls:
+  this file's invariants and layout, `README.md`, a deploy repo's
+  `infra-log.md`.
+- **Ideological** is why: the owner's decision with its date, the villager
+  job, the options refused and what they cost, where the line on counting
+  and privacy sits. It lives in this file's invariants, the design docs,
+  `docs/later.md`, the village's `village.md` and the plan's Decided block.
+- **A turn that only talked still writes.** A decision lands in the doc that
+  owns it, a brainstorm or a deferral in `docs/later.md`, and a step the
+  owner was told to take beside the thing it operates. Chat may repeat it;
+  chat is never the only copy. A turn that hands over nothing writes nothing.
+- **The doc is in the repo that owns the fact**, which may be a sibling, and
+  that repo's commit carries it.
 - **One fact, one home.** Architecture and invariants: this file. Stack and
   commands: `README.md`. A village's manual VM steps and its context live in
   that village's deploy repo, not here.
@@ -766,8 +855,10 @@ backend/internal/httpapi/demo.go   the demo village: demo/seed.json (the words),
   line, in the design doc that proposes it. If that line cannot be written,
   the feature is not needed.
 - `.claude/launch.json` starts the dev frontend or the backend; `task be:run`
-  is the same backend from a terminal. Checking the CSP against a real page:
-  `README.md`.
+  is the same backend from a terminal. It also starts the demo village on
+  :8799 from a local image (`task be:demo-image` first) and the landing on
+  :8798 from `../porta-pagi-cloud/site`. Checking the CSP against a real
+  page: `README.md`.
 
 ## Memory
 
@@ -786,10 +877,13 @@ than adding a duplicate, delete one that turns out wrong.
 about a finished turn: what should have been done better, as a
 psychotherapist, an engineer, a UX/UI specialist and a homesteading
 practitioner at once. **Every turn that changed files invokes it before
-ending**, with what was asked and what was done, and then acts on the
-feedback or surfaces it to the owner. `.claude/hooks/review-gate.py`, wired as
-a Stop hook in `.claude/settings.json`, blocks the turn once if that was
-skipped. The reviewer edits nothing.
+ending**, in this repo or a sibling, with what was asked and what was done,
+and then acts on the feedback or surfaces it to the owner. It reads every
+repo the turn touched, and a doc that should have changed and did not is a
+finding. `.claude/hooks/review-gate.py`, wired as a Stop hook in
+`.claude/settings.json`, blocks the turn once if that was skipped. The gate
+sees only writes: a turn that decided something and wrote nothing passes it,
+so rule 5 at the top is the only fence there. The reviewer edits nothing.
 
 ## Working rules
 
@@ -805,7 +899,11 @@ skipped. The reviewer edits nothing.
 - Work on `main`. One person owns this repo; a side branch and a pull request
   only put a gate between a verified change and the villages. Commit to `main`
   and push (owner's rule 2026-09-07).
-- Run `task check` before every commit. CI runs the same.
+- Run `task check` before every commit. CI runs the same. Judge it by the
+  exit code (`task check; echo $?`): a failed `go vet` prints no FAIL line,
+  and a grep for one once let a red `main` through.
+- A path or a command handed to the owner is confirmed in the same turn
+  (`ls`, or the command's dry form).
 - Migrations are append-only files in `backend/internal/store/migrations/`;
   never edit an applied one.
 - Prefer a few lines of code over a dependency. Backend has two (sqlite,
@@ -815,9 +913,10 @@ skipped. The reviewer edits nothing.
   backticks in subjects (they break the Telegram deploy ping).
 - Push to `main` builds the image, frontend and backend together
   (`backend/Dockerfile` builds the frontend), and CI pushes it to GHCR as
-  `sha-<commit>`. **Nothing deploys from here**: a village rolls the tag in
-  its own deploy repo, and verifies there. Only `backend/**`, `frontend/**`
-  and the workflow itself trigger a build — a docs-only commit builds nothing.
+  `sha-<commit>`. **CI deploys nothing**: a roll is a commit in the repo that
+  runs the tag, made from this checkout and verified on the VM (§ The repos).
+  Only `backend/**`, `frontend/**` and the workflow itself trigger a build —
+  a docs-only commit builds nothing.
 - A change that a village's deploy needs — an env variable, a migration a
   village must rehearse, a CLI a village must run — is announced in the commit
   subject: that line is what the village's changelog panel prints.

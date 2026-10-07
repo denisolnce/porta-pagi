@@ -72,7 +72,9 @@ def main() -> int:
             "Files were changed this turn and the reviewer has not seen them. "
             "Invoke the `reviewer` subagent (.claude/agents/reviewer.md) with "
             "what the turn was asked to do and what was done, then act on its "
-            "feedback or surface it to the owner before ending the turn.\n"
+            "feedback or surface it to the owner before ending the turn. Every "
+            "fact the turn built, decided or handed the owner belongs in the doc "
+            "that owns it (CLAUDE.md § Docs stay current).\n"
         )
         return 2
     return 0

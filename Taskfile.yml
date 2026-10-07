@@ -19,6 +19,9 @@ tasks:
   be:image:
     desc: build the backend image locally
     cmds: [docker build -f backend/Dockerfile -t porta-pagi:local .]
+  be:demo-image:
+    desc: build the demo image locally, the door with no code compiled in (the pagi-demo preview runs it)
+    cmds: [docker build -f backend/Dockerfile --build-arg TAGS=demo -t porta-pagi-demo:local .]
   fe:dev:
     desc: vite dev server on :5173, proxies /api to the backend on :8788
     dir: frontend

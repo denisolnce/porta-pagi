@@ -105,6 +105,7 @@ Tavern asking the houses what they miss, and then four weeks of listening.
 | Stewardship on an MCP key. None today: an agent has no confirm dialog and the steward routes are the ones a confirm dialog guards. The owner left it open — "later key might carry stewardship". One line in `requireHouse` | The owner, when an agent needs to export or create a house | `CLAUDE.md` § A door for agents, `design-mcp.md` § Decisions |
 | OAuth for MCP clients that demand it (claude.ai connectors). A static key in a header is the whole auth story today | The owner, if a house uses claude.ai and not Claude Code | `design-mcp.md` § Decisions |
 | Deletes through MCP. None today: a phone gets a confirm first. Would come as one `delete_*` per table with the route's own owner-or-steward check | The owner, if an agent ever needs one | `design-mcp.md` § The tool surface |
+| The demo's first language. `CLAUDE.md` § The demo village and `README.md` say `pt,en`; the demo on the VM (gaias-choice `deploy/app/compose.yaml`) and the local `pagi-demo` preview run `en,pt`, so a visitor lands in English. Found 2026-10-07 when the preview moved here | The owner | `CLAUDE.md` and `README.md` § The demo village, or the two configs |
 | The all-kinds-on push default once more houses join | Every house, after a week | the village's context file § Notifications |
 | A second steward | The village | the village's context file § People and roles |
 | What a household without land calls itself | The household, when the first one joins | `design-membership.md` |

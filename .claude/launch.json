@@ -2,6 +2,8 @@
   "version": "0.0.1",
   "configurations": [
     { "name": "frontend", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--prefix", "frontend"], "port": 5173 },
-    { "name": "backend", "runtimeExecutable": "env", "runtimeArgs": ["BIND=127.0.0.1", "VILLAGE_NAME=Dev", "LANGUAGES=sl,en", "PUBLIC_URL=http://localhost:5173", "PUSH_SUBJECT=mailto:dev@localhost", "go", "run", "-C", "backend", "."], "port": 8788 }
+    { "name": "backend", "runtimeExecutable": "env", "runtimeArgs": ["BIND=127.0.0.1", "VILLAGE_NAME=Dev", "LANGUAGES=sl,en", "PUBLIC_URL=http://localhost:5173", "PUSH_SUBJECT=mailto:dev@localhost", "go", "run", "-C", "backend", "."], "port": 8788 },
+    { "name": "pagi-demo", "runtimeExecutable": "docker", "runtimeArgs": ["run", "--rm", "-p", "127.0.0.1:8799:8788", "--tmpfs", "/data:size=256m,uid=65532,gid=65532", "-e", "VILLAGE_NAME=Sobreiro Torto", "-e", "LANGUAGES=en,pt", "-e", "PUBLIC_URL=http://localhost:8799", "-e", "PUSH_SUBJECT=mailto:demo@localhost", "-e", "WEATHER_PROVIDER=open-meteo", "-e", "WEATHER_COORDS=37.65,-8.22", "-e", "WEATHER_LOCATION=Sobreiro Torto", "-e", "TZ=Europe/Lisbon", "porta-pagi-demo:local"], "port": 8799 },
+    { "name": "pagi-site", "runtimeExecutable": "python3", "runtimeArgs": ["-m", "http.server", "8798", "--bind", "127.0.0.1", "--directory", "../porta-pagi-cloud/site"], "port": 8798 }
   ]
 }
