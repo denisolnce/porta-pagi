@@ -6,6 +6,8 @@ backend/data/
 backups/
 .DS_Store
 *.local
+# Per machine: which sibling repos a session may reach (CLAUDE.md § The repos).
+.claude/settings.local.json
 *.log
 
 # The Docker build writes Vite output here; only the placeholders are tracked.

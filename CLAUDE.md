@@ -25,7 +25,13 @@ feature must beat "scroll up in the WhatsApp group" or it does not ship.
 the other repos from it (owner's decision 2026-10-07; until then sessions
 started in the village's repo). They sit beside this one, `../<name>`. Each
 keeps its own `CLAUDE.md` and its rules hold inside it — read it before the
-first edit there.
+first edit there. Its hooks and skills do not run from here: gaias-choice
+keeps its shipping rules, the shared-tree guard among them, in
+`.claude/behavior.yaml` and `.claude/skills/manage-site/SKILL.md`
+§ Committing & shipping — read both by hand before a tag roll there. A
+session reaches the siblings through `permissions.additionalDirectories` in
+`.claude/settings.local.json`, which is per machine and gitignored: without
+it, an edit there asks for permission first.
 
 | Repo | Visibility | Holds | Ships by |
 | --- | --- | --- | --- |
