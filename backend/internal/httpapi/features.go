@@ -21,6 +21,11 @@ type Feature struct {
 // Features in the order the steward's settings page lists them. A new
 // switch is one line here, one guard on its routes, one line in the page.
 var Features = []Feature{
+	// The sky in the calendar (almanac.go): the one switch every village
+	// starts with on, so it heads the list — a steward reads what the village
+	// has before the rooms it could add. Its comments ring under events, so
+	// it owns no push kind.
+	{Key: "celestial", Default: true},
 	{Key: "camp", Default: false, Kind: "camp"},
 	{Key: "dues", Default: false},
 	{Key: "roster", Default: false},

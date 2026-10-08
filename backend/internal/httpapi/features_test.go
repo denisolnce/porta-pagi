@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 // TestFeatures: a switch reads its default until a steward flips it, a
@@ -134,6 +135,93 @@ func TestCampSwitch(t *testing.T) {
 	}
 	if code, _, _ := volk.do("GET", "/api/camp", nil); code != 200 {
 		t.Fatalf("GET /api/camp with camp on: %d", code)
+	}
+}
+
+// TestCelestialSwitch: the sky is on in a new village, with no row behind
+// it. Off, it is absent — the list, its threads and a comment's delete are
+// 404s, list_almanac is neither listed nor callable, and no year is written,
+// so nothing asks ARSO for a place — and nothing is deleted: back on, the
+// rows and their comments are there, and the next round writes the missing
+// year.
+func TestCelestialSwitch(t *testing.T) {
+	srv, _, steward, volk := newVillage(t)
+	srv.cfg.WeatherCoords = "45.6458,14.8496"
+	ctx := t.Context()
+	if !srv.feature(ctx, "celestial") {
+		t.Fatal("the sky is off in a new village")
+	}
+	if row, _ := srv.st.One(ctx, `SELECT 1 FROM features WHERE key='celestial'`); row != nil {
+		t.Fatal("the sky's default needs a row")
+	}
+	srv.fillSky(ctx)
+	_, _, rows := volk.do("GET", "/api/almanac", nil)
+	moon := ""
+	for _, r := range rows {
+		if r["kind"] == "full_moon" {
+			moon = itoa(r["id"].(float64))
+			break
+		}
+	}
+	if moon == "" {
+		t.Fatalf("no full moon listed: %v", rows)
+	}
+	_, c, _ := volk.do("POST", "/api/threads/almanac/"+moon, map[string]any{"body": "Lepa luna"})
+	comment := itoa(c["id"].(float64))
+	key, _ := mintKey(t, volk, "agent")
+	listed := func() bool {
+		_, out := rpc(t, srv, key, "tools/list", nil)
+		for _, x := range out["result"].(map[string]any)["tools"].([]any) {
+			if x.(map[string]any)["name"] == "list_almanac" {
+				return true
+			}
+		}
+		return false
+	}
+	if !listed() {
+		t.Fatal("list_almanac missing with the sky on")
+	}
+
+	steward.must(200, first(steward.do("PUT", "/api/features/celestial", map[string]any{"on": false})), "sky off")
+	for _, rt := range []struct{ method, path string }{
+		{"GET", "/api/almanac"}, {"GET", "/api/threads/almanac/" + moon}, {"POST", "/api/threads/almanac/" + moon}, {"DELETE", "/api/comments/" + comment},
+	} {
+		if code, _, _ := volk.do(rt.method, rt.path, map[string]any{"body": "x"}); code != 404 {
+			t.Fatalf("%s %s with the sky off: %d", rt.method, rt.path, code)
+		}
+	}
+	if code, _, _ := volk.do("GET", "/api/threads/event/1", nil); code != 200 {
+		t.Fatalf("an event's thread went with the sky: %d", code)
+	}
+	if listed() {
+		t.Fatal("list_almanac listed with the sky off")
+	}
+	if _, out := rpc(t, srv, key, "tools/call", map[string]any{"name": "list_almanac"}); out["error"] == nil {
+		t.Fatalf("list_almanac answered with the sky off: %v", out)
+	}
+	srv.now = func() time.Time { return time.Date(2028, 1, 10, 10, 0, 0, 0, time.Local) }
+	srv.fillSky(ctx)
+	if row, _ := srv.st.One(ctx, `SELECT count(*) AS n FROM almanac WHERE starts_at LIKE '2028-%'`); row["n"].(int64) != 0 {
+		t.Fatal("a year written with the sky off")
+	}
+	if code, obj, _ := steward.do("GET", "/api/export", nil); code != 200 || len(obj["almanac"].([]any)) == 0 || !strings.Contains(fmt.Sprint(obj["comments"]), "Lepa luna") {
+		t.Fatalf("the export lost the sky while it was off: %d", code)
+	}
+
+	switchOn(t, steward, "celestial")
+	srv.fillSky(ctx)
+	if row, _ := srv.st.One(ctx, `SELECT count(*) AS n FROM almanac WHERE starts_at LIKE '2028-%'`); row["n"].(int64) == 0 {
+		t.Fatal("the year missed while off was not written when the sky came back")
+	}
+	if !listed() {
+		t.Fatal("list_almanac missing with the sky back on")
+	}
+	_, _, thread := volk.do("GET", "/api/threads/almanac/"+moon, nil)
+	if len(thread) != 1 || thread[0]["body"] != "Lepa luna" {
+		t.Fatalf("the moon's thread did not wait for the switch: %v", thread)
+	}
+	if code, _, _ := volk.do("GET", "/api/almanac", nil); code != 200 {
+		t.Fatalf("GET /api/almanac with the sky back on: %d", code)
 	}
 }
 

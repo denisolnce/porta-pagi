@@ -5,6 +5,7 @@ import { localeOf, useT } from "../i18n";
 import { ahead as aheadOf, instances, isOver, useList, When } from "./shared";
 import { EventCard, ICON, REPEATS } from "./EventCard";
 import { SkyCard, skyIcon } from "./Almanac";
+import { useFeature } from "../features";
 import { DatePicker } from "../DatePicker";
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -15,11 +16,12 @@ const blank = { title: "", kind: "event", starts_at: "", ends_at: "", place: "",
 // the chosen day (or everything ahead) as cards you can sign up to. A series
 // sits on every day it lands on; the sky — moons, equinoxes, solstices,
 // eclipses — sits beside the events, written by the portal and only talked
-// about, never answered.
+// about, never answered. The sky is a switch (celestial): off, it is not
+// fetched, and no mark or card of it is drawn.
 export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
   const { t, lang } = useT();
   const { items, reload } = useList("/events");
-  const sky = useList("/almanac");
+  const sky = useList(useFeature("celestial") ? "/almanac" : null);
   const [f, setF] = useState(blank);
   const birthday = f.kind === "birthday";
   const [open, setOpen] = useState(false);

@@ -107,7 +107,7 @@ func (s *Server) routes() {
 	m.HandleFunc("DELETE /api/events/{id}", s.requireHouse(s.deleteRow("events")))
 	m.HandleFunc("POST /api/events/{id}/signup", s.requireHouse(s.signUp))
 	m.HandleFunc("DELETE /api/events/{id}/signup", s.requireHouse(s.signOff))
-	m.HandleFunc("GET /api/almanac", s.requireHouse(s.listAlmanac))
+	m.HandleFunc("GET /api/almanac", s.requireHouse(s.requireFeature("celestial", s.listAlmanac)))
 	// Comment threads: one shape for every room that has them (threads.go).
 	m.HandleFunc("GET /api/threads/{subject}/{id}", s.requireHouse(s.listThread))
 	m.HandleFunc("POST /api/threads/{subject}/{id}", s.requireHouse(s.createThreadComment))

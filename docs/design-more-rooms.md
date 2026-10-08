@@ -340,6 +340,17 @@ comments ring the houses already in that thread. Options refused for who
 hears a comment: nobody (a "nice moon tonight" would go unanswered), every
 house (noise under `events`).
 
+**The sky is a switch, `celestial`, on by default** (owner's ask
+2026-10-08: "maybe some villages wont need them. ON by default"). The first
+switch on for every village; the others are rooms a village adds, this is a
+part of the calendar a village may take away. Off, it is absent like a room:
+`GET /api/almanac` and a thread on `almanac` answer 404, `list_almanac` is
+not listed, the calendar fetches and draws no sky, and the yearly write
+stops, so a village that does not want it asks ARSO for nothing. It owns no
+push kind: its comments ring under `events`, and with the thread absent
+nothing rings. Back on, the rows and threads are where they were, and the
+next round of `RunCalendar` (30 minutes at most) writes a year missed.
+
 | What the page says | Where it comes from |
 | --- | --- |
 | A line per full moon of the northern year (the harvest moon, Easter's rule, the lowest summer moon) | `rooms/Almanac.tsx`, words per language; south of the equator one line every full moon shares |

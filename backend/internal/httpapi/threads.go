@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,6 +16,16 @@ import (
 // push kind stays the room's own, so nobody's opt-out changes meaning.
 
 var commentSubjects = []string{"event", "wish", "away", "contact", "almanac"}
+
+// subjectSwitch names the switch a subject lives behind (features.go). While
+// it is off the thread is absent like the rows it hangs on: read, written
+// and deleted nowhere, and its comments wait for the switch to come back.
+var subjectSwitch = map[string]string{"almanac": "celestial"}
+
+func (s *Server) subjectOn(ctx context.Context, subject string) bool {
+	key, ok := subjectSwitch[subject]
+	return !ok || s.feature(ctx, key)
+}
 
 func subjectOf(r *http.Request) (string, int64, bool) {
 	s := r.PathValue("subject")
@@ -31,6 +42,10 @@ func (s *Server) listThread(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, "bad subject")
 		return
 	}
+	if !s.subjectOn(r.Context(), subject) {
+		writeErr(w, 404, "not in this village")
+		return
+	}
 	rows, err := s.st.Rows(r.Context(), `SELECT c.*,`+houseJoin+` FROM comments c JOIN houses h ON h.id=c.house_id
 		WHERE c.subject=? AND c.subject_id=? ORDER BY c.created_at LIMIT 500`, subject, id)
 	if err != nil {
@@ -45,6 +60,10 @@ func (s *Server) createThreadComment(w http.ResponseWriter, r *http.Request) {
 	subject, id, ok := subjectOf(r)
 	if !ok {
 		writeErr(w, 400, "bad subject")
+		return
+	}
+	if !s.subjectOn(r.Context(), subject) {
+		writeErr(w, 404, "not in this village")
 		return
 	}
 	m, err := readJSON(r)
@@ -167,12 +186,12 @@ func (s *Server) tellThread(r *http.Request, subject string, id int64, from *Hou
 func (s *Server) deleteComment(w http.ResponseWriter, r *http.Request) {
 	h := houseFrom(r)
 	id, _ := pathID(r)
-	row, err := s.st.One(r.Context(), `SELECT house_id FROM comments WHERE id=?`, id)
+	row, err := s.st.One(r.Context(), `SELECT house_id, subject FROM comments WHERE id=?`, id)
 	if err != nil {
 		fail(w, err)
 		return
 	}
-	if row == nil {
+	if row == nil || !s.subjectOn(r.Context(), row["subject"].(string)) {
 		writeErr(w, 404, "not found")
 		return
 	}

@@ -3,10 +3,12 @@ import { api } from "../api";
 import { localeOf, useT } from "../i18n";
 
 // useList: load a resource, expose reload. Rooms are lists with a form on top.
-export function useList<T = any>(path: string) {
+// A null path is a list behind a switch that is off: nothing is fetched and
+// the list is empty.
+export function useList<T = any>(path: string | null) {
   const [items, setItems] = useState<T[]>([]);
   const [err, setErr] = useState("");
-  const reload = useCallback(() => api<T[]>(path).then(setItems).catch((e) => setErr(String(e.message))), [path]);
+  const reload = useCallback(() => (path ? api<T[]>(path).then(setItems).catch((e) => setErr(String(e.message))) : Promise.resolve(setItems([]))), [path]);
   useEffect(() => { reload(); }, [reload]);
   return { items, err, reload };
 }

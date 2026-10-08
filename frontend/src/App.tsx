@@ -91,8 +91,9 @@ export default function App() {
 
   const logout = () => { setToken(null); setMe(null); setState("gate"); };
   const steward = me?.is_steward === 1;
-  // A room's icon by its switch, for the settings page.
-  const icons = Object.fromEntries(ROOMS.filter((r) => r.feature).map((r) => [r.feature!, r.icon]));
+  // A room's icon by its switch, for the settings page. The sky is a switch
+  // with no room of its own, so its icon is written here.
+  const icons = { celestial: "🌕", ...Object.fromEntries(ROOMS.filter((r) => r.feature).map((r) => [r.feature!, r.icon])) };
   const rooms = roomsOn(features); // App provides the switches, so it cannot ask the context for them
 
   return (
