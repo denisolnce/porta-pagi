@@ -906,7 +906,8 @@ backend/internal/httpapi/shed.go   tool photo routes, wishlist; photos.go = how 
                     (config.go: VILLAGE_NAME, LANGUAGES, PUBLIC_URL, PUSH_SUBJECT have no default, the binary refuses to start without them)
 docs/               design docs the owner and the assistant decide on together (navigation growth, Projects, Campground,
                     `design-membership.md` — accounts for people who live here without land, options only, nothing built;
-                    and `design-mcp.md` — the API as MCP tools for agents: built, with the options rejected and their costs);
+                    `design-mcp.md` — the API as MCP tools for agents: built, with the options rejected and their costs;
+                    and `design-news.md` — a curated "what's new" that rings when a roll brings it: researched, not built);
                     `later.md` = the one home for what is brainstormed, designed-and-set-aside, or still undecided
 docs/diagrams/      hand-drawn SVG sketches belonging to those docs
 .github/workflows/  build-backend: the image to GHCR (ghcr.io/denisolnce/porta-pagi), sha-<commit> and latest; nothing deploys from here
