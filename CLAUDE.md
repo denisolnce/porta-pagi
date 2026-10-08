@@ -79,6 +79,11 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   product promises first, because a buyer checks: no scripts, no counters,
   and every screenshot from the demo village, never the real one, whose
   crests on real parcels would publish who lives where (its `CLAUDE.md`).
+  Its words are plain English for villagers who may not be native speakers
+  (Simplified Technical English, `task plain` checks it), and its pictures
+  are retaken with `task shots`: both in porta-pagi-cloud's `CLAUDE.md`
+  § The page's rules. A room that gains a feature here gains it in its
+  caption there at the next landing roll.
 
 **Where to look on a cold start.** Pointers, not values:
 
