@@ -683,7 +683,11 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   the origin changed — `docker exec <container> /server code "<house>"` on the
   VM rotates that house's invite and prints the link (`cli.go`).
   SSH to the machine is the credential; there is no in-app password to reset
-  and no email to send. Keep it that way.
+  and no email to send. Keep it that way. **Questioned, not changed**
+  (owner's ask 2026-10-08, "code access is a bit wonky"): a house
+  passphrase and a way-in by email are two of the options in
+  `docs/design-sessions.md`, both decisions against this sentence and
+  both the owner's; the rungs recommended first there move nothing here.
 - **A door for agents: `POST /api/mcp`, and a key that is a device.** The
   portal's API as MCP tools (`mcp.go`), so a house tells its assistant and it
   is in the portal — the owner's agent and a villager's alike. JSON-RPC by
@@ -988,7 +992,8 @@ docs/               design docs the owner and the assistant decide on together (
                     `design-membership.md` — accounts for people who live here without land, options only, nothing built;
                     `design-mcp.md` — the API as MCP tools for agents: built, with the options rejected and their costs;
                     `design-news.md` — a curated "what's new" that rings when a roll brings it: researched, not built;
-                    and `design-links.md` — a link to one entry, to paste into the group: researched 2026-10-08, not built, no overhaul needed);
+                    `design-links.md` — a link to one entry, to paste into the group: researched 2026-10-08, not built, no overhaul needed;
+                    and `design-sessions.md` — getting in and staying in, the options from a cookie to passkeys: brainstormed 2026-10-08, not built);
                     `later.md` = the one home for what is brainstormed, designed-and-set-aside, or still undecided
 docs/diagrams/      hand-drawn SVG sketches belonging to those docs
 .github/workflows/  build-backend: the image to GHCR (ghcr.io/denisolnce/porta-pagi), sha-<commit> and latest; nothing deploys from here

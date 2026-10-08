@@ -57,8 +57,11 @@ the neighbour opens Home and hunts. The answer first, then the argument.
 - **Not on an away notice.** The portal does not help a notice travel; a
   villager who wants to tell the group types it. The owner decides.
 - **One prerequisite**: a link pasted into a tavern post is not clickable.
-  `Board.tsx` prints `p.body` as text. `#/codex` is documented as "its
-  address for pasting into the Tavern" and does not work as one. Linkify
+  `Board.tsx` prints `p.body` as text, and no browser makes a link out of
+  text on a page — chat apps do that in their own bubbles, a web page does
+  it itself or not at all (the owner asked, 2026-10-08). `#/codex` is
+  documented as "its address for pasting into the Tavern" and does not
+  work as one. Linkify
   `https://` runs in posts and comments, `noreferrer`, same-origin hash
   links opening in the app — a few lines in a `Prose`-like helper.
 
@@ -110,10 +113,20 @@ the neighbour opens Home and hunts. The answer first, then the argument.
   land on the card and not on Home.
 - **A reused id**: no table uses `AUTOINCREMENT`, so when the newest entry
   is deleted the next one written takes its id, and a stale link would open
-  a different entry instead of the faint line. The resolver link carries
-  the entry's creation day, `#/go/event/12/2026-10-08`, and the room
-  compares it with `created_at` before it scrolls: a mismatch is "not here
-  any more". No migration; `AUTOINCREMENT` would be a rebuild of every table.
+  a different entry instead of the faint line. **The owner wants
+  `AUTOINCREMENT` added, "if doable without issues, cause it should work
+  solidly" (2026-10-08).** It is doable and has one issue: SQLite cannot
+  alter a table into it, so each of the 26 tables with an id is rebuilt
+  (create, copy, drop, rename), and a drop under `PRAGMA foreign_keys=ON`
+  cascades through the 62 references — the pragma must be off, and it is a
+  no-op inside a transaction, which is where `store.go` runs every
+  migration. So: a marker the runner honours to run one migration with
+  foreign keys off and a check at the end, the rebuild as that migration,
+  rehearsed on a copy of the village's backup, and `ResetDemo` clearing
+  `sqlite_sequence` so the demo's ids keep repeating each hour. Until it
+  lands, the resolver link carries the entry's creation day,
+  `#/go/event/12/2026-10-08`, and the room compares it with `created_at`
+  before it scrolls: a mismatch is "not here any more".
 - **A series** (a weekly work party): the link carries the day, `?event=12&day=2026-10-11`,
   because the answer buttons are per day (`occurs_on`). The Share button on
   an instance writes the day it was drawn on.
