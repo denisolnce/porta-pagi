@@ -208,7 +208,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   2026-10-08): each provider gives what it has and nothing is padded —
   Open-Meteo 15 (its API stops at 16), ARSO 10, the ten its own page shows
   (its answer carries an eleventh, a stub whose page is empty). ‹ › page by
-  five and are absent at their end. **A day links to the provider's page for
+  five, stand on the days' own line one at each side, small and as tall as
+  the squares (owner's ask 2026-10-08), and are absent at their end. **A day links to the provider's page for
   that day only where the provider has one** (owner's decision 2026-10-08:
   he had made the links hang on both providers having pages, Open-Meteo has
   none, and he kept ARSO's): ARSO does
@@ -1091,7 +1092,10 @@ so rule 5 at the top is the only fence there. The reviewer edits nothing.
   adds a Portal News note to `news/news.json` in the same commit**, in
   English, Slovenian and Portuguese, written for the villager and not the
   builder: no migration, no backup, no file names. The owner reads it in the
-  diff. A change nobody sees gets no note.
+  diff. A change nobody sees gets no note, and **a small fix never does** —
+  an arrow moved, a word changed, a line that fits better (owner's rule
+  2026-10-08: "these kinds of small fixes should never end up in portal
+  news").
 - A change that a village's deploy needs — an env variable, a migration a
   village must rehearse, a CLI a village must run — is announced in the commit
   subject: that line is what the village's changelog panel prints.

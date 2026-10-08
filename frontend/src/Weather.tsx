@@ -58,6 +58,13 @@ export function Weather() {
     return `${at.toLocaleDateString(locale, { weekday: "short" })} ${at.toLocaleDateString(locale, { day: "numeric" })}`;
   };
   const shown = w.days.slice(start, start + PAGE);
+  // The arrows stand on the days' own line, one at each side (owner's ask
+  // 2026-10-08). An arrow is absent at its end of the forecast, never
+  // wrapping round, so the end is seen; its empty column keeps the days still.
+  const paged = w.days.length > PAGE;
+  const arrow = (show: boolean, label: string, to: number, glyph: string) => show
+    ? <button type="button" className="lesser w-arrow" aria-label={t(label)} onClick={() => setStart(to)}>{glyph}</button>
+    : <span className="w-arrow" aria-hidden="true" />;
 
   return (
     <div className="parchment weather">
@@ -66,31 +73,27 @@ export function Weather() {
         <span className="w-temp">{w.now}°</span>
         <span className="w-where">{w.place}<br /><span className="small">{t(w.now_text)}{w.wind ? ` · ${w.wind}` : ""}</span></span>
       </div>
-      <div className="w-days">
-        {shown.map((d, j) => {
-          const inner = (<>
-            <div className="small">{dayName(d.date, start + j)}</div>
-            <div className="w-icon-sm">{emoji(d.icon)}</div>
-            <div className="w-range"><strong>{d.max}°</strong> <span className="muted">{d.min}°</span></div>
-            {d.rain && <div className="small w-rain">💧 {mm(d.rain)}<span className="unit"> mm</span></div>}
-          </>);
-          // A day the provider has a page for opens it beside the app, so an
-          // installed portal does not navigate away, and without a referrer,
-          // so the provider is not told the portal's address; one it has none
-          // for is a framed box that does nothing (CLAUDE.md § The button frame).
-          return d.link
-            ? <a key={d.date} className="w-day" href={d.link} target="_blank" rel="noopener noreferrer" title={`${t("Details at")} ${w.source}`}>{inner}</a>
-            : <div key={d.date} className="w-day">{inner}</div>;
-        })}
-      </div>
-      {w.days.length > PAGE && (
-        // An arrow is absent at its end of the forecast, never wrapping round,
-        // so the end is seen; the empty span holds the other arrow to its side.
-        <div className="w-pager">
-          {start > 0 ? <button type="button" className="lesser" aria-label={t("Earlier days")} onClick={() => setStart(start - PAGE)}>‹</button> : <span />}
-          {start + PAGE < w.days.length ? <button type="button" className="lesser" aria-label={t("Later days")} onClick={() => setStart(start + PAGE)}>›</button> : <span />}
+      <div className={"w-row" + (paged ? " paged" : "")}>
+        {paged && arrow(start > 0, "Earlier days", start - PAGE, "‹")}
+        <div className="w-days">
+          {shown.map((d, j) => {
+            const inner = (<>
+              <div className="small">{dayName(d.date, start + j)}</div>
+              <div className="w-icon-sm">{emoji(d.icon)}</div>
+              <div className="w-range"><strong>{d.max}°</strong> <span className="muted">{d.min}°</span></div>
+              {d.rain && <div className="small w-rain">💧 {mm(d.rain)}<span className="unit"> mm</span></div>}
+            </>);
+            // A day the provider has a page for opens it beside the app, so an
+            // installed portal does not navigate away, and without a referrer,
+            // so the provider is not told the portal's address; one it has none
+            // for is a framed box that does nothing (CLAUDE.md § The button frame).
+            return d.link
+              ? <a key={d.date} className="w-day" href={d.link} target="_blank" rel="noopener noreferrer" title={`${t("Details at")} ${w.source}`}>{inner}</a>
+              : <div key={d.date} className="w-day">{inner}</div>;
+          })}
         </div>
-      )}
+        {paged && arrow(start + PAGE < w.days.length, "Later days", start + PAGE, "›")}
+      </div>
       <p className={"small w-src" + (stale ? " stale-note" : " muted")}>
         {/* CC BY asks for the licensor's name and a link; a link loads nothing until tapped. */}
         {t("Source")}: {w.source === "Open-Meteo.com" ? <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer">Open-Meteo.com</a> : w.source}. {t("Forecast for")} {w.place}, {t("not measured at the village.")}{" "}

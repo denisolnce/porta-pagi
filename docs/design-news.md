@@ -56,8 +56,9 @@ backup"), and nothing rang. The git log stays, as the panel's second tab.
 - **Who writes a note**: the assistant, in the same commit as the
   user-visible change it describes — a feature, or a bug a villager would
   have noticed — in the village's languages, and the owner reads it in the
-  diff. A change nobody sees gets no note; `CLAUDE.md` § Working rules says
-  so.
+  diff. A change nobody sees gets no note, and a small fix never does —
+  the owner's rule of 2026-10-08, when the weather's arrows moved onto the
+  days' line; `CLAUDE.md` § Working rules says so.
 
 ## Options considered
 
