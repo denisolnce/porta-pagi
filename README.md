@@ -18,7 +18,8 @@ founding text, editable by every house. A steward switches on, from
 the ⚙️ settings, the rooms a village wants beyond those: the Campground (on
 for a village that had it before switches), a Dues ledger (who paid what the
 village asked) and a Duty roster (turns at the chores, with counts) — all
-three off by default. One shared login per house, handed
+three off by default — and switches off the sky in the calendar, which is on
+by default. One shared login per house, handed
 out as an invite link; a house adds its own further phones with a six-digit
 pairing code. Installs to the home screen and sends notifications.
 
@@ -120,7 +121,7 @@ Other clients, `.mcp.json` shape:
 What the agent can do: read and write in every room — board, calendar and
 answers, threads, shop runs and needs, give-aways, the Watchtower, the shed
 and its wishlist, projects, tasks and a picture on a project, the campground,
-the codex, the weather, the almanac (to read and talk about), and — where the village switched them on — the
+the codex, the weather, the almanac (to read and talk about, unless the village switched the sky off), and — where the village switched them on — the
 campground, the dues ledger and the duty roster. What it cannot: delete anything, mint keys or touch
 devices, edit the house itself, or do a steward's work. **The key opens
 `/api/mcp` and nothing else** — `curl` with it gets a 403 — so the tool list

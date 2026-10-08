@@ -14,3 +14,4 @@ backups/
 backend/internal/httpapi/web/*
 !backend/internal/httpapi/web/index.html
 !backend/internal/httpapi/web/manifest.webmanifest
+.claude/worktrees/

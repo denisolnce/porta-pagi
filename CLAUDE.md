@@ -120,9 +120,20 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   on asks once more, because it adds counting to a portal that counts
   nothing by default. What is about houses — creating them, invites, land,
   making stewards, deleting a house — stays in the Houses room. The switches today:
-  `camp` (the Campground; on for a village that existed before switches,
-  migration `025`), `dues` (a dues ledger) and `roster` (a duty roster with
-  counts). The two counting rooms are the one place a total is allowed, and
+  `celestial` (the sky in the calendar, § The sky is the portal's; owner's
+  ask 2026-10-08, "maybe some villages wont need them"), `camp` (the
+  Campground; on for a village that existed before switches, migration
+  `025`), `dues` (a dues ledger) and `roster` (a duty roster with counts).
+  **`celestial` is the first switch on by default for every village**, so it
+  heads the settings list: a steward reads what the village has before the
+  rooms it could add. It is no room, so it has no `ROOMS` entry: off, the
+  calendar asks `useFeature` and fetches no sky, draws no mark and no card;
+  a thread on its subject is absent with it (`subjectSwitch` in
+  `threads.go`: read, write and a comment's delete answer 404, so
+  `get_thread` and `comment` on `almanac` are tool errors); and
+  `RunCalendar` writes no year, so nothing asks ARSO for a place. The first
+  round after it comes back, within 30 minutes, writes a year it missed.
+  The two counting rooms are the one place a total is allowed, and
   only because a village switched it on: the "do not add a total anywhere"
   rules below are the defaults, not exceptions to this one. The demo seeds
   every switch on.
@@ -413,7 +424,10 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   rule**: the church reckons with a table moon, so the backend computes
   Gregorian Easter and the full moon before it says the day; "the first full
   moon after the equinox" is wrong in years like 2019 and 2038. Nothing pushes. The sky
-  is not something to come to, so Home counts none of it.
+  is not something to come to, so Home counts none of it. **It sits behind
+  the `celestial` switch, on by default** (owner's ask 2026-10-08, § Switches):
+  a village that does not want it switches it off, and its rows and threads
+  wait.
 - **No tally of favours.** Work-bee sign-ups are a headcount for one day and
   die with the event. Tool loans record who holds a tool now, never how many
   times a house borrowed. Do not add a total anywhere. The **return reminder**
@@ -652,8 +666,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   keeps the hash and cannot show it again. **A key opens `/api/mcp` and
   nothing else**: `requireHouse` answers 403 to an agent device on every other
   route unless the request carries the `viaMCP` context mark the dispatcher
-  sets — so the tool table in `mcp.go` is the whole surface (52 tools, pinned
-  by `TestMCPSurface`: reads and writes in every room, a project picture in,
+  sets — so the tool table in `mcp.go` is the whole surface (52 tools in the
+  table whatever the switches, pinned by `TestMCPSurface`: reads and writes in every room, a project picture in,
   **no deletes**, no devices, pairing, push, house row or steward route), and
   the raw REST API is closed to a key on purpose. **And the door takes a key
   and nothing else**: a phone's own session token is answered 403 at

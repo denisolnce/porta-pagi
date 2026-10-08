@@ -43,12 +43,7 @@ func (s *Server) RunCalendar(ctx context.Context) {
 	t := time.NewTicker(30 * time.Minute)
 	defer t.Stop()
 	for {
-		y := s.now().Year()
-		for _, year := range []int{y, y + 1} {
-			if err := s.fillAlmanac(ctx, year); err != nil {
-				log.Printf("almanac %d: %v", year, err)
-			}
-		}
+		s.fillSky(ctx)
 		if n, err := s.ringBirthdays(ctx); err != nil {
 			log.Printf("birthdays: %v", err)
 		} else if n > 0 {
@@ -58,6 +53,23 @@ func (s *Server) RunCalendar(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-t.C:
+		}
+	}
+}
+
+// fillSky writes this year and the next while the village has the sky
+// (the celestial switch). Switched off, nothing is computed and ARSO is not
+// asked for a place nobody would see; the rows already written stay, with
+// their threads. The first round after the switch comes back writes
+// whichever year is missing.
+func (s *Server) fillSky(ctx context.Context) {
+	if !s.feature(ctx, "celestial") {
+		return
+	}
+	y := s.now().Year()
+	for _, year := range []int{y, y + 1} {
+		if err := s.fillAlmanac(ctx, year); err != nil {
+			log.Printf("almanac %d: %v", year, err)
 		}
 	}
 }

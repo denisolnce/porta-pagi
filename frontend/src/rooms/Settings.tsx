@@ -8,6 +8,7 @@ import { shrink } from "../photo";
 
 // What each switch adds, in one line. A switch with no line here shows its key.
 const ABOUT: Record<string, string> = {
+  celestial: "Celestial events — full and new moons, seasons and eclipses in the calendar",
   camp: "Campground — who noticed a camper, who has the money",
   dues: "Dues ledger — who paid what, and when",
   roster: "Duty roster — turns at the village's chores, with counts",
@@ -16,6 +17,10 @@ const ABOUT: Record<string, string> = {
 // so switching one of these on is a change of what the village is, and the
 // steward is asked once more (the business plan's Decided block, porta-pagi-cloud).
 const COUNTING = ["dues", "roster"];
+// What switching off takes, for a switch that is not a room.
+const OFF: Record<string, string> = {
+  celestial: "Every house loses these from the calendar until a steward switches them back on. Nothing is deleted, comments included.",
+};
 
 type Prefs = { kinds: string[]; global_off: string[]; global_detail: { kind: string; set_by: string | null; set_at: string }[] };
 
@@ -41,7 +46,7 @@ export function Settings({ icons }: { icons: Record<string, string> }) {
     if (on && COUNTING.includes(f.key) && !confirm(`${t(ABOUT[f.key] || f.key)}\n\n${t("This adds counting to a portal that counts nothing by default. Switch it on?")}`)) return;
     // Off is one tap that takes a room from every house, the campground's
     // money in flight with it: say so first. Nothing is deleted.
-    if (!on && !confirm(`${t(ABOUT[f.key] || f.key)}\n\n${t("Every house loses this room until a steward switches it back on. Nothing in it is deleted.")}`)) return;
+    if (!on && !confirm(`${t(ABOUT[f.key] || f.key)}\n\n${t(OFF[f.key] || "Every house loses this room until a steward switches it back on. Nothing in it is deleted.")}`)) return;
     setBusy(f.key); setErr("");
     try {
       await api(`/features/${f.key}`, { method: "PUT", body: { on } });
