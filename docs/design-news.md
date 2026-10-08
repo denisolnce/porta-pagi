@@ -1,7 +1,8 @@
-# What's new: a curated note that rings when a village gets it
+# Portal News: a curated note that rings when a village gets it
 
-Researched 2026-10-08 on the owner's ask; **nothing built**. The open
-choices are at the end and are the owner's.
+Built 2026-10-08 on the owner's ask (`news.go`, `news/news.json`,
+`news_test.go`, the Changelog panel's first tab); the owner's decisions are
+at the end.
 
 The owner's words: "keeping a user-facing notification-enabled changelog
 file somewhere, and if it updates (maybe as a database migration?) then a
@@ -13,21 +14,22 @@ house (and globally for steward) it could be on/offed."
 
 **The villager job, in one line: "what is new in our portal, and is the
 thing I asked for in?" — told once, in the village's language, without the
-builder's words for builders.** Today the 🔨 Changelog panel answers it from
-the git log: English commit subjects, migration and backup notes included
-(the calendar's subject ends "migration 029 rebuilds event answers, rehearse
-on backup"), and nothing rings.
+builder's words for builders.** The git log alone answered it before:
+English commit subjects, migration and backup notes included (the
+calendar's subject ends "migration 029 rebuilds event answers, rehearse on
+backup"), and nothing rang. The git log stays, as the panel's second tab.
 
-## How it would work
+## How it works
 
 - **The notes are a file in the repo**, embedded in the binary like the
   dictionaries: `backend/internal/httpapi/news/news.json`, newest first. One
   entry is an id (the day and a slug, `2026-10-07-calendar`), its day, and
-  per language a title for the lock screen and one or two lines of body:
+  per language a title for the lock screen and a body of at most 120
+  characters, the push's whole snippet (`TestNewsFile`):
 
   ```json
   {"id": "2026-10-07-calendar", "on": "2026-10-07",
-   "texts": {"en": {"title": "The calendar knows the sky", "body": "Full moons, the seasons' turns and the eclipses we can see. Birthdays, and events that repeat every week, month or year."},
+   "texts": {"en": {"title": "The calendar knows the sky", "body": "Moons, seasons and the eclipses we can see are in the calendar, with birthdays and events that repeat."},
              "sl": {"title": "…", "body": "…"}, "pt": {"title": "…", "body": "…"}}}
   ```
 
@@ -42,8 +44,8 @@ on backup"), and nothing rings.
   gets the image, and never twice, because the mark lives in its database.
 - **A fresh village rings nothing for the past**: on the first boot with no
   houses every id present is marked told without a push. A village that
-  rolls over several notes at once gets **one** push — the newest title,
-  "and 2 more" — and the panel lists all of them.
+  rolls over several notes at once gets **one** push — "Portal News" and
+  their titles — and the panel lists all of them.
 - **On or off per house, and village-wide by a steward**: `news` is an
   ordinary kind, so the house's own list and the steward's mute on the
   settings page already cover it. On by default, like every kind.
@@ -54,13 +56,14 @@ on backup"), and nothing rings.
 - **Who writes a note**: the assistant, in the same commit as the
   user-visible change it describes — a feature, or a bug a villager would
   have noticed — in the village's languages, and the owner reads it in the
-  diff. A change nobody sees gets no note. `CLAUDE.md` would say so.
+  diff. A change nobody sees gets no note; `CLAUDE.md` § Working rules says
+  so.
 
 ## Options considered
 
 | How the note travels | For | Against |
 | --- | --- | --- |
-| **A file embedded in the binary** (recommended) | Rings exactly when the image arrives and once, by a mark in the village's own database; a typo is fixed by editing the file until the image is rolled; translations live beside the text; the demo, wiped hourly, still shows the notes because they are in the binary | A note shipped and rolled cannot be unsaid on a village's phones — true of every push |
+| **A file embedded in the binary** (built) | Rings exactly when the image arrives and once, by a mark in the village's own database; a typo is fixed by editing the file until the image is rolled; translations live beside the text; the demo, wiped hourly, still shows the notes because they are in the binary | A note shipped and rolled cannot be unsaid on a village's phones — true of every push |
 | A migration that inserts the note | The owner's first idea: it runs once per database by construction | Migrations are append-only, so a typo is there forever; content mixed into schema history; texts in three languages inside SQL; the demo wipes its tables hourly but not the migration ledger, so its notes would vanish after the first hour |
 | Notes read off commit messages (a "news:" line) | Nothing new to remember | English only, in the builder's register; a commit message cannot be fixed after the push; ties the backend to the frontend's build-time git step |
 | **No push at all**: a dot on the 🔨 chip until the note is read, or a pinned line on the board in the village's words with its thread | Reaches nobody's bedside table; a board line can be answered ("finally! thank you") where a lock screen cannot | The owner asked for a push; a dot is only seen by whoever scrolls to the foot of Home |
@@ -74,26 +77,20 @@ house, no person and no absence, so its title may travel as it is
 
 ## What it touches
 
-`news.json` and a small `news.go` (the list route, the round that rings,
-the fresh-village mark), the kind `news` in `Kinds` and its label in the
-Notifications panel, the Changelog panel's data source, `banner_test.go`
-for the push's two lines, `CLAUDE.md` (an invariant and the writing rule),
-`README.md`. No migration and no new table. About a day's work.
+`news.json` and `news.go` (the list route, the round that rings, the
+empty-village mark), the kind `news` in `Kinds` and its label in the
+Notifications panel, the Changelog panel's first tab, `news_test.go` for
+the file's rules and the push's lines, `CLAUDE.md` (an invariant and the
+writing rule), `README.md`. No migration and no new table.
 
-## Open choices for the owner
+## Decided (owner, 2026-10-08)
 
-1. **The git-log changelog**: replace it with the notes (one panel, one
-   voice), or keep it under the notes for the curious, or drop the panel's
-   git half from Home and keep it in the repo only.
-2. **One push per roll** naming the newest note and how many more
-   (recommended), or one push per note.
-3. **The kind's name in the list of notifications**: "What's new" is the
-   suggestion.
-4. **Push, or quiet**: a push per roll as asked, or the dot and the board
-   line instead — and if a push, whether a village that rolls twice in a
-   week hears the second one.
-5. **The first note**: the calendar (sky, birthdays, repeats) is already on
-   both villages, so its note would ring nobody under the "fresh village"
-   rule only for a new village; for Mokri Potok and the demo it would ring
-   on the next roll. Ship it as the first note, or start with the next
-   change.
+1. **The changelog stays and gets two tabs**: Portal News, chosen by
+   default, and Development, the git log as before.
+2. **One push per roll**: one note by its own title and body; several as
+   "Portal News" with their titles.
+3. **The kind is called "Portal News".**
+4. **A push, not the quiet way** (a dot on the 🔨 chip, or a pinned board
+   line): "if 2 new features roll per week — notif on both makes sense".
+5. **The calendar is the first note** and rings Mokri Potok with its next
+   roll, together with the weather's fifteen days.

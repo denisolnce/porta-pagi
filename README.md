@@ -29,9 +29,11 @@ own deploy repo.
 
 - **Frontend:** Vite + React 18 + TypeScript, hash-routed SPA, one dictionary
   per language, installable (web manifest + service worker for push). The
-  changelog at the foot of Home is the last 90 days of the git log, filtered
-  and written to `public/changelog.json` by `scripts/changelog.mjs` before
-  every build. Built **into the backend image** (`backend/Dockerfile`, build
+  changelog at the foot of Home has two tabs: Portal News, a short note per
+  change a villager would notice (`backend/internal/httpapi/news/news.json`,
+  rung once to each village when its roll brings it), and Development, the
+  last 90 days of the git log, filtered and written to `public/changelog.json`
+  by `scripts/changelog.mjs` before every build. Built **into the backend image** (`backend/Dockerfile`, build
   context is the repo root) and served by the Go binary, so the portal is one
   origin on its own domain.
 - **Backend:** Go, stdlib HTTP, SQLite (pure Go), VAPID web push, one binary,

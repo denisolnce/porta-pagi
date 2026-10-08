@@ -37,8 +37,9 @@ var almanacTitles = map[string]string{
 	"solar_eclipse": "Solar eclipse", "lunar_eclipse": "Lunar eclipse",
 }
 
-// RunCalendar keeps the year's sky written and rings the morning's birthdays:
-// once at start, then every 30 minutes.
+// RunCalendar keeps the year's sky written, rings the morning's birthdays
+// and tells the village the Portal News its binary brought: once at start,
+// then every 30 minutes.
 func (s *Server) RunCalendar(ctx context.Context) {
 	t := time.NewTicker(30 * time.Minute)
 	defer t.Stop()
@@ -48,6 +49,11 @@ func (s *Server) RunCalendar(ctx context.Context) {
 			log.Printf("birthdays: %v", err)
 		} else if n > 0 {
 			log.Printf("birthdays: %d rung", n)
+		}
+		if n, err := s.ringNews(ctx); err != nil {
+			log.Printf("news: %v", err)
+		} else if n > 0 {
+			log.Printf("news: %d told", n)
 		}
 		select {
 		case <-ctx.Done():

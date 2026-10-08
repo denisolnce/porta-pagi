@@ -1,0 +1,20 @@
+[
+  {
+    "id": "2026-10-08-weather",
+    "on": "2026-10-08",
+    "texts": {
+      "en": {"title": "Weather for up to fifteen days", "body": "Page through every day the forecast gives, five at a time; a tap on a day opens its page where there is one."},
+      "sl": {"title": "Vreme za petnajst dni naprej", "body": "Napoved zdaj kaže vse dni, po pet naenkrat; dotik dneva odpre njegovo stran, kjer jo ima."},
+      "pt": {"title": "O tempo para quinze dias", "body": "A previsão mostra todos os dias que tem, cinco de cada vez; tocar num dia abre a sua página, quando existe."}
+    }
+  },
+  {
+    "id": "2026-10-07-calendar",
+    "on": "2026-10-07",
+    "texts": {
+      "en": {"title": "The calendar knows the sky", "body": "Moons, seasons and the eclipses we can see are in the calendar, with birthdays and events that repeat."},
+      "sl": {"title": "Koledar pozna nebo", "body": "V koledarju so lune, letni časi in mrki, ki jih vidimo, pa tudi rojstni dnevi in dogodki, ki se ponavljajo."},
+      "pt": {"title": "O calendário conhece o céu", "body": "Luas, estações e os eclipses que se veem daqui estão no calendário, com aniversários e eventos que se repetem."}
+    }
+  }
+]

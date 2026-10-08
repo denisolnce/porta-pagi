@@ -1,5 +1,5 @@
 import { Children, isValidElement, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
-import { Link, NavLink, Route, Routes, useNavigate, useParams } from "react-router-dom";
+import { Link, NavLink, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, ApiError, getToken, setToken, type House, type Me } from "./api";
 import { syncPushLang } from "./push";
 import { useT } from "./i18n";
@@ -185,6 +185,11 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
   // default — both are for whoever scrolls down to ask.
   const [foot, setFoot] = useState<Foot>(() => { try { const v = localStorage.getItem("potok.foot"); if (v === "changelog" || v === "feedback") return v; } catch { /* ignore */ } return ""; });
   const pickFoot = (v: Foot) => { const n = foot === v ? "" : v; setFoot(n); try { localStorage.setItem("potok.foot", n); } catch { /* ignore */ } };
+  // A Portal News push opens #/?news: the changelog, on its news tab, for
+  // this visit only — the device's own choice stays. The tab scrolls itself
+  // into view once its notes are in (Changelog.tsx).
+  const [params] = useSearchParams();
+  useEffect(() => { if (params.has("news")) setFoot("changelog"); }, [params]);
   // One badge per building, built as a finished sentence so a room can say two
   // things at once (the shed: how many are in it, how many are out).
   const [badges, setBadges] = useState<Record<string, string>>({});

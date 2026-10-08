@@ -209,10 +209,9 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   Open-Meteo 15 (its API stops at 16), ARSO 10, the ten its own page shows
   (its answer carries an eleventh, a stub whose page is empty). ‹ › page by
   five and are absent at their end. **A day links to the provider's page for
-  that day only where the provider has one** — the assistant's call of
-  2026-10-08, awaiting the owner's yes, because the owner made the links
-  hang on both providers having pages and Open-Meteo has none
-  (`docs/later.md` § Open decisions): ARSO does
+  that day only where the provider has one** (owner's decision 2026-10-08:
+  he had made the links hang on both providers having pages, Open-Meteo has
+  none, and he kept ARSO's): ARSO does
   (`vreme.arso.gov.si/napoved/<place>/graf/<n>`, n counted from today, so
   neither the cache nor the browser keeps a copy past midnight), and the
   link opens beside the app. **That address is not a published API**: it is
@@ -664,7 +663,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   and when, because the house is coming back the same day and the whole point
   is to answer it; an order says who orders and until when, and nobody
   leaves home for it. A **birthday** names the person and the day, and only
-  the day: it says nothing about a house being empty. Classify a new kind
+  the day: it says nothing about a house being empty. A **Portal News** note
+  names no house and no person. Classify a new kind
   against that line; do not guess.
   The one other exception is the optional author name on a tavern post, which
   the poster typed themselves.
@@ -758,8 +758,7 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   forecast day wears `.lesser`'s border, fill and thin shadow (`.w-day`).
   Reuse the frame where a small box needs to belong; the affordance goes
   only on what a tap opens. A forecast day is both cases: where the provider
-  has a page for that day (ARSO) it is a link (the assistant's call of
-  2026-10-08 on the owner's ask, awaiting his yes) and
+  has a page for that day (ARSO) it is a link (owner's decision 2026-10-08) and
   takes the affordance — the date dotted underneath, which is the one cue a
   phone shows before the tap, as the house name in the top bar has, and the
   pointer, the hover and the press for a mouse. Where it has none
@@ -898,7 +897,27 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   village can pull the door by mistake. Not seeded: project pictures and tool
   photos, because a picture of an invented village would have to be
   fabricated; the strips stay empty.
-- **The changelog is the git log, filtered, written at build time.**
+- **Portal News: a note per change a villager would notice, rung once when
+  the roll brings it** (owner's decisions 2026-10-08, `news.go`,
+  `docs/design-news.md`). The notes are `backend/internal/httpapi/news/news.json`,
+  newest first, embedded in the binary: an id that starts with its day, the
+  day, and per language a title for the lock screen and a line or two of
+  body of at most 120 characters, the push's whole snippet — in English,
+  Slovenian and Portuguese (`TestNewsFile`). The 30-minute round compares them with the
+  `news:<id>` marks in `settings` and rings what the village has not
+  heard, in **one push per roll** whatever the number — one note by its own
+  title and body, several as "Portal News" and their titles — then marks
+  them; quiet hours hold it until the morning. A village with no houses
+  marks the past as told and rings nothing. It rings under its own kind
+  `news`, "Portal News" in the list, which a house switches off and a
+  steward mutes for the village like any other; on by default, and two
+  rolls a week ring twice, by the owner's word. On a lock screen a note
+  names no house and no person. **Not a migration**: an applied migration
+  cannot be fixed, and the demo wipes its tables hourly but not the ledger.
+  The page reads `GET /api/news` and shows it as the changelog's first tab,
+  chosen by default; a push opens `#/?news`.
+- **The changelog's second tab, Development, is the git log, filtered,
+  written at build time.**
   `frontend/scripts/changelog.mjs` writes `public/changelog.json` before every
   build and dev start — `built` is HEAD's date, `entries` are the last **90
   days** of commit subjects minus deploy rolls, docs, tooling, reverts and
@@ -908,8 +927,9 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   Docker build, because the web stage copies `frontend/` without `.git`; a
   build with no git keeps the file it finds, or writes an empty one so the
   panel still loads. The file is gitignored and served `no-cache`. Commit
-  subjects are what a villager reads there, in English — write them for that
-  reader. **Where it lives**: a chip row mirrored at the foot of Home, under
+  subjects are what a curious villager reads there, in English, under the
+  Portal News tab; the note is what everybody reads. **Where it lives**: a
+  chip row mirrored at the foot of Home, under
   the buildings, seen only by whoever scrolls down; its chips — 🔨 Changelog
   and ✉️ Feedback — open one panel at a time under the row, per device, off
   by default.
@@ -939,7 +959,8 @@ frontend/           Vite + React; src/rooms/* one file per room (Projects.tsx ho
                     fzf-style match, the letter shelves and the type picker that is its only user). Hall.tsx = Calendar.tsx + Board.tsx
                     stacked, because the tavern is one door; src/map/VillageMap.tsx; rooms/Codex.tsx = the founding text, from the DB;
                     rooms/Settings.tsx = the steward's village settings (switches, village-wide mutes, export), a page, not a room;
-                    src/Changelog.tsx reads public/changelog.json, which scripts/changelog.mjs writes from the git log at build
+                    src/Changelog.tsx = two tabs: Portal News off GET /api/news, and Development off public/changelog.json,
+                    which scripts/changelog.mjs writes from the git log at build
 frontend/public/    manifest.webmanifest, sw.js (push only, no caching), icons, backdrop.jpg (aerial photo behind the gate), fonts/ (self-hosted, OFL)
                     icon.svg is hand-drawn paths, full-bleed, content inside the central 80 % safe circle
                     (an emoji glyph renders off-centre and monochrome — do not go back to one)
@@ -953,6 +974,7 @@ backend/internal/httpapi/roster.go    the duty roster behind its switch: duties 
 backend/internal/httpapi/almanac.go   the sky in the calendar: the yearly write, the place off the weather's setting, the list route;
                     internal/astro is the arithmetic (Meeus, stdlib only); frontend rooms/Almanac.tsx words a row per language
 backend/internal/httpapi/birthdays.go a birthday's write and its morning ring; recur.go = the one rule for which days a series lands on
+backend/internal/httpapi/news.go      Portal News: news/news.json embedded, the list route, the once-per-roll ring; frontend src/Changelog.tsx is its tab
 backend/internal/httpapi/dues.go   the dues ledger, behind its switch: five routes, the amount parser, the one total besides the roster's
 backend/internal/httpapi/mcp.go    the door for agents: the tool table (the whole surface), the JSON-RPC endpoint, the in-process
                     dispatcher and the key route; the fence that keeps a key on /api/mcp is in auth.go
@@ -1064,6 +1086,11 @@ so rule 5 at the top is the only fence there. The reviewer edits nothing.
   runs the tag, made from this checkout and verified on the VM (§ The repos).
   Only `backend/**`, `frontend/**` and the workflow itself trigger a build —
   a docs-only commit builds nothing.
+- **A change a villager would notice — a feature, or a bug somebody saw —
+  adds a Portal News note to `news/news.json` in the same commit**, in
+  English, Slovenian and Portuguese, written for the villager and not the
+  builder: no migration, no backup, no file names. The owner reads it in the
+  diff. A change nobody sees gets no note.
 - A change that a village's deploy needs — an env variable, a migration a
   village must rehearse, a CLI a village must run — is announced in the commit
   subject: that line is what the village's changelog panel prints.
