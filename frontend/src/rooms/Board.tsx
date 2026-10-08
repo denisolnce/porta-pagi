@@ -1,39 +1,48 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, type Me } from "../api";
 import { useT } from "../i18n";
 import { Crest, Empty, When, canEdit } from "./shared";
-import { defaultAuthor } from "./Thread";
+import { defaultAuthor, PostAs } from "./Thread";
 
 // The message board half of the tavern. The calendar is the other half —
 // Hall.tsx stacks them, because a village opens one room, not two.
+//
+// The write box stays at the top: a post is what the room is for. A reply is
+// a form of its own under the post's replies, the shape a thread has
+// (Thread.tsx) — the two used to share one box, so a reply dragged the
+// villager back up to the top of the board and the box changed meaning
+// under the thumb. Both submit rows read "Post as <name>" (owner's ask
+// 2026-10-08).
 export function Board({ me, items, reload }: { me: Me; items: any[]; reload: () => void }) {
   const { t } = useT();
   const [body, setBody] = useState("");
   const [author, setAuthor] = useState(() => defaultAuthor(me));
   const [replyTo, setReplyTo] = useState<number | null>(null);
+  const [replyBody, setReplyBody] = useState("");
+  const board = useRef<HTMLDivElement>(null);
+  // The reply box appears under the post; focusing it brings it into view.
+  useEffect(() => {
+    if (replyTo != null) board.current?.querySelector<HTMLTextAreaElement>("form.reply textarea")?.focus();
+  }, [replyTo]);
 
-  const post = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!body.trim()) return;
+  const send = async (text: string, parent?: number) => {
+    if (!text.trim()) return false;
     try { localStorage.setItem("potok.author", author); } catch { /* ignore */ }
-    await api("/posts", { method: "POST", body: { body, author, parent_id: replyTo ?? undefined } });
-    setBody(""); setReplyTo(null); reload();
+    await api("/posts", { method: "POST", body: { body: text, author, parent_id: parent } });
+    reload();
+    return true;
   };
+  const post = async (e: React.FormEvent) => { e.preventDefault(); if (await send(body)) setBody(""); };
+  const reply = async (e: React.FormEvent) => { e.preventDefault(); if (await send(replyBody, replyTo!)) { setReplyBody(""); setReplyTo(null); } };
   const roots = items.filter((p) => !p.parent_id);
   const replies = (id: number) => items.filter((p) => p.parent_id === id).sort((a, b) => a.created_at.localeCompare(b.created_at));
 
   return (
-    <div className="parchment">
+    <div className="parchment" ref={board}>
       <h2>📜 {t("The board")} <span className="sub">{t("what must stay findable")}</span></h2>
       <form className="inline" onSubmit={post}>
-        <div className="row">
-          <label>{t("Your name (optional)")}<input value={author} onChange={(e) => setAuthor(e.target.value)} maxLength={40} /></label>
-        </div>
-        <label>{replyTo ? t("Reply") : t("Write to the village")}<textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder={t("What is on your mind")} maxLength={4000} /></label>
-        <div className="submit">
-          {replyTo && <button type="button" className="ghost" onClick={() => setReplyTo(null)}>✕</button>}
-          <button className="primary" type="submit">{replyTo ? t("Reply") : t("Post")}</button>
-        </div>
+        <label>{t("Write to the village")}<textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder={t("What is on your mind")} maxLength={4000} /></label>
+        <PostAs author={author} setAuthor={setAuthor} label={t("Post")} primary />
       </form>
       {roots.length === 0 && <Empty text={t("No posts yet. Be the first.")} />}
       {roots.map((p) => (
@@ -41,7 +50,7 @@ export function Board({ me, items, reload }: { me: Me; items: any[]; reload: () 
           <div className="head"><Crest crest={p.house_crest} color={p.house_color} /><span className="who">{p.house_name}{p.author && p.author !== p.house_name ? ` · ${p.author}` : ""}</span>{p.pinned ? <span className="tag alarm">📌 {t("Pinned")}</span> : null}<When iso={p.created_at} /></div>
           <div className="body">{p.body}</div>
           <div className="actions">
-            <button className="ghost" onClick={() => setReplyTo(p.id)}>↩ {t("Reply")}</button>
+            <button className="ghost" onClick={() => setReplyTo(replyTo === p.id ? null : p.id)}>↩ {t("Reply")}</button>
             {me.is_steward === 1 && <button className="ghost" onClick={() => api(`/posts/${p.id}`, { method: "PUT", body: { pinned: !p.pinned } }).then(reload)}>📌 {p.pinned ? t("Unpin") : t("Pin")}</button>}
             {canEdit(me, p) && <button className="ghost" onClick={() => confirm("?") && api(`/posts/${p.id}`, { method: "DELETE" }).then(reload)}>🗑 {t("Delete")}</button>}
           </div>
@@ -52,6 +61,12 @@ export function Board({ me, items, reload }: { me: Me; items: any[]; reload: () 
               {canEdit(me, r) && <div className="actions"><button className="ghost" onClick={() => confirm("?") && api(`/posts/${r.id}`, { method: "DELETE" }).then(reload)}>🗑 {t("Delete")}</button></div>}
             </div>
           ))}
+          {replyTo === p.id && (
+            <form className="inline reply" onSubmit={reply} style={{ marginLeft: "1.5rem" }}>
+              <label>{t("Reply")}<textarea value={replyBody} onChange={(e) => setReplyBody(e.target.value)} maxLength={4000} /></label>
+              <PostAs author={author} setAuthor={setAuthor} label={t("Reply")} onCancel={() => { setReplyTo(null); setReplyBody(""); }} />
+            </form>
+          )}
         </div>
       ))}
     </div>

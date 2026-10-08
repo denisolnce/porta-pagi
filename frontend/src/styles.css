@@ -240,6 +240,18 @@ button.w-arrow { min-width: 0; padding: 0; font-size: 1rem; line-height: 1; alig
 .wish-option a { color: var(--blue); }
 .comments { border-top: 1px dashed var(--parch3); margin-top: .5rem; padding-top: .5rem; }
 .comments .card.comment { background: #fdf7e6; border-left-color: var(--parch3); margin: .3rem 0; }
+/* A thread's write box is under the comments. Every submit row of a thing
+   written under a name reads "Post as <name>" (a thread, the board, a board
+   reply):
+   the caption sits on the field only, and the word and the button share
+   the field's baseline. The field keeps a name's width and may wrap under
+   the button on a narrow phone. */
+.comments form.inline { margin-bottom: 0; margin-top: .4rem; }
+form.inline .submit.post-as { justify-content: flex-start; align-items: flex-end; flex-wrap: wrap; }
+.post-as .as-word { padding-bottom: .35rem; color: var(--ink2); }
+.post-as label.as-name { margin-top: 0; flex: 1 1 9rem; max-width: 14rem; min-width: 7.5rem; font-size: .8rem; }
+/* A board post's reply box: under the replies, the thread's shape. */
+form.inline.reply { margin-bottom: .3rem; }
 a.plain { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--ink3); }
 a.plain:hover { color: var(--blue); }
 .tag.place { background: #e6dcc0; color: var(--wood2); font-size: .85rem; margin-right: .2rem; }

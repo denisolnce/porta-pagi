@@ -1,14 +1,5 @@
 [
   {
-    "id": "2026-10-08-session",
-    "on": "2026-10-08",
-    "texts": {
-      "en": {"title": "You stay signed in", "body": "On an iPhone without the portal on its home screen, Safari used to forget you after a quiet week. It no longer does."},
-      "sl": {"title": "Prijava ostane", "body": "Na iPhonu brez portala na domačem zaslonu je Safari po mirnem tednu odjavil hišo. Zdaj je ne odjavi več."},
-      "pt": {"title": "Continua ligado", "body": "Num iPhone sem o portal no ecrã inicial, o Safari esquecia-o ao fim de uma semana sossegada. Já não esquece."}
-    }
-  },
-  {
     "id": "2026-10-08-weather",
     "on": "2026-10-08",
     "texts": {

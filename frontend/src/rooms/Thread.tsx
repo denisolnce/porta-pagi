@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, type Me } from "../api";
 import { useT } from "../i18n";
 import { Crest, When } from "./shared";
@@ -6,6 +6,8 @@ import { Crest, When } from "./shared";
 // One comment thread, wherever a room wants one: an event, a wish, an away
 // notice, a number in the phone book. The board's own shape, one reply level. The name field starts filled
 // with the label this phone joined under, so most people never type it.
+// The box sits under the comments. The name sits to the right of Post,
+// so the row reads "Post as <name>", with "Name (optional)" over the field.
 //
 // The button that opens one is "💬 Comments" and carries the count only when
 // there is one to carry — the same in every room that has a thread.
@@ -15,7 +17,13 @@ export function Thread({ subject, id, me, onChanged }: { subject: "event" | "wis
   const [body, setBody] = useState("");
   const [replyTo, setReplyTo] = useState<number | null>(null);
   const [author, setAuthor] = useState(() => defaultAuthor(me));
+  const formRef = useRef<HTMLFormElement>(null);
   const load = () => api<any[]>(`/threads/${subject}/${id}`).then(setItems).catch(() => setItems([]));
+  // Reply used to open the box above the thread, in view. The box is under
+  // the comments now, so a reply focuses it and the browser brings it up.
+  useEffect(() => {
+    if (replyTo != null) formRef.current?.querySelector("textarea")?.focus();
+  }, [replyTo]);
   useEffect(() => { load(); }, [subject, id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const post = async (e: React.FormEvent) => {
@@ -44,13 +52,27 @@ export function Thread({ subject, id, me, onChanged }: { subject: "event" | "wis
 
   return (
     <div className="comments">
-      <form className="inline" onSubmit={post}>
-        <div className="row"><label>{t("Your name (optional)")}<input value={author} onChange={(e) => setAuthor(e.target.value)} maxLength={40} /></label></div>
-        <label>{replyTo ? t("Reply") : t("Comment")}<textarea value={body} onChange={(e) => setBody(e.target.value)} maxLength={2000} /></label>
-        <div className="submit">{replyTo && <button type="button" className="ghost" onClick={() => setReplyTo(null)}>✕</button>}<button className="lesser" type="submit">{replyTo ? t("Reply") : t("Post")}</button></div>
-      </form>
       {roots.length === 0 && <p className="small muted" style={{ fontStyle: "italic" }}>{t("No comments yet.")}</p>}
       {roots.map((c) => (<div key={c.id}>{one(c)}{replies(c.id).map((r) => one(r, true))}</div>))}
+      <form className="inline" onSubmit={post} ref={formRef}>
+        <label>{replyTo ? t("Reply") : t("Comment")}<textarea value={body} onChange={(e) => setBody(e.target.value)} maxLength={2000} /></label>
+        <PostAs author={author} setAuthor={setAuthor} label={replyTo ? t("Reply") : t("Post")} onCancel={replyTo ? () => setReplyTo(null) : undefined} />
+      </form>
+    </div>
+  );
+}
+
+// The submit row of anything a house writes under a name: "Post as <name>",
+// the one shape in a thread, on the board and under a board post's reply.
+// `primary` is the board's own post, the one action its form is for.
+export function PostAs({ author, setAuthor, label, primary, onCancel }: { author: string; setAuthor: (s: string) => void; label: string; primary?: boolean; onCancel?: () => void }) {
+  const { t } = useT();
+  return (
+    <div className="submit post-as">
+      {onCancel && <button type="button" className="ghost" onClick={onCancel}>✕</button>}
+      <button className={primary ? "primary" : "lesser"} type="submit">{label}</button>
+      <span className="as-word">{t("as")}</span>
+      <label className="as-name">{t("Name (optional)")}<input value={author} onChange={(e) => setAuthor(e.target.value)} maxLength={40} /></label>
     </div>
   );
 }

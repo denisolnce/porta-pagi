@@ -347,7 +347,13 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   A **birthday's** thread rings the house that wrote it down, like an event's
   caller — usually the person's own house, which is who a "parabéns" is for.
   The name field starts filled from the device label this phone joined under,
-  and stays optional.
+  and stays optional. **The write box sits under the comments, and its
+  submit row reads "Post as ‹name›"** (owner's ask 2026-10-08, `PostAs` in
+  `Thread.tsx`): the name to the right of the button, "Name (optional)" over
+  the field, one row on a phone. The board keeps its own box at the top —
+  a post is what the room is for — and **a reply on the board is a form of
+  its own under the post's replies**, the thread's shape, never the top box
+  changing meaning under the thumb.
 - **Wish options are findings, not votes.** Anyone may add "this model, this
   price, this link" to a wish. Never count, rank or mark a winner.
 - **A past event leaves the list, never the calendar.** The list under the month
