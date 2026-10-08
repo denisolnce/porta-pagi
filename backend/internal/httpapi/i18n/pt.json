@@ -10,7 +10,6 @@
   "calendar": "calendário",
   "who is away": "quem está fora",
   "houses, with land and without": "casas, com terra e sem",
-  "who lives here": "quem vive aqui",
   "Nothing left this month.": "Não há mais nada este mês.",
   "Next": "A seguir",
   "Nearest": "Mais próximo",
@@ -222,7 +221,6 @@
   "Watch": "Atalaia",
   "Shed": "Arrecad.",
   "Hall": "Taberna",
-  "calendar, work bees and the board": "calendário, dias de trabalho e o quadro",
   "The village calendar": "O calendário da aldeia",
   "The board": "O quadro",
   "Category": "Categoria",
@@ -612,5 +610,6 @@
   "A date for the village to know, not a party: every house sees the date and the year, and the hour if you give it. Write someone's down only with their yes. It rings every house on the morning of the day.": "Uma data para a aldeia saber, não uma festa: todas as casas veem o dia e o ano, e a hora se a indicar. Escreva a de outra pessoa só com o sim dela. Na manhã do dia toca para todas as casas.",
   "The full moon nearest the March equinox rises almost due east and sets almost due west.": "A lua cheia mais perto do equinócio de março nasce quase a leste e põe-se quase a oeste.",
   "Spring's full moon: from now until summer each full moon rides a little lower than the last.": "Lua cheia de primavera: daqui até ao verão cada lua cheia passa um pouco mais baixa do que a anterior.",
-  "Easter this year:": "Páscoa este ano:"
+  "Easter this year:": "Páscoa este ano:",
+  "calendar, work and the board": "calendário, trabalho e o quadro"
 }

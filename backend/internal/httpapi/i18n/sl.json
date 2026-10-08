@@ -10,7 +10,6 @@
   "calendar": "koledar",
   "who is away": "kdo je odsoten",
   "houses, with land and without": "hiše, z zemljo in brez",
-  "who lives here": "kdo živi tu",
   "Nothing left this month.": "Ta mesec ni več ničesar.",
   "Next": "Naslednje",
   "Nearest": "Najbližje",
@@ -222,7 +221,6 @@
   "Watch": "Straža",
   "Shed": "Lopa",
   "Hall": "Gostilna",
-  "calendar, work bees and the board": "koledar, delovne akcije in oglasna deska",
   "The village calendar": "Vaški koledar",
   "The board": "Oglasna deska",
   "Category": "Vrsta",
@@ -562,7 +560,7 @@
   "every date of it": "vsi datumi",
   "Year": "Leto",
   "Birthdays": "Rojstni dnevi",
-  "celestial": "nebesno",
+  "celestial": "nebo",
   "New moon": "Mlaj",
   "Full moon": "Polna luna",
   "March equinox": "Marčevsko enakonočje",
@@ -612,5 +610,6 @@
   "A date for the village to know, not a party: every house sees the date and the year, and the hour if you give it. Write someone's down only with their yes. It rings every house on the morning of the day.": "Datum, ki naj ga vas pozna, ne zabava: vsaka hiša vidi datum in leto, in uro, če jo vpišeš. Tujega vpiši le z njegovim privoljenjem. Na dan zjutraj zazvoni vsem hišam.",
   "The full moon nearest the March equinox rises almost due east and sets almost due west.": "Polna luna ob marčevskem enakonočju vzide skoraj točno na vzhodu in zaide skoraj točno na zahodu.",
   "Spring's full moon: from now until summer each full moon rides a little lower than the last.": "Pomladna polna luna: od zdaj do poletja je vsaka polna luna malo nižje od prejšnje.",
-  "Easter this year:": "Velika noč letos:"
+  "Easter this year:": "Velika noč letos:",
+  "calendar, work and the board": "koledar, delo in oglasna deska"
 }

@@ -34,14 +34,14 @@ export type Session = { me: Me; houses: House[]; refresh: () => Promise<void>; l
 // behind a switch needs here.
 export type Room = { path: string; icon: string; name: string; short: string; sub: string; nav: boolean; feature?: string };
 export const ROOMS: Room[] = [
-  { path: "/tavern", icon: "🍺", name: "Tavern", short: "Hall", sub: "calendar, work bees and the board", nav: true },
-  { path: "/projects", icon: "📋", name: "Projects", short: "Projects", sub: "long jobs, split into tasks", nav: true },
+  { path: "/tavern", icon: "🍺", name: "Tavern", short: "Hall", sub: "calendar, work and the board", nav: true },
+  { path: "/projects", icon: "📋", name: "Projects", short: "Projects", sub: "", nav: true },
   { path: "/market", icon: "🧺", name: "Market", short: "Market", sub: "needs, give-aways, runs, orders", nav: true },
-  { path: "/shed", icon: "🛠", name: "Tool shed", short: "Shed", sub: "what the village has", nav: true },
+  { path: "/shed", icon: "🛠", name: "Tool shed", short: "Shed", sub: "", nav: true },
   { path: "/watch", icon: "🕯️", name: "Watchtower", short: "Watch", sub: "who is away", nav: false },
-  { path: "/camp", icon: "🏕️", name: "Campground", short: "Camp", sub: "who noticed, who has the money", nav: false, feature: "camp" },
-  { path: "/houses", icon: "🏘️", name: "Houses", short: "Houses", sub: "who lives here", nav: false },
-  { path: "/contacts", icon: "📇", name: "Contacts", short: "Contacts", sub: "who to call", nav: false },
+  { path: "/camp", icon: "🏕️", name: "Campground", short: "Camp", sub: "", nav: false, feature: "camp" },
+  { path: "/houses", icon: "🏘️", name: "Houses", short: "Houses", sub: "", nav: false },
+  { path: "/contacts", icon: "📇", name: "Contacts", short: "Contacts", sub: "", nav: false },
   { path: "/roster", icon: "🧹", name: "Duty roster", short: "Roster", sub: "chores and whose turn it was", nav: false, feature: "roster" },
   { path: "/dues", icon: "🪙", name: "Dues", short: "Dues", sub: "who paid what the village asked", nav: false, feature: "dues" },
 ];
@@ -233,7 +233,7 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
           <Link key={r.path} to={r.path} className="building">
             <span className="icon">{r.icon}</span>
             <span className="sign">{t(r.name)}</span>
-            <span className="small">{t(r.sub)}</span>
+            {r.sub && <span className="small">{t(r.sub)}</span>}
             {badges[r.path] && <span className="badge">{badges[r.path]}</span>}
           </Link>
         ))}
