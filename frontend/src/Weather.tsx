@@ -24,6 +24,11 @@ const emoji = (icon: string) => GLYPH[icon] || "🌡️";
 // end to end, and no square slides under the thumb while the eye is on it.
 const PAGE = 5;
 
+// Rain in whole millimetres: "💧 21.6 mm" and even "💧 0.3 mm" are wider than
+// a square on a 375 px phone, and a forecast's tenth of a millimetre tells a
+// garden nothing. A trace under one millimetre reads "<1", because it is not 0.
+const mm = (v: string) => { const n = parseFloat(v); return isNaN(n) ? v : n > 0 && n < 1 ? "<1" : String(Math.round(n)); };
+
 export function Weather() {
   const { t, lang } = useT();
   const [w, setW] = useState<W | null>(null);
@@ -67,7 +72,7 @@ export function Weather() {
             <div className="small">{dayName(d.date, start + j)}</div>
             <div className="w-icon-sm">{emoji(d.icon)}</div>
             <div className="w-range"><strong>{d.max}°</strong> <span className="muted">{d.min}°</span></div>
-            {d.rain && <div className="small w-rain">💧 {d.rain} mm</div>}
+            {d.rain && <div className="small w-rain">💧 {mm(d.rain)}<span className="unit"> mm</span></div>}
           </>);
           // A day the provider has a page for opens it beside the app, so an
           // installed portal does not navigate away, and without a referrer,

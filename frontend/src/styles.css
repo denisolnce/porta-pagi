@@ -203,6 +203,8 @@ a.w-day:active { transform: translateY(1px); box-shadow: none; }
 .w-range { font-size: .95rem; }
 /* Five framed days must fit one phone row, so the rain line never wraps. */
 .w-rain { color: var(--blue); font-size: .72rem; white-space: nowrap; }
+/* Under 360 px a square is 38 px wide: the drop and the number say it, the unit goes. */
+@media (max-width: 359px) { .w-rain .unit { display: none; } }
 .w-src { margin: .5rem 0 0; font-style: italic; }
 /* The dropdown is a sibling of the label, not its child, so it aligns to the
    bottom of the field rather than to the caption above it. The select is capped
