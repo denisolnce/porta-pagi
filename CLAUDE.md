@@ -200,7 +200,30 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   (`weather.go`, cached 30 min), never framed. Both adapters emit one shape
   with a neutral icon key, so the page knows no provider. Both licences require
   naming the source, so the panel shows *Vir: ARSO* or *Vir: Open-Meteo.com*;
-  the fetch sends a User-Agent with `PUBLIC_URL` as the contact. **The panel is a forecast for a town some
+  the fetch sends a User-Agent with `PUBLIC_URL` as the contact. **The panel
+  pages through up to fifteen days, five on screen** (owner's ask
+  2026-10-08): each provider gives what it has and nothing is padded —
+  Open-Meteo 15 (its API stops at 16), ARSO 10, the ten its own page shows
+  (its answer carries an eleventh, a stub whose page is empty). ‹ › page by
+  five and are absent at their end. **A day links to the provider's page for
+  that day only where the provider has one**: ARSO does
+  (`vreme.arso.gov.si/napoved/<place>/graf/<n>`, n counted from today, so
+  neither the cache nor the browser keeps a copy past midnight), and the
+  link opens beside the app. **That address is not a published API**: it is
+  a route of ARSO's own page, read out of its script on 2026-10-08 and
+  checked for Kočevje and Novo mesto (`/graf/0`–`/graf/9` open the right
+  day, `/graf/10` an empty page). When ARSO changes it, every day opens the
+  wrong page and nothing here notices; to take the links off, delete the
+  `day.Link` line in `fromARSO` and the days draw unclickable. The cost,
+  paid knowingly: when ARSO is down after midnight the backend serves
+  yesterday's copy rather than nothing, and until ARSO answers its days and
+  links are one day off. Open-Meteo is an API with no page per place or
+  day, so its days stay unclickable; its docs page draws a chart for any
+  coordinates, and that is a page for developers, not a villager's forecast.
+  A link is the villager's own tap: the provider sees that browser then and
+  only then, and `noreferrer` on the day links and the attribution link
+  keeps the portal's address out of the request.
+  **The panel is a forecast for a town some
   kilometres away, not a measurement at the village** — the page says so, and
   it must never become a frost source for the homestead work. An iframe would hand
   the agency every villager's address on a logged-in page. Any future embed
@@ -726,9 +749,18 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   that column's own shape — `starts_at >= datetime('now')` compares `'T'` with
   `' '` and quietly answers wrong.
 - **The button frame is the house style, not only the button.** A weather
-  forecast day wears `.lesser`'s border, fill and thin shadow (`.w-day`) and is
-  not clickable: no hover, no press. Reuse the frame where a small box needs to
-  belong; never reuse the affordance.
+  forecast day wears `.lesser`'s border, fill and thin shadow (`.w-day`).
+  Reuse the frame where a small box needs to belong; the affordance goes
+  only on what a tap opens. A forecast day is both cases: where the provider
+  has a page for that day (ARSO) it is a link (owner's ask 2026-10-08) and
+  takes the affordance — the date dotted underneath, which is the one cue a
+  phone shows before the tap, as the house name in the top bar has, and the
+  pointer, the hover and the press for a mouse. Where it has none
+  (Open-Meteo) it stays a box with none of these. The cost, paid knowingly:
+  on a phone the frame itself looks like a button, so an Open-Meteo day
+  reads as pressable until the thumb learns it is not, and only the missing
+  dotted date tells the two apart. The answer label beside the crests
+  (`.signers`) is a frame without a click, and stays so.
 - **Buttons come in three weights.** `primary` for the one action a card or
   form is for, plain for the rest, `lesser` for inner additions (add a task, add
   a note) — a real button one size down, never a ghost link. `ghost` is for

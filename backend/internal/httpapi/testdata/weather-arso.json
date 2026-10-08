@@ -1,0 +1,242 @@
+{
+ "observation": {
+  "type": "FeatureCollection",
+  "features": [
+   {
+    "type": "Feature",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.8496,
+      45.6458
+     ]
+    },
+    "properties": {
+     "title": "Kočevje",
+     "days": [
+      {
+       "date": "2026-10-08",
+       "timeline": [
+        {
+         "valid": "2026-10-08T09:00:00+00:00",
+         "t": "18",
+         "clouds_icon_wwsyn_icon": "prevCloudy_day",
+         "clouds_shortText_wwsyn_shortText": "pretežno oblačno",
+         "clouds_shortText": "pretežno oblačno",
+         "ff_shortText": "šibek J"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "forecast3h": {
+  "type": "FeatureCollection",
+  "features": [
+   {
+    "type": "Feature",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.8496,
+      45.6458
+     ]
+    },
+    "properties": {
+     "title": "Kočevje",
+     "days": [
+      {
+       "date": "2026-10-08",
+       "timeline": [
+        {
+         "valid": "2026-10-08T12:00:00+00:00",
+         "t": "16",
+         "clouds_icon_wwsyn_icon": "overcast_modRA_day",
+         "clouds_shortText_wwsyn_shortText": "dež",
+         "clouds_shortText": "oblačno",
+         "ff_shortText": "šibek J"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "forecast24h": {
+  "type": "FeatureCollection",
+  "features": [
+   {
+    "type": "Feature",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.8496,
+      45.6458
+     ]
+    },
+    "properties": {
+     "title": "Kočevje",
+     "days": [
+      {
+       "date": "2026-10-08",
+       "timeline": [
+        {
+         "valid": "2026-10-08T12:00:00+00:00",
+         "clouds_icon_wwsyn_icon": "prevCloudy_modTSRA_day",
+         "clouds_shortText_wwsyn_shortText": "možnost neviht",
+         "clouds_shortText": "pretežno oblačno",
+         "txsyn": "18",
+         "tnsyn": "12",
+         "tp_24h_acc": "21.4"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-09",
+       "timeline": [
+        {
+         "valid": "2026-10-09T12:00:00+00:00",
+         "clouds_icon_wwsyn_icon": "overcast_modTSRA_day",
+         "clouds_shortText_wwsyn_shortText": "možnost neviht",
+         "clouds_shortText": "oblačno",
+         "txsyn": "12",
+         "tnsyn": "9",
+         "tp_24h_acc": "14.3"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-10",
+       "timeline": [
+        {
+         "valid": "2026-10-10T12:00:00+00:00",
+         "clouds_icon_wwsyn_icon": "overcast_modRA_day",
+         "clouds_shortText_wwsyn_shortText": "dež",
+         "clouds_shortText": "oblačno",
+         "txsyn": "12",
+         "tnsyn": "8",
+         "tp_24h_acc": "14.9"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-11",
+       "timeline": [
+        {
+         "valid": "2026-10-11T12:00:00+00:00",
+         "clouds_icon_wwsyn_icon": "prevCloudy_day",
+         "clouds_shortText_wwsyn_shortText": "pretežno oblačno",
+         "clouds_shortText": "pretežno oblačno",
+         "txsyn": "16",
+         "tnsyn": "6",
+         "tp_24h_acc": "0.3"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-12",
+       "timeline": [
+        {
+         "valid": "2026-10-12T12:00:00+00:00",
+         "clouds_icon_wwsyn_icon": "prevCloudy_day",
+         "clouds_shortText_wwsyn_shortText": "pretežno oblačno",
+         "clouds_shortText": "pretežno oblačno",
+         "txsyn": "14",
+         "tnsyn": "5",
+         "tp_24h_acc": "0.1"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-13",
+       "timeline": [
+        {
+         "valid": "2026-10-13T12:00:00+00:00",
+         "clouds_icon_wwsyn_icon": "clear_day",
+         "clouds_shortText_wwsyn_shortText": "jasno",
+         "clouds_shortText": "jasno",
+         "txsyn": "12",
+         "tnsyn": "4",
+         "tp_24h_acc": "0"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-14",
+       "timeline": [
+        {
+         "valid": "2026-10-14T12:00:00+00:00",
+         "clouds_icon_wwsyn_icon": "partCloudy_day",
+         "clouds_shortText_wwsyn_shortText": "delno oblačno",
+         "clouds_shortText": "delno oblačno",
+         "txsyn": "12",
+         "tnsyn": "2",
+         "tp_24h_acc": "0"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-15",
+       "timeline": [
+        {
+         "valid": "2026-10-15T12:00:00+00:00",
+         "clouds_icon_wwsyn_icon": "clear_day",
+         "clouds_shortText_wwsyn_shortText": "jasno",
+         "clouds_shortText": "jasno",
+         "txsyn": "15",
+         "tnsyn": "1",
+         "tp_24h_acc": "0"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-16",
+       "timeline": [
+        {
+         "valid": "2026-10-16T12:00:00+00:00",
+         "clouds_icon_wwsyn_icon": "prevCloudy_day",
+         "clouds_shortText_wwsyn_shortText": "pretežno oblačno",
+         "clouds_shortText": "pretežno oblačno",
+         "txsyn": "19",
+         "tnsyn": "3",
+         "tp_24h_acc": "0"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-17",
+       "timeline": [
+        {
+         "valid": "2026-10-17T12:00:00+00:00",
+         "clouds_icon_wwsyn_icon": "overcast_modRA_day",
+         "clouds_shortText_wwsyn_shortText": "dež",
+         "clouds_shortText": "oblačno",
+         "txsyn": "8",
+         "tnsyn": "6",
+         "tp_24h_acc": "39.5"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-18",
+       "timeline": [
+        {
+         "valid": "2026-10-18T12:00:00+00:00",
+         "clouds_icon_wwsyn_icon": "overcast_day",
+         "clouds_shortText_wwsyn_shortText": "oblačno",
+         "clouds_shortText": "oblačno",
+         "txsyn": "7",
+         "tnsyn": "6",
+         "tp_24h_acc": "0.2"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

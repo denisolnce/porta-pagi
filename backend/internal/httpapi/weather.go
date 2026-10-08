@@ -26,6 +26,15 @@ import (
 // Both adapters emit the same shape. The icon is one of the keys below, which
 // the page turns into a glyph; the text is a dictionary key for Open-Meteo
 // (the page translates it) and ARSO's own Slovenian words for ARSO.
+//
+// Days: each provider gives what it has, up to maxWeatherDays, never padded —
+// Open-Meteo 15 (its API stops at 16), ARSO 10 (what its own page shows). A
+// day carries a link only where the provider has a browser page for that day:
+// ARSO has one, Open-Meteo is an API with no page per place or per day, so
+// its days carry no link and the page draws them unclickable.
+
+// maxWeatherDays: the owner's ask (2026-10-08), fifteen days to page through.
+const maxWeatherDays = 15
 
 // Icon keys. A provider maps its own names onto these; the page knows only these.
 const (
@@ -49,6 +58,7 @@ type weatherDay struct {
 	Min  string `json:"min"`
 	Max  string `json:"max"`
 	Rain string `json:"rain"`
+	Link string `json:"link,omitempty"` // the provider's page for this day; absent where it has none
 }
 
 type weatherOut struct {
@@ -78,15 +88,18 @@ func (s *Server) weather(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 404, "no weather configured")
 		return
 	}
+	now := s.now()
 	wcache.mu.Lock()
-	fresh := time.Since(wcache.at) < 30*time.Minute && wcache.body != nil
+	// A copy from before midnight is not fresh after it, however young: its
+	// first day is yesterday, and ARSO's day links count from today.
+	fresh := wcache.body != nil && now.Sub(wcache.at) < 30*time.Minute && now.Format("2006-01-02") == wcache.at.Format("2006-01-02")
 	body := wcache.body
 	wcache.mu.Unlock()
 	if !fresh {
 		out, err := s.fetchWeather(r.Context())
 		if err != nil {
 			if body != nil { // serve the stale copy rather than nothing
-				writeRaw(w, body)
+				writeRaw(w, body, now)
 				return
 			}
 			writeErr(w, 502, "weather unavailable")
@@ -94,15 +107,19 @@ func (s *Server) weather(w http.ResponseWriter, r *http.Request) {
 		}
 		body, _ = json.Marshal(out)
 		wcache.mu.Lock()
-		wcache.at, wcache.body = time.Now(), body
+		wcache.at, wcache.body = now, body
 		wcache.mu.Unlock()
 	}
-	writeRaw(w, body)
+	writeRaw(w, body, now)
 }
 
-func writeRaw(w http.ResponseWriter, body []byte) {
+// writeRaw lets the browser keep the copy fifteen minutes, but not past
+// midnight, for the same reason the cache above does not.
+func writeRaw(w http.ResponseWriter, body []byte, now time.Time) {
+	y, m, d := now.Date()
+	age := min(900, int(time.Date(y, m, d+1, 0, 0, 0, 0, now.Location()).Sub(now).Seconds()))
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "private, max-age=900")
+	w.Header().Set("Cache-Control", "private, max-age="+strconv.Itoa(age))
 	w.Write(body)
 }
 
@@ -111,9 +128,9 @@ func writeRaw(w http.ResponseWriter, body []byte) {
 // logs, and an anonymous poller is the thing a service blocks first.
 func (s *Server) fetchWeather(ctx context.Context) (*weatherOut, error) {
 	if s.cfg.WeatherProvider == "arso" {
-		return fetchARSO(ctx, s.cfg.WeatherLocation, s.cfg.PublicURL)
+		return fetchARSO(ctx, s.cfg.WeatherLocation, s.cfg.PublicURL, s.now())
 	}
-	return fetchOpenMeteo(ctx, s.cfg.WeatherCoords, s.cfg.WeatherLocation, s.cfg.PublicURL)
+	return fetchOpenMeteo(ctx, s.cfg.WeatherCoords, s.cfg.WeatherLocation, s.cfg.PublicURL, s.now())
 }
 
 func getJSON(ctx context.Context, u, contact string, into any) error {
@@ -140,7 +157,23 @@ func getJSON(ctx context.Context, u, contact string, into any) error {
 // https://open-meteo.com — a forecast for any lat,lon, WMO weather codes.
 // Attribution is a licence term (CC BY 4.0): the panel names Open-Meteo.com.
 
-func fetchOpenMeteo(ctx context.Context, coords, place, contact string) (*weatherOut, error) {
+type openMeteoDoc struct {
+	Current struct {
+		Temp  float64 `json:"temperature_2m"`
+		Code  int     `json:"weather_code"`
+		Wind  float64 `json:"wind_speed_10m"`
+		IsDay int     `json:"is_day"`
+	} `json:"current"`
+	Daily struct {
+		Time []string  `json:"time"`
+		Code []int     `json:"weather_code"`
+		Max  []float64 `json:"temperature_2m_max"`
+		Min  []float64 `json:"temperature_2m_min"`
+		Rain []float64 `json:"precipitation_sum"`
+	} `json:"daily"`
+}
+
+func fetchOpenMeteo(ctx context.Context, coords, place, contact string, now time.Time) (*weatherOut, error) {
 	lat, lon, ok := strings.Cut(strings.TrimSpace(coords), ",")
 	if !ok {
 		return nil, errNoWeather
@@ -149,36 +182,28 @@ func fetchOpenMeteo(ctx context.Context, coords, place, contact string) (*weathe
 		"latitude": {strings.TrimSpace(lat)}, "longitude": {strings.TrimSpace(lon)},
 		"current":       {"temperature_2m,weather_code,wind_speed_10m,is_day"},
 		"daily":         {"weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum"},
-		"timezone":      {"auto"},
-		"forecast_days": {"5"},
+		"timezone":      {"auto"}, // so the first day is the place's own today
+		"forecast_days": {strconv.Itoa(maxWeatherDays)},
 	}
-	var doc struct {
-		Current struct {
-			Temp  float64 `json:"temperature_2m"`
-			Code  int     `json:"weather_code"`
-			Wind  float64 `json:"wind_speed_10m"`
-			IsDay int     `json:"is_day"`
-		} `json:"current"`
-		Daily struct {
-			Time []string  `json:"time"`
-			Code []int     `json:"weather_code"`
-			Max  []float64 `json:"temperature_2m_max"`
-			Min  []float64 `json:"temperature_2m_min"`
-			Rain []float64 `json:"precipitation_sum"`
-		} `json:"daily"`
-	}
+	var doc openMeteoDoc
 	if err := getJSON(ctx, "https://api.open-meteo.com/v1/forecast?"+q.Encode(), contact, &doc); err != nil {
 		return nil, err
 	}
+	return fromOpenMeteo(&doc, coords, place, now)
+}
+
+// fromOpenMeteo trims the answer into the panel's shape. No day carries a
+// link: Open-Meteo has no page to send a villager to.
+func fromOpenMeteo(doc *openMeteoDoc, coords, place string, now time.Time) (*weatherOut, error) {
 	if place == "" {
 		place = strings.TrimSpace(coords)
 	}
-	out := &weatherOut{Fetched: time.Now().UTC().Format(time.RFC3339), Source: "Open-Meteo.com", Place: place}
+	out := &weatherOut{Fetched: now.UTC().Format(time.RFC3339), Source: "Open-Meteo.com", Place: place}
 	out.NowIcon, out.NowText = wmo(doc.Current.Code, doc.Current.IsDay == 1)
 	out.Now = fmt.Sprintf("%.0f", doc.Current.Temp)
 	out.Wind = fmt.Sprintf("%.0f km/h", doc.Current.Wind)
 	for i, date := range doc.Daily.Time {
-		if i >= len(doc.Daily.Code) || i >= len(doc.Daily.Max) || i >= len(doc.Daily.Min) || len(out.Days) >= 5 {
+		if i >= len(doc.Daily.Code) || i >= len(doc.Daily.Max) || i >= len(doc.Daily.Min) || len(out.Days) >= maxWeatherDays {
 			break
 		}
 		day := weatherDay{Date: date, Min: fmt.Sprintf("%.0f", doc.Daily.Min[i]), Max: fmt.Sprintf("%.0f", doc.Daily.Max[i])}
@@ -229,6 +254,18 @@ func wmo(code int, day bool) (icon, text string) {
 //
 // https://vreme.arso.gov.si — public data, attribution shown in the UI. The
 // texts are ARSO's own Slovenian words and go to the page as they are.
+//
+// forecast24h carries eleven days, today and ten more, but ARSO's own page
+// shows ten: it drops the days before today (the answer can still start
+// with yesterday just after midnight) and keeps the first ten, because the
+// eleventh is a stub — the 6-hour forecast ends at its midnight. That page
+// has an address per day, /napoved/<place>/graf/<n>, n counted from today in
+// that same list of ten; /graf/10 draws an empty page. So the panel takes
+// the same ten days, and day n links to /graf/n. The address is a route of
+// that page's script, not a published API (CLAUDE.md § No third party in
+// the page says what was checked); the day.Link line is the one to cut.
+
+const arsoDays = 10
 
 type arsoFeatureSet struct {
 	Features []struct {
@@ -242,16 +279,24 @@ type arsoFeatureSet struct {
 	} `json:"features"`
 }
 
-func fetchARSO(ctx context.Context, loc, contact string) (*weatherOut, error) {
-	var doc struct {
-		Forecast3h  arsoFeatureSet `json:"forecast3h"`
-		Forecast24h arsoFeatureSet `json:"forecast24h"`
-		Observation arsoFeatureSet `json:"observation"`
-	}
+type arsoDoc struct {
+	Forecast3h  arsoFeatureSet `json:"forecast3h"`
+	Forecast24h arsoFeatureSet `json:"forecast24h"`
+	Observation arsoFeatureSet `json:"observation"`
+}
+
+func fetchARSO(ctx context.Context, loc, contact string, now time.Time) (*weatherOut, error) {
+	var doc arsoDoc
 	if err := getJSON(ctx, "https://vreme.arso.gov.si/api/1.0/location/?location="+url.QueryEscape(loc), contact, &doc); err != nil {
 		return nil, err
 	}
-	out := &weatherOut{Fetched: time.Now().UTC().Format(time.RFC3339), Source: "ARSO"}
+	return fromARSO(&doc, now)
+}
+
+// fromARSO trims the answer into the panel's shape. now is the village's
+// clock, and its date is today.
+func fromARSO(doc *arsoDoc, now time.Time) (*weatherOut, error) {
+	out := &weatherOut{Fetched: now.UTC().Format(time.RFC3339), Source: "ARSO"}
 	first := func(fs arsoFeatureSet) map[string]string {
 		if len(fs.Features) > 0 && len(fs.Features[0].Properties.Days) > 0 && len(fs.Features[0].Properties.Days[0].Timeline) > 0 {
 			return fs.Features[0].Properties.Days[0].Timeline[0]
@@ -262,20 +307,25 @@ func fetchARSO(ctx context.Context, loc, contact string) (*weatherOut, error) {
 		out.Place = doc.Forecast3h.Features[0].Properties.Title
 	}
 	// Now: the observation if there is one, else the nearest 3-hour step.
-	now := first(doc.Observation)
-	if now == nil || now["t"] == "" {
-		now = first(doc.Forecast3h)
+	cur := first(doc.Observation)
+	if cur == nil || cur["t"] == "" {
+		cur = first(doc.Forecast3h)
 	}
-	if now != nil {
-		out.Now, out.NowIcon, out.NowText = now["t"], arsoIcon(now["clouds_icon_wwsyn_icon"]), now["clouds_shortText_wwsyn_shortText"]
+	if cur != nil {
+		out.Now, out.NowIcon, out.NowText = cur["t"], arsoIcon(cur["clouds_icon_wwsyn_icon"]), cur["clouds_shortText_wwsyn_shortText"]
 		if out.NowText == "" {
-			out.NowText = now["clouds_shortText"]
+			out.NowText = cur["clouds_shortText"]
 		}
-		out.Wind = now["ff_shortText"]
+		out.Wind = cur["ff_shortText"]
 	}
 	if len(doc.Forecast24h.Features) > 0 {
-		for _, d := range doc.Forecast24h.Features[0].Properties.Days {
-			if len(d.Timeline) == 0 || len(out.Days) >= 5 {
+		p := doc.Forecast24h.Features[0].Properties
+		today := now.Format("2006-01-02")
+		for _, d := range p.Days {
+			if d.Date < today { // ISO dates compare as strings
+				continue
+			}
+			if len(d.Timeline) == 0 || len(out.Days) >= min(arsoDays, maxWeatherDays) {
 				break
 			}
 			tl := d.Timeline[0]
@@ -287,6 +337,9 @@ func fetchARSO(ctx context.Context, loc, contact string) (*weatherOut, error) {
 			// Millimetres, but only when it is worth saying.
 			if v, err := strconv.ParseFloat(strings.TrimSpace(day.Rain), 64); err != nil || v < 0.1 {
 				day.Rain = ""
+			}
+			if p.Title != "" {
+				day.Link = "https://vreme.arso.gov.si/napoved/" + url.PathEscape(p.Title) + "/graf/" + strconv.Itoa(len(out.Days))
 			}
 			out.Days = append(out.Days, day)
 		}
