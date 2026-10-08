@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, type House, type Me } from "../api";
 import { localeOf, useT } from "../i18n";
-import { ahead as aheadOf, instances, isOver, useList, When } from "./shared";
+import { ahead as aheadOf, instances, isOver, landsOn, useList, When } from "./shared";
+import { LinkLine, useLanding } from "../links";
 import { EventCard, ICON, REPEATS } from "./EventCard";
 import { SkyCard, skyIcon } from "./Almanac";
 import { useFeature } from "../features";
@@ -20,7 +21,7 @@ const blank = { title: "", kind: "event", starts_at: "", ends_at: "", place: "",
 // fetched, and no mark or card of it is drawn.
 export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
   const { t, lang } = useT();
-  const { items, reload } = useList("/events");
+  const { items, loaded, reload } = useList("/events");
   const sky = useList(useFeature("celestial") ? "/almanac" : null);
   const [f, setF] = useState(blank);
   const birthday = f.kind === "birthday";
@@ -43,6 +44,22 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
   const [cursor, setCursor] = useState(() => new Date());
   const [day, setDay] = useState<string | null>(null);
   const locale = localeOf(lang);
+
+  // A link to one event or one row of the sky (links.tsx): the grid pages to
+  // its month and picks its day, and its card opens its thread. A series
+  // opens on the day the link names, else on its next day.
+  const [landed, setLanded] = useState("");
+  const land = (d: string, entry: string) => { setCursor(new Date(d + "T00:00")); setDay(d); setLanded(entry); setTimeout(() => setLanded(""), 2000); };
+  const eventGone = useLanding("event", items, loaded, (ev) => {
+    const named = params.get("day");
+    let d = ev.starts_at.slice(0, 10);
+    if (ev.recur) {
+      const today = iso(new Date());
+      d = named && landsOn(ev.starts_at, ev.recur, named) ? named : instances([ev], today, iso(new Date(Date.now() + 400 * 864e5)))[0]?.occurs_on || d;
+    }
+    land(d, "event-" + ev.id);
+  });
+  const skyGone = useLanding("almanac", sky.items, sky.loaded, (row) => land(row.starts_at.slice(0, 10), "almanac-" + row.id), "almanac");
 
   // The form opens already filled: the picked day, else today when the shown
   // month is this one, else the 1st of the shown month — 09:00 to 17:00. A
@@ -164,6 +181,7 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
       <h2>🔔 {t("The village calendar")} <span className="sub">{t("calendar and work bees")}</span>
         <button style={{ marginLeft: "auto" }} onClick={openForm}>+ {t("Add an event")}</button>
       </h2>
+      <LinkLine note={eventGone || skyGone ? "gone" : null} />
 
       {open && (
         <form className="inline" onSubmit={save}>
@@ -246,8 +264,8 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
         </p>
       )}
       {shown.map((ev) => ev.sky
-        ? <SkyCard key={"sky" + ev.id + "-" + (day || "")} row={ev} me={me} reload={sky.reload} />
-        : <EventCard key={ev.id + "-" + (ev.occurs_on || "") + "-" + (day || "")} ev={ev} me={me} reload={reload} />)}
+        ? <SkyCard key={"sky" + ev.id + "-" + (day || "")} row={ev} me={me} reload={sky.reload} landed={landed === "almanac-" + ev.id} />
+        : <EventCard key={ev.id + "-" + (ev.occurs_on || "") + "-" + (day || "")} ev={ev} me={me} reload={reload} landed={landed === "event-" + ev.id} />)}
     </div>
   );
 }

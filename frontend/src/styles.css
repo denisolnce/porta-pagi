@@ -286,6 +286,13 @@ details.parchment[open] > summary { border-bottom: 2px solid var(--parch3); padd
 /* A finished thing fades: a closed task, a done project, a handed camp row, an
    event that is over. One value, so the rooms agree with each other. */
 .card.faded { opacity: .7; }
+/* A link to one entry landed here (links.tsx): the frame says "this one" for
+   a moment, on a phone where the scroll alone is not obvious. A link in a
+   post or a comment breaks anywhere, or a long address pans the page. */
+[data-entry] { transition: box-shadow .4s; scroll-margin-top: 4.5rem; } /* clear of the sticky top bar */
+[data-entry].landed { box-shadow: 0 0 0 3px var(--brass); }
+.link-note { font-style: italic; }
+.card .body a { overflow-wrap: anywhere; }
 /* Wraps because the row carries a name, its parcels and up to three steward
    buttons: on a phone that is wider than the panel, and the last button was
    landing outside the parchment. */

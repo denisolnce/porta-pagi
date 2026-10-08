@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api, ApiError, type Me } from "../api";
 import { langName, localeOf, useT } from "../i18n";
 import { Crest, Empty, parse, useList } from "./shared";
+import { LinkLine, Share, useLanding } from "../links";
 
 // The Codex: the village's values and agreements, as the council adopted them
 // and as the houses have amended them since. Sections are rows in the
@@ -27,7 +28,10 @@ const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI"
 
 export function Codex({ me }: { me: Me }) {
   const { t, lang, languages } = useT();
-  const { items, reload } = useList<Section>("/codex");
+  const { items, loaded, reload } = useList<Section>("/codex");
+  // A link to one section (links.tsx). A section keeps no creation day, so
+  // its link carries none and a reused id is not caught here.
+  const gone = useLanding("section", items, loaded);
   // The language a section is shown in: the reader's if it has text, else the
   // first of the village's that does.
   const shown = (s: Section) => [lang, ...languages].find((l) => s.texts[l]?.title || s.texts[l]?.body) || lang;
@@ -103,12 +107,13 @@ export function Codex({ me }: { me: Me }) {
     <div className="parchment codex">
       <h2>📜 {t("Codex")} <span className="sub">{t("the village's values and agreements")}</span></h2>
       {last && <p className="cx-stamp cx-head"><Stamp s={last} /></p>}
+      <LinkLine note={gone ? "gone" : null} />
       {items.length === 0 && <Empty text={t("The codex is empty. A steward brings in the adopted text.")} />}
       {items.map((s, i) => {
         const l = shown(s);
         const text = s.texts[l] || empty;
         return (
-          <section key={s.id} className="cx-sec">
+          <section key={s.id} className="cx-sec" data-entry={"section-" + s.id}>
             <div className="cx-num">{ROMAN[i] || i + 1}.</div>
             <div className="cx-text">
               {editing === s.id ? form : (<>
@@ -119,6 +124,7 @@ export function Codex({ me }: { me: Me }) {
                   {/* A section repeats the header's line only when it has one of its own. */}
                   <span>{last && (s.updated_by || s.updated_at !== last.updated_at) ? <Stamp s={s} /> : null}</span>
                   <span className="cx-tools">
+                    <Share kind="section" id={s.id} made="" />
                     <button className="ghost" onClick={() => start(s)}>✎ {t("Edit")}</button>
                     {me.is_steward === 1 && <button className="ghost" onClick={() => remove(s)}>🗑</button>}
                   </span>

@@ -226,13 +226,13 @@ func TestAlmanac(t *testing.T) {
 	if len(rows) == 0 || rows[0]["starts_at"].(string) < "2026-07-06" {
 		t.Fatalf("listed from %v", rows[0]["starts_at"])
 	}
-	moon := ""
+	moon, moonDay := "", ""
 	for _, r := range rows {
 		if r["title"] != almanacTitles[r["kind"].(string)] || r["title"] == "" {
 			t.Fatalf("a row without its title: %v", r)
 		}
 		if r["kind"] == "full_moon" {
-			moon = itoa(r["id"].(float64))
+			moon, moonDay = itoa(r["id"].(float64)), r["starts_at"].(string)[:10]
 			break
 		}
 	}
@@ -251,7 +251,8 @@ func TestAlmanac(t *testing.T) {
 	defer fake.mu.Unlock()
 	var p Payload
 	json.Unmarshal(fake.payloads[0], &p)
-	if len(fake.sent) != 1 || p.Title != "💬 S on: Full moon" {
+	// The sky has no created_at: its own day names the row in the link.
+	if len(fake.sent) != 1 || p.Title != "💬 S on: Full moon" || p.URL != "#/go/almanac/"+moon+"/"+moonDay {
 		t.Fatalf("reply rang: %d %+v", len(fake.sent), p)
 	}
 }

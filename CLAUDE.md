@@ -767,7 +767,9 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
 - **Codes.** A steward's invite is 10 characters and multi-use for 14 days — it
   travels through WhatsApp and lets a whole house in. A pairing code is 6
   digits, single use, 15 minutes, and only ever adds one more phone to a house
-  that is already inside. The small keyspace is paid for by a per-IP cap on
+  that is already inside; Add another device copies it as a link too,
+  `#/join/<code>`, which the gate fills in like an invite (`AddPhone.tsx`,
+  no backend change). The small keyspace is paid for by a per-IP cap on
   `/api/join` and by burning every live pairing code after five wrong guesses.
   Do not widen either without redoing that arithmetic.
 - **One date control.** Every date or date-time in the app is `DatePicker.tsx`
@@ -814,7 +816,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
 - **Buttons come in three weights.** `primary` for the one action a card or
   form is for, plain for the rest, `lesser` for inner additions (add a task, add
   a note) — a real button one size down, never a ghost link. `ghost` is for
-  dismiss and delete only.
+  dismiss and delete only, and for 🔗 Share until the owner picks
+  (§ A link to one entry).
 - **The village's language first.** `LANGUAGES` lists a village's languages
   in its order, the first is its default (`sl,en` here); the top bar's buttons
   and a phone's push language come from that list. Every user-facing string
@@ -850,6 +853,30 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
 - **Old notification links must keep working.** Payload URLs live in the
   database of no one — they are already on people's phones. `/bell` survives as
   a route alias after the merge; a post links to `#/tavern?at=board`.
+- **A link to one entry** (owner's ask 2026-10-08, `frontend/src/links.tsx`;
+  the mechanics, the button's place per card and what differs from the
+  design are in `docs/design-links.md` § As built). An entry's address is a
+  parameter on its room (`#/tavern?event=ID`, `#/market?run=ID`, a
+  project's page `#/projects/ID`), and what a Share button, a comment push
+  and an agent hand out is **one resolver route, `#/go/<kind>/<id>/<day>`**,
+  the one place that knows which room a kind lives in and whether its
+  switch is on. Keep every room address working, as § Old notification
+  links. **The day is the row's `created_at` as stored, the UTC day it was
+  written**, because no table uses `AUTOINCREMENT`: a deleted newest
+  entry's id goes to the next one written, so a row of another day reads
+  "not here any more" instead of opening the wrong entry. **A link is an
+  address, never an access**: the gate stands in front of it and keeps it
+  through the join; never put an entry's words in `index.html` or any
+  public answer, so no unfurl. **The 🔗 Share button is never on an away
+  notice** (burglary information travels by a villager's own typing; its
+  comment push stays `#/watch` and anonymous), **nor on a birthday** (a
+  person's data; the route still opens one, for the comment push its own
+  thread rings, and the agent is told not to hand one out), **a contact, a
+  camp row, a due or a duty.** It is `ghost` by the assistant's pick,
+  pending the owner, against § Buttons. **The WhatsApp cost, accepted by
+  the owner 2026-10-08**: a link tapped in the group opens WhatsApp's own
+  browser, which holds no session, so it lands on the gate until that
+  browser pairs once, and on iOS a link never opens the home-screen app.
 - **The Codex is the village's text, so it lives in the database, never in
   the repo** (owner's decision 2026-09-09). `codex_sections` holds the founding
   document — values and the agreements the council adopted — as ordered
@@ -1009,6 +1036,7 @@ frontend/public/    manifest.webmanifest, sw.js (push only, no caching), icons, 
                     icon.svg is hand-drawn paths, full-bleed, content inside the central 80 % safe circle
                     (an emoji glyph renders off-centre and monochrome — do not go back to one)
                     src/push.ts, src/Install.tsx, src/AddPhone.tsx, src/photo.ts (auth'd photo fetch + browser-side shrink)
+                    src/links.tsx = a link to one entry: the #/go resolver, the landing hook a room calls, the Share button, Linkify
 backend/internal/httpapi/codex.go  the codex: four routes and the one-time stdin import
 backend/internal/httpapi/feedback.go  the feedback door; internal/mailer = one Resend POST, stdlib; frontend src/Feedback.tsx is its form
 backend/internal/httpapi/i18n.go   tr() for push texts and the manifest's line, off i18n/<lang>.json — the dictionaries the page imports too (@i18n alias);
@@ -1031,8 +1059,8 @@ docs/               design docs the owner and the assistant decide on together (
                     `design-membership.md` — accounts for people who live here without land, options only, nothing built;
                     `design-mcp.md` — the API as MCP tools for agents: built, with the options rejected and their costs;
                     `design-news.md` — a curated "what's new" that rings when a roll brings it: researched, not built;
-                    `design-links.md` — a link to one entry, to paste into the group: researched 2026-10-08, not built, no overhaul needed;
-                    and `design-sessions.md` — getting in and staying in, the options from a cookie to passkeys: brainstormed 2026-10-08, not built);
+                    `design-links.md` — a link to one entry, to paste into the group: built 2026-10-08, with the options refused;
+                    and `design-sessions.md` — getting in and staying in, the options from a cookie to passkeys: brainstormed 2026-10-08, the cookie and the pairing link built);
                     `later.md` = the one home for what is brainstormed, designed-and-set-aside, or still undecided
 docs/diagrams/      hand-drawn SVG sketches belonging to those docs
 .github/workflows/  build-backend: the image to GHCR (ghcr.io/denisolnce/porta-pagi), sha-<commit> and latest; nothing deploys from here

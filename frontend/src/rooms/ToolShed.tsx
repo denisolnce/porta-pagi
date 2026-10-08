@@ -5,6 +5,7 @@ import { useT } from "../i18n";
 import { photoURL, uploadPhoto } from "../photo";
 import { Crest, Empty, When, canEdit, useList } from "./shared";
 import { Thread } from "./Thread";
+import { LinkLine, Share, madeOf, useLanding } from "../links";
 
 // Tool shed: what the village lends. A tool has an owner house and, while it is
 // out, a holder. No counting of who borrows most — the reciprocity stays social.
@@ -25,7 +26,7 @@ function Photo({ id, version, onOpen }: { id: number; version: number; onOpen: (
 
 export function ToolShed({ me, houses }: { me: Me; houses: House[] }) {
   const { t } = useT();
-  const { items, reload } = useList("/tools");
+  const { items, loaded, reload } = useList("/tools");
   const wishes = useList("/wishes");
   const [f, setF] = useState({ name: "", notes: "", category: "other" });
   const [file, setFile] = useState<File | null>(null);
@@ -44,6 +45,13 @@ export function ToolShed({ me, houses }: { me: Me; houses: House[] }) {
   const [ef, setEf] = useState({ name: "", notes: "", category: "other" });
   const startEdit = (x: any) => { setEf({ name: x.name, notes: x.notes || "", category: x.category }); setEditing(x.id); };
   const saveEdit = async (id: number) => { await api(`/tools/${id}`, { method: "PUT", body: ef }); setEditing(null); reload(); };
+  // A link to one tool or one wish (links.tsx): the filters let the tool be
+  // seen, the wishlist unfolds and the wish's thread opens.
+  const [wishOpen, setWishOpen] = useState(false);
+  const gone = [
+    useLanding("tool", items, loaded, () => { setOwner(null); setCat(null); }),
+    useLanding("wish", wishes.items, wishes.loaded, (w) => { setWishOpen(true); setThreadFor(w.id); }),
+  ].some(Boolean);
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +79,7 @@ export function ToolShed({ me, houses }: { me: Me; houses: House[] }) {
 
   // A render function, not a component — see Market.tsx. Lowercase on purpose.
   const tool = (x: any) => (
-    <div key={x.id} className={"card tool" + (x.held_by ? " out" : "")} style={{ borderLeftColor: x.held_by ? "var(--parch3)" : "var(--green)" }}>
+    <div key={x.id} className={"card tool" + (x.held_by ? " out" : "")} style={{ borderLeftColor: x.held_by ? "var(--parch3)" : "var(--green)" }} data-entry={"tool-" + x.id}>
       <div className="tool-main">
         {editing === x.id ? (
           <form className="inline" onSubmit={(e) => { e.preventDefault(); saveEdit(x.id); }}>
@@ -95,6 +103,7 @@ export function ToolShed({ me, houses }: { me: Me; houses: House[] }) {
           {!x.held_by && <button className="primary" onClick={() => take(x.id, true)}>🤲 {t("I take it")}</button>}
           {x.held_by === me.id && <button onClick={() => take(x.id, false)}>↩ {t("I brought it back")}</button>}
           {x.held_by && x.held_by !== me.id && canEdit(me, x) && <button onClick={() => take(x.id, false)}>↩ {t("Mark returned")}</button>}
+          <Share kind="tool" id={x.id} made={madeOf(x)} />
           {canEdit(me, x) && (
             <label className="btn-file">📷<input type="file" accept="image/*" capture="environment" onChange={(e) => replacePhoto(x.id, e.target.files?.[0] || null)} /></label>
           )}
@@ -111,6 +120,7 @@ export function ToolShed({ me, houses }: { me: Me; houses: House[] }) {
       <div className="parchment">
         <h2>🛠 {t("Tool shed")} <span className="sub">{t("what the village has")}</span><button style={{ marginLeft: "auto" }} onClick={() => setAdding(!adding)}>+ {t("I share a tool")}</button></h2>
         <p className="small muted" style={{ fontStyle: "italic", marginTop: "-.3rem" }}>{t("Take and return are for when it helps. A tool may simply be listed, so the village knows it exists.")}</p>
+        <LinkLine note={gone ? "gone" : null} />
         {adding && <form className="inline" onSubmit={add}>
           <div className="row">
             <label>{t("I share a tool")}<input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder={t("chainsaw, ladder, trailer…")} maxLength={80} /></label>
@@ -145,7 +155,7 @@ export function ToolShed({ me, houses }: { me: Me; houses: House[] }) {
         {out.map(tool)}
       </div>
 
-      <details className="parchment wish">
+      <details className="parchment wish" open={wishOpen} onToggle={(e) => setWishOpen(e.currentTarget.open)}>
         <summary>✨ {t("Wishlist")} <span className="sub">{t("tools the village lacks")}</span>{wishes.items.length > 0 && <span className="small"> · {wishes.items.length}</span>}</summary>
         <form className="inline" onSubmit={async (e) => { e.preventDefault(); if (!wish.trim()) return; await api("/wishes", { method: "POST", body: { text: wish } }); setWish(""); wishes.reload(); }}>
           <div className="row"><label>{t("I wish the village had")}<input value={wish} onChange={(e) => setWish(e.target.value)} maxLength={120} placeholder={t("log splitter, cider press…")} /></label></div>
@@ -154,7 +164,7 @@ export function ToolShed({ me, houses }: { me: Me; houses: House[] }) {
         {wishes.items.map((w: any) => {
           const wants: any[] = JSON.parse(w.wants || "[]");
           return (
-            <div key={w.id} className="card">
+            <div key={w.id} className="card" data-entry={"wish-" + w.id}>
               <div className="head"><Crest crest={w.house_crest} color={w.house_color} /><strong>{w.text}</strong><When iso={w.created_at} /></div>
               <div className="small">🙋 {wants.map((h) => `${h.crest} ${h.name}`).join(", ")}</div>
               {(JSON.parse(w.options || "[]") as any[]).map((o) => (
@@ -177,6 +187,7 @@ export function ToolShed({ me, houses }: { me: Me; houses: House[] }) {
                 <button className={w.mine ? "" : "primary"} onClick={() => api(`/wishes/${w.id}`, { method: "PUT", body: { want: !w.mine } }).then(wishes.reload)}>{w.mine ? t("Not any more") : "🙋 " + t("I would love that too")}</button>
                 {optFor !== w.id && <button className="lesser" onClick={() => setOptFor(w.id)}>🔎 {t("I found one")}</button>}
                 <button className="ghost" onClick={() => setThreadFor(threadFor === w.id ? null : w.id)}>💬 {t("Comments")}{w.comments ? ` (${w.comments})` : ""}</button>
+                <Share kind="wish" id={w.id} made={madeOf(w)} />
                 {canEdit(me, w) && <button className="ghost" onClick={() => confirm(w.text + "?") && api(`/wishes/${w.id}`, { method: "DELETE" }).then(wishes.reload)}>✓ {t("It arrived")}</button>}
               </div>
               {threadFor === w.id && <Thread subject="wish" id={w.id} me={me} onChanged={wishes.reload} />}

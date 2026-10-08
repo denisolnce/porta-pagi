@@ -207,7 +207,7 @@
   "Already signed in in your browser? Open the portal there, go to Houses and press Add another device — it gives you a 6-digit code for this one.": "Já tem sessão no navegador? Abra lá o portal, vá a Casas e carregue em Adicionar outro aparelho — dá-lhe um código de 6 dígitos para este.",
   "Too many attempts. Wait a few minutes.": "Demasiadas tentativas. Espere uns minutos.",
   "Add another device": "Adicionar outro aparelho",
-  "On the other device open the portal and type this code. It works once, and only for": "No outro aparelho abra o portal e escreva este código. Serve uma vez, e só durante",
+  "On the other device open the link, or open the portal and type this code. It works once, and only for": "No outro aparelho abra o link, ou abra o portal e escreva este código. Serve uma vez, e só durante",
   "This is how a second device of the same house gets in, and how you sign in again after adding the portal to your home screen.": "É assim que um segundo aparelho da mesma casa entra, e como se volta a entrar depois de adicionar o portal ao ecrã inicial.",
   "The installed icon starts signed out. Take a code with you:": "O ícone instalado começa sem sessão. Leve um código consigo:",
   "one tap, then it opens like an app.": "um toque, e depois abre como uma app.",
@@ -621,5 +621,10 @@
   "Portal News": "Notícias do portal",
   "Development": "Desenvolvimento",
   "Could not load the news.": "Não foi possível carregar as notícias.",
-  "No news yet.": "Ainda não há notícias."
+  "No news yet.": "Ainda não há notícias.",
+  "Share": "Partilhar",
+  "Link copied": "Link copiado",
+  "That room is switched off in this village.": "Esta sala está desligada nesta aldeia.",
+  "That entry is not here any more — it may have been deleted.": "Isto já não está aqui — pode ter sido apagado.",
+  "Copy link": "Copiar link"
 }

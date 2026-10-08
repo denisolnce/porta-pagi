@@ -1,5 +1,5 @@
 import { Children, isValidElement, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
-import { Link, NavLink, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, ApiError, setToken, type House, type Me } from "./api";
 import { syncPushLang } from "./push";
 import { useT } from "./i18n";
@@ -22,6 +22,7 @@ import { InstallBanner } from "./Install";
 import { Weather } from "./Weather";
 import { ahead, answersFor, When } from "./rooms/shared";
 import { FeaturesContext, useFeatures, type FeatureRow } from "./features";
+import { Go, LinkLine, type LinkNote } from "./links";
 
 export type Session = { me: Me; houses: House[]; refresh: () => Promise<void>; logout: () => void };
 
@@ -151,6 +152,8 @@ export default function App() {
             {/* The codex is a chip on Home; this is its address, for pasting into the Tavern. */}
             <Route path="/codex" element={<Codex me={me} />} />
             {steward && <Route path="/settings" element={<Settings icons={icons} />} />}
+            {/* A link to one entry: kind → room, then the room's own address (links.tsx). */}
+            <Route path="/go/:kind/:id/:made?" element={<Go />} />
             <Route path="/join/:code" element={<Home me={me} houses={houses} />} />
             <Route path="*" element={<Home me={me} houses={houses} />} />
           </>, rooms)}</Routes>
@@ -197,6 +200,9 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
   // into view once its notes are in (Changelog.tsx).
   const [params] = useSearchParams();
   useEffect(() => { if (params.has("news")) setFoot("changelog"); }, [params]);
+  // A link that could not open its entry lands here with one faint line,
+  // carried in the router's state, so the next tap takes it away.
+  const linkNote = (useLocation().state as { linkNote?: LinkNote } | null)?.linkNote;
   // One badge per building, built as a finished sentence so a room can say two
   // things at once (the shed: how many are in it, how many are out).
   const [badges, setBadges] = useState<Record<string, string>>({});
@@ -229,6 +235,7 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
   return (
     <>
       <InstallBanner />
+      <LinkLine note={linkNote} />
       <div className="topper-pick">
         {([["map", "🗺️", "Map"], ["weather", "🌤️", "Weather"], ["tavern", "🍺", "Tavern"], ["codex", "📜", "Codex"]] as [Topper, string, string][]).map(([v, icon, label]) => (
           <button key={v} className={"chip" + (top === v ? " on" : "")} onClick={() => pick(v)} title={t("this device only")}>{icon} {t(label)}</button>
@@ -268,6 +275,7 @@ function Gate({ onJoined }: { onJoined: () => Promise<void> }) {
   const { t, demo } = useT();
   const { code: urlCode } = useParams();
   const nav = useNavigate();
+  const { pathname } = useLocation();
   const [code, setCode] = useState(urlCode || "");
   const [device, setDevice] = useState("");
   const [name, setName] = useState("");
@@ -283,7 +291,10 @@ function Gate({ onJoined }: { onJoined: () => Promise<void> }) {
       const r = await api<{ token: string }>(path, { method: "POST", body: { code: code.replace(/\s+/g, ""), device, name } });
       setToken(r.token);
       await onJoined();
-      nav("/");
+      // The page stays on the address it was opened on, so a link to an
+      // entry lands on the entry once the phone is in. Only an invite or a
+      // pairing address goes on to Home.
+      if (pathname.startsWith("/join/")) nav("/");
     } catch (ex) {
       const s = ex instanceof ApiError ? ex.status : 0;
       setErr(s === 404 || s === 403 ? t("Unknown code") : s === 410 ? t("Code expired — ask the steward for a new link") : s === 429 ? t("Too many attempts. Wait a few minutes.") : t("Something went wrong"));
