@@ -53,12 +53,13 @@ backup"), and nothing rang. The git log stays, as the panel's second tab.
   from `GET /api/news` (behind the token, like everything). What the
   village has heard is what the binary carries, so the panel and the push
   never disagree.
-- **Who writes a note**: the assistant, in the same commit as the
-  user-visible change it describes — a feature, or a bug a villager would
-  have noticed — in the village's languages, and the owner reads it in the
-  diff. A change nobody sees gets no note, and a small fix never does —
-  the owner's rule of 2026-10-08, when the weather's arrows moved onto the
-  days' line; `CLAUDE.md` § Working rules says so.
+- **Who decides a note**: the owner, every time — a hard rule since
+  2026-10-08 ("any entry into portal news needs my y/n"), after two notes
+  he struck the same day. The assistant proposes title and body in chat,
+  in the village's languages, and writes it only on a yes; a small fix is
+  never proposed (the owner's rule of the same day, when the weather's
+  arrows moved onto the days' line). `CLAUDE.md` § Working rules holds the
+  rule.
 
 ## Options considered
 

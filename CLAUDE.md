@@ -1134,12 +1134,17 @@ so rule 5 at the top is the only fence there. The reviewer edits nothing.
   runs the tag, made from this checkout and verified on the VM (§ The repos).
   Only `backend/**`, `frontend/**` and the workflow itself trigger a build —
   a docs-only commit builds nothing.
-- **A change a villager would notice — a feature, or a bug somebody saw —
-  adds a Portal News note to `news/news.json` in the same commit**, in
-  English, Slovenian and Portuguese, written for the villager and not the
-  builder: no migration, no backup, no file names. The owner reads it in the
-  diff. A change nobody sees gets no note, and **a small fix never does** —
-  an arrow moved, a word changed, a line that fits better (owner's rule
+- **No entry goes into Portal News without the owner's yes** (hard rule,
+  owner 2026-10-08: "any entry into portal news needs my y/n"). The
+  assistant proposes the note in chat — title and body, in English,
+  Slovenian and Portuguese, written for the villager and not the builder:
+  no migration, no backup, no file names — and writes it to
+  `news/news.json` only on a yes, in the change's commit or a commit of its
+  own. A no, or no answer, is no note. A subagent never writes one: its
+  brief says so. The owner declined two the same day — the session cookie
+  and the shareable links — so the bar is his, not the assistant's guess
+  of "would a villager notice"; and **a small fix never gets one** — an
+  arrow moved, a word changed, a line that fits better (owner's rule
   2026-10-08: "these kinds of small fixes should never end up in portal
   news").
 - A change that a village's deploy needs — an env variable, a migration a
