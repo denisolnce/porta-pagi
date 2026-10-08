@@ -96,6 +96,9 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   in this repo.
 - **What the assistant owes next:** §11 of the same plan, the ordered
   backlog.
+- **Who finds the landing and the demo:** `task lens` in
+  `../porta-pagi-cloud`; how to read it, and the domain-day steps, in §10
+  of the same plan.
 
 ## Invariants
 
