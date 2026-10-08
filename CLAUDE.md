@@ -350,7 +350,9 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   and stays optional. **The write box sits under the comments, and its
   submit row reads "Post as ‹name›"** (owner's ask 2026-10-08, `PostAs` in
   `Thread.tsx`): the name to the right of the button, "Name (optional)" over
-  the field, one row on a phone. The board keeps its own box at the top —
+  the field, one row on a phone. The cost, paid knowingly: on an event with
+  a long thread a villager who opens 💬 to write scrolls past every comment
+  to the box; only a reply focuses it into view. The board keeps its own box at the top —
   a post is what the room is for — and **a reply on the board is a form of
   its own under the post's replies**, the thread's shape, never the top box
   changing meaning under the thumb.

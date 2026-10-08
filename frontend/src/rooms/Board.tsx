@@ -21,9 +21,18 @@ export function Board({ me, items, reload }: { me: Me; items: any[]; reload: () 
   const [replyBody, setReplyBody] = useState("");
   const board = useRef<HTMLDivElement>(null);
   // The reply box appears under the post; focusing it brings it into view.
+  // A draft moves with the box only while it is the same post's: opening a
+  // reply under another post starts clean. Cancel keeps the words (a thread's
+  // does too) and puts the focus back on the Reply button it left.
+  const lastReply = useRef<number | null>(null);
   useEffect(() => {
-    if (replyTo != null) board.current?.querySelector<HTMLTextAreaElement>("form.reply textarea")?.focus();
+    if (replyTo != null) {
+      if (lastReply.current != null && lastReply.current !== replyTo) setReplyBody("");
+      lastReply.current = replyTo;
+      board.current?.querySelector<HTMLTextAreaElement>("form.reply textarea")?.focus();
+    }
   }, [replyTo]);
+  const cancelReply = (id: number) => { setReplyTo(null); board.current?.querySelector<HTMLButtonElement>(`[data-reply="${id}"]`)?.focus(); };
 
   const send = async (text: string, parent?: number) => {
     if (!text.trim()) return false;
@@ -50,7 +59,7 @@ export function Board({ me, items, reload }: { me: Me; items: any[]; reload: () 
           <div className="head"><Crest crest={p.house_crest} color={p.house_color} /><span className="who">{p.house_name}{p.author && p.author !== p.house_name ? ` · ${p.author}` : ""}</span>{p.pinned ? <span className="tag alarm">📌 {t("Pinned")}</span> : null}<When iso={p.created_at} /></div>
           <div className="body">{p.body}</div>
           <div className="actions">
-            <button className="ghost" onClick={() => setReplyTo(replyTo === p.id ? null : p.id)}>↩ {t("Reply")}</button>
+            <button className="ghost" data-reply={p.id} onClick={() => (replyTo === p.id ? cancelReply(p.id) : setReplyTo(p.id))}>↩ {t("Reply")}</button>
             {me.is_steward === 1 && <button className="ghost" onClick={() => api(`/posts/${p.id}`, { method: "PUT", body: { pinned: !p.pinned } }).then(reload)}>📌 {p.pinned ? t("Unpin") : t("Pin")}</button>}
             {canEdit(me, p) && <button className="ghost" onClick={() => confirm("?") && api(`/posts/${p.id}`, { method: "DELETE" }).then(reload)}>🗑 {t("Delete")}</button>}
           </div>
@@ -64,7 +73,7 @@ export function Board({ me, items, reload }: { me: Me; items: any[]; reload: () 
           {replyTo === p.id && (
             <form className="inline reply" onSubmit={reply} style={{ marginLeft: "1.5rem" }}>
               <label>{t("Reply")}<textarea value={replyBody} onChange={(e) => setReplyBody(e.target.value)} maxLength={4000} /></label>
-              <PostAs author={author} setAuthor={setAuthor} label={t("Reply")} onCancel={() => { setReplyTo(null); setReplyBody(""); }} />
+              <PostAs author={author} setAuthor={setAuthor} label={t("Reply")} onCancel={() => cancelReply(p.id)} />
             </form>
           )}
         </div>

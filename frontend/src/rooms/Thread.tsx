@@ -65,6 +65,8 @@ export function Thread({ subject, id, me, onChanged }: { subject: "event" | "wis
 // The submit row of anything a house writes under a name: "Post as <name>",
 // the one shape in a thread, on the board and under a board post's reply.
 // `primary` is the board's own post, the one action its form is for.
+// The key "as" in the dictionaries is this preposition only ("Post as Ana");
+// an English "as" in another sense ("Save as", "as of") needs a key of its own.
 export function PostAs({ author, setAuthor, label, primary, onCancel }: { author: string; setAuthor: (s: string) => void; label: string; primary?: boolean; onCancel?: () => void }) {
   const { t } = useT();
   return (
