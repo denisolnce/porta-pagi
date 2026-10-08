@@ -3,10 +3,10 @@
 // the page. shrink() makes a phone photo small before it leaves the phone.
 // The same helpers serve a tool's photo (/tools/{id}/photo) and a project's
 // pictures (/photos/{id}).
-import { API, getToken } from "./api";
+import { API, authHeaders } from "./api";
 
 const cache = new Map<string, Promise<string>>();
-const auth = () => ({ Authorization: "Bearer " + (getToken() || "") });
+const auth = authHeaders;
 
 export function photoURL(path: string, bust = 0): Promise<string> {
   const key = `${path}#${bust}`;

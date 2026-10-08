@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, API, getToken } from "../api";
+import { api, API, authHeaders } from "../api";
 import { localeOf, useT } from "../i18n";
 import { useFeatures, type FeatureRow } from "../features";
 import { KIND_LABELS } from "./Notifications";
@@ -88,7 +88,7 @@ export function Settings({ icons }: { icons: Record<string, string> }) {
     let blob: Blob;
     try { blob = await shrink(file, 2000); } catch { setPicErr(t("Could not read that picture. Try a JPEG or PNG.")); return; }
     try {
-      const r = await fetch(API + "/site/backdrop", { method: "PUT", headers: { Authorization: "Bearer " + (getToken() || ""), "Content-Type": "image/jpeg" }, body: blob });
+      const r = await fetch(API + "/site/backdrop", { method: "PUT", headers: { ...authHeaders(), "Content-Type": "image/jpeg" }, body: blob });
       if (!r.ok) throw new Error(String(r.status));
       await loadSite(); setBust(Date.now());
     } catch { setPicErr(t("Something went wrong")); }
@@ -100,7 +100,7 @@ export function Settings({ icons }: { icons: Record<string, string> }) {
   };
 
   const exportAll = async () => {
-    const r = await fetch(`${API}/export`, { headers: { Authorization: "Bearer " + (getToken() || "") } });
+    const r = await fetch(`${API}/export`, { headers: authHeaders() });
     const b = await r.blob(); const u = URL.createObjectURL(b);
     const a = document.createElement("a"); a.href = u; a.download = "potok-export.json"; a.click(); URL.revokeObjectURL(u);
   };

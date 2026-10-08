@@ -679,6 +679,39 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   stays silent — the default is quiet. **Tool return reminders are the
   exception to the exception**: `remind.go` still skips the whole night cycle,
   so the nudge lands in the morning. A nudge is not news.
+- **A session is a cookie and a drawer** (owner's decision 2026-10-08,
+  `auth.go`, `docs/design-sessions.md`). A phone keeps its device token in
+  `localStorage` and sends it as a bearer, as from the start; the server
+  keeps the same token in a cookie it sets, `potok` — `HttpOnly`,
+  `SameSite=Strict`, `Secure` when `PUBLIC_URL` is https, a year — because
+  Safari evicts what page script wrote after seven days of Safari use
+  without opening the site, and a cookie the server set it keeps; an iPhone
+  that never installed the portal stayed signed in for a quiet week and no
+  longer loses it. `GET /api/me` re-issues it on every load, which is also
+  how a phone from before the cookie gets one: nothing renews a cookie but
+  the server sending it again. The header wins when both arrive. **A write
+  by cookie is taken only from the portal's own origin**: `SameSite` fences
+  a site, not an origin, and the demo and the landing are sibling
+  subdomains of one site, as every village under a cloud domain would be;
+  a sibling's fetch with a text/plain body sends no preflight and
+  `readJSON` decodes it whatever its type, so `tokenFrom` refuses a cookie
+  on a POST, PUT or DELETE whose `Origin` is not `PUBLIC_URL`'s, with a
+  403 that names both — a browser always sends `Origin` on those, a
+  request without one is not a browser's. Reads need no check: without
+  CORS a sibling cannot read the answer. **The
+  agent door reads the header only**: the cookie rides on every
+  same-origin fetch, and `/api/mcp` must stay closed to a phone's session,
+  so `tokenFrom` returns none there (`TestSessionCookie`). A 401 on a cookie
+  takes the cookie off, so a removed phone or the demo's hourly reset does
+  not send a dead one for a year; `DELETE /api/session` is logout, no token
+  needed, because `HttpOnly` means the page cannot clear it itself. The
+  page therefore cannot tell gate from loading by its drawer: it asks
+  `/api/me` first and alone, and a fresh browser sees the gate one round
+  trip later — asked beside the other calls, their 401 would reload the
+  page forever. The drawer stays: a browser that blocks cookies is still
+  signed in by the header, and the CSP already keeps page script to this
+  origin. Not verified on a phone: whether iOS's home-screen app shares
+  Safari's cookie jar.
 - **The way back in.** When nobody holds a session — a steward's phone wiped,
   the origin changed — `docker exec <container> /server code "<house>"` on the
   VM rotates that house's invite and prints the link (`cli.go`).

@@ -1,6 +1,6 @@
 import { Children, isValidElement, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { Link, NavLink, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { api, ApiError, getToken, setToken, type House, type Me } from "./api";
+import { api, ApiError, setToken, type House, type Me } from "./api";
 import { syncPushLang } from "./push";
 import { useT } from "./i18n";
 import { VillageMap } from "./map/VillageMap";
@@ -69,10 +69,17 @@ export default function App() {
   const [houses, setHouses] = useState<House[]>([]);
   const [features, setFeatures] = useState<FeatureRow[]>([]);
   const reloadFeatures = useCallback(async () => { setFeatures(await api<FeatureRow[]>("/features")); }, []);
-  const [state, setState] = useState<"loading" | "gate" | "in">(getToken() ? "loading" : "gate");
+  // The session may be a cookie this page cannot see (api.ts), so the page
+  // cannot tell the gate from loading by looking in its drawer: it asks
+  // /api/me, and a fresh browser sees the gate one round trip later.
+  const [state, setState] = useState<"loading" | "gate" | "in">("loading");
 
   const refresh = useCallback(async () => {
-    const [m, hs, fs] = await Promise.all([api<Me>("/me"), api<House[]>("/houses"), api<FeatureRow[]>("/features")]);
+    // /me first, alone: its 401 is "no session" and ends at the gate, while
+    // any other call's 401 reloads the page (api.ts) — asked together, a
+    // fresh browser would reload forever.
+    const m = await api<Me>("/me");
+    const [hs, fs] = await Promise.all([api<House[]>("/houses"), api<FeatureRow[]>("/features")]);
     setMe(m); setHouses(hs); setFeatures(fs); setState("in");
   }, []);
   // A steward may flip a switch while this phone sleeps: read them again
@@ -87,11 +94,11 @@ export default function App() {
   useEffect(() => { if (state === "in") syncPushLang(lang); }, [state, lang]);
 
   useEffect(() => {
-    if (!getToken()) return;
     refresh().catch((e) => { if (e instanceof ApiError && e.status === 401) setToken(null); setState("gate"); });
   }, [refresh]);
 
-  const logout = () => { setToken(null); setMe(null); setState("gate"); };
+  // The cookie is HttpOnly, so only the server can take it off.
+  const logout = () => { api("/session", { method: "DELETE" }).catch(() => {}); setToken(null); setMe(null); setState("gate"); };
   const steward = me?.is_steward === 1;
   // A room's icon by its switch, for the settings page. The sky is a switch
   // with no room of its own, so its icon is written here.

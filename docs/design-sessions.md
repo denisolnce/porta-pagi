@@ -57,7 +57,7 @@ holds and can type anywhere**, which is option D below, made long enough.
 
 | Option | What the villager does | What it costs | What it breaks | Verdict |
 | --- | --- | --- | --- | --- |
-| A. **The token as a server-set cookie** (`HttpOnly`, `SameSite=Strict`, a year) | Nothing | Two routes, a re-issue, a cookie read in `auth.go` that `/api/mcp` must not take, and a one-time exchange at the roll so nobody is logged out by it — the whole list in § A and B in detail | Nothing seen. Whether Safari and the home-screen app share it is to be verified on a phone, not assumed | **First.** A server-set cookie is exempt from Safari's seven-day eviction, so an iPhone that never installed stays in |
+| A. **The token as a server-set cookie** (`HttpOnly`, `SameSite=Strict`, a year) | Nothing | **Built 2026-10-08** ("i see only the benefits so lets implement it"): `auth.go`, `TestSessionCookie`, the invariant in `CLAUDE.md` § A session is a cookie and a drawer. One change from the detail below: the drawer is kept, the cookie is the copy that survives | Nothing seen. Whether Safari and the home-screen app share it is to be verified on a phone, not assumed | **First.** A server-set cookie is exempt from Safari's seven-day eviction, so an iPhone that never installed stays in |
 | B. **The pairing code as a link too** | On a phone that is in: Houses → Add another device → *Copy link*, sent to the laptop (AirDrop, "message yourself", mail) and opened there | A second button beside the code; the gate takes `#/join/<code>` already | Nothing. Same fifteen minutes, one use | **With A.** No typing, and a link opened from WhatsApp Desktop lands in the system browser, logged in |
 | C. **Reverse pairing with a QR** | The laptop's gate shows a QR; the phone's camera reads it, opens the portal logged in, and asks "let this browser in?" | A pending-pairings table, a QR encoder (a small dependency or ~150 lines), an approve page. iOS reads a QR with the camera app, so no scanner page is needed | Nothing; it is a second shape of today's code | **When laptops matter.** The WhatsApp Web pattern villagers already know |
 | D. **A house passphrase** — a few words the house sets at first login, typed with the house name on any gate | Types "Zeleni Volk" and three words | A column, a form in the Houses room, a second mode on the gate. Three words of a two-thousand-word list are eight billion, and the join cap holds | **The invariant "no in-app password to reset"** (`CLAUDE.md` § The way back in). The reset exists — a steward rotates the invite and the house sets new words — but it is a password, and a thing written on the fridge | The owner's PIN made safe. A decision against an invariant, so the owner's |
@@ -65,6 +65,7 @@ holds and can type anywhere**, which is option D below, made long enough.
 | F. **Passkeys** (WebAuthn) | Face ID or a fingerprint; the laptop by the phone's QR, which the OS draws itself | A credentials table, the ceremony on the gate, CBOR and COSE verification — a Go dependency (`go-webauthn`) or some hundreds of lines, a decision in `CLAUDE.md` | Nothing in the model: a passkey is per person on a platform account, which is a device row each. WhatsApp's webview may not offer passkeys at all | **The solid end state**: nothing to remember, nothing to reset, nothing phishable, synced across one person's phones and laptops by Apple and Google. The heaviest, so after A–C |
 | G. **Android link capture** | Nothing | Nothing, if true: an installed app on Android registers its scope, so a link tapped in WhatsApp may open the installed portal, logged in | iOS never does this | **Verify on an Android phone** before any of the above is built for WhatsApp's sake |
 | H. **A way-in by email** through the mailer that feedback already uses | Types the house's address, taps the link in the mail | An address per house, a privacy line, the "no email to send" line in `CLAUDE.md` turned around | Email as identity, in a village that runs on WhatsApp. `later.md` keeps WhatsApp one-time codes at "v2 or never" for Meta's fee | No, for now |
+| I. **A native app**, iOS and Android, as a shell around the same web code (the owner asked 2026-10-08: "if we had a fullblown ios and android app, would that be solved well?") | Taps the link in WhatsApp; the app opens, signed in | Both platforms let an installed app claim a domain through a file the portal serves (Universal Links, App Links), so a link opens the app itself — **the only thing that solves the WhatsApp case on iOS**. The costs: an Apple developer account at 99 dollars a year and a review that needs a demo account (the demo village serves); a shell such as Capacitor — a dependency and a second build; push moved from web push to Apple's and Google's services inside it; and the claimed domains baked into the app, so every village on its own domain needs an app release, which argues for the cloud plan's one domain | Per-village naming on the home screen goes; one app for every village | The real answer to the iOS case, at the price of a second product. After A–C, and after the cloud plan decides the domain |
 
 ## A and B in detail (the owner asked, 2026-10-08)
 
@@ -101,10 +102,12 @@ dropping the header. What that buys, and why each flag:
 - `devices` is untouched: the cookie carries the token the hash already
   knows. No migration.
 
-What it costs, each one small: a route `POST /api/session` that takes the
-old bearer and answers with the cookie, called once by a page that finds a
-token in its drawer and no session, so the roll logs nobody out — then the
-page empties the drawer; a route `DELETE /api/session` for logout, because
+What it costs, each one small (as built: the re-issue on `/api/me` is the
+exchange, so there is no `POST /api/session`, and the drawer is kept — a
+browser that blocks cookies stays signed in by the header, and the CSP
+already keeps page script to this origin, so `HttpOnly` loses little by
+the token also sitting in `localStorage`): a route `DELETE /api/session`
+for logout, because
 `HttpOnly` means the page cannot clear it itself; the re-issue on
 `/api/me` above; `auth.go` reading the cookie where there is no header,
 **except at `/api/mcp`**, which reads the header only — the cookie rides

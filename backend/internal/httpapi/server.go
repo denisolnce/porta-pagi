@@ -73,6 +73,7 @@ func (s *Server) routes() {
 	m.HandleFunc("POST /api/pair", s.requireHouse(s.createPairing))
 
 	m.HandleFunc("GET /api/me", s.requireHouse(s.me))
+	m.HandleFunc("DELETE /api/session", s.logout)
 	// Switches (features.go): any house reads them, a steward flips one.
 	m.HandleFunc("GET /api/features", s.requireHouse(s.listFeatures))
 	m.HandleFunc("PUT /api/features/{key}", s.requireSteward(s.putFeature))
@@ -449,6 +450,15 @@ func (s *Server) me(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, err)
 		return
+	}
+	// Re-issue the session cookie on every load (auth.go): a phone that
+	// still carries only the bearer gets one, and a cookie's year starts
+	// again. Never for a key: a fence, though the dispatcher drops the
+	// headers of a whoami anyway.
+	if !h.Agent {
+		if tok, _, _ := s.tokenFrom(r); tok != "" {
+			s.setSession(w, tok)
+		}
 	}
 	row["device_id"] = h.DeviceID
 	// Report the authority the request actually carries, not the row's. For a
