@@ -744,6 +744,10 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   language is one new file and nothing else; a phrase with no entry reads as
   English. The dictionary lives with the backend because Go can embed only
   below its own module; Vite reaches it through the `@i18n` alias.
+- **A building on Home carries a subtitle only where its name does not say it
+  all** (owner's pick 2026-10-08): Projects, Tool shed, Campground, Houses and
+  Contacts lost theirs, the Tavern's reads "calendar, work and the board". The
+  room's own heading keeps its line; the owner spoke of the buttons.
 - **The bottom bar fits five.** Village plus four rooms — Hall, Projects,
   Market, Shed (owner's pick 2026-09-05). A new room either replaces one, merges
   into one, or lives off the bar like Watchtower, Campground, Houses and

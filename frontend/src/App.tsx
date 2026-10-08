@@ -31,7 +31,9 @@ export type Session = { me: Me; houses: House[]; refresh: () => Promise<void>; l
 // `feature` names the switch the room belongs to (features.go). While it is
 // off the room is absent: no building on Home, no nav item, and its route and
 // everything under it falls through to Home. That one field is all a room
-// behind a switch needs here.
+// behind a switch needs here. `sub` is the line under a building on Home, and
+// a building carries one only where its name does not say it all (owner's
+// pick 2026-10-08); the room's own heading keeps its line either way.
 export type Room = { path: string; icon: string; name: string; short: string; sub: string; nav: boolean; feature?: string };
 export const ROOMS: Room[] = [
   { path: "/tavern", icon: "🍺", name: "Tavern", short: "Hall", sub: "calendar, work and the board", nav: true },

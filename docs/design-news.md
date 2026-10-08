@@ -63,6 +63,14 @@ on backup"), and nothing rings.
 | **A file embedded in the binary** (recommended) | Rings exactly when the image arrives and once, by a mark in the village's own database; a typo is fixed by editing the file until the image is rolled; translations live beside the text; the demo, wiped hourly, still shows the notes because they are in the binary | A note shipped and rolled cannot be unsaid on a village's phones — true of every push |
 | A migration that inserts the note | The owner's first idea: it runs once per database by construction | Migrations are append-only, so a typo is there forever; content mixed into schema history; texts in three languages inside SQL; the demo wipes its tables hourly but not the migration ledger, so its notes would vanish after the first hour |
 | Notes read off commit messages (a "news:" line) | Nothing new to remember | English only, in the builder's register; a commit message cannot be fixed after the push; ties the backend to the frontend's build-time git step |
+| **No push at all**: a dot on the 🔨 chip until the note is read, or a pinned line on the board in the village's words with its thread | Reaches nobody's bedside table; a board line can be answered ("finally! thank you") where a lock screen cannot | The owner asked for a push; a dot is only seen by whoever scrolls to the foot of Home |
+
+**How often is too often.** An active fortnight is three or four rolls. The
+only brakes on the builder's voice reaching every phone are "one push per
+roll" and "a change nobody sees gets no note", plus each house's opt-out and
+the steward's village-wide mute. **On the lock screen** a note names no
+house, no person and no absence, so its title may travel as it is
+(`CLAUDE.md` § What a lock screen may say).
 
 ## What it touches
 
@@ -81,7 +89,10 @@ for the push's two lines, `CLAUDE.md` (an invariant and the writing rule),
    (recommended), or one push per note.
 3. **The kind's name in the list of notifications**: "What's new" is the
    suggestion.
-4. **The first note**: the calendar (sky, birthdays, repeats) is already on
+4. **Push, or quiet**: a push per roll as asked, or the dot and the board
+   line instead — and if a push, whether a village that rolls twice in a
+   week hears the second one.
+5. **The first note**: the calendar (sky, birthdays, repeats) is already on
    both villages, so its note would ring nobody under the "fresh village"
    rule only for a new village; for Mokri Potok and the demo it would ring
    on the next roll. Ship it as the first note, or start with the next
