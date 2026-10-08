@@ -277,6 +277,9 @@ function Gate({ onJoined }: { onJoined: () => Promise<void> }) {
   const nav = useNavigate();
   const { pathname } = useLocation();
   const [code, setCode] = useState(urlCode || "");
+  // The gate stays mounted when the address changes under it (a phone at
+  // the gate taps an invite link): the code follows the address.
+  useEffect(() => { if (urlCode) setCode(urlCode); }, [urlCode]);
   const [device, setDevice] = useState("");
   const [name, setName] = useState("");
   const [err, setErr] = useState("");
