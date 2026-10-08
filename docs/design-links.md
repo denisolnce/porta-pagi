@@ -64,11 +64,17 @@ the neighbour opens Home and hunts. The answer first, then the argument.
   longer shown here": a run the day after its cut-off (`listRuns`), a need
   or a give-away seven days after done, an event after sixty days — the
   three windows, in one place. "Not here any more — it may have been
-  deleted" is kept for the one case that means it: a day in the link that
-  is not the row's, or an unknown kind.
+  deleted" is kept for the cases that mean it: a day in the link that is
+  not the row's, an unknown kind, and an absent row in a list that is
+  whole — the codex, the shed and the wishlist pass `whole` to
+  `useLanding`, because nothing hides a row there but a delete.
 - **The gate, opened from a link**, adds one line for a member whose
   WhatsApp browser holds no session: open this link in Safari or Chrome,
-  where you are signed in. The webview's cost is accepted; a sentence that
+  where you are signed in, with the iPhone gesture (the share icon, Open
+  in Safari). Only where the install banner is silent — iOS, whose webview
+  `isInApp` does not detect; on Android the banner already says how to
+  leave, and a second, vaguer line under it would be three instructions
+  for one escape. The webview's cost is accepted; a sentence that
   tells a member to ask for an invite is not part of it.
 - **Share** opens the system sheet only on a coarse pointer (a phone, where
   WhatsApp is two taps away) and copies on a laptop, where Chrome's sheet
@@ -265,6 +271,9 @@ the neighbour opens Home and hunts. The answer first, then the argument.
 
 ## Open
 
+- The gone/hidden rule and the share rule live in one `if` chain in
+  `links.tsx` and no test pins them: the repo has no frontend suite. A
+  Playwright run would be the first to hit them.
 - `ghost` or `lesser` for the button (above). Built as `ghost`. On a
   Market need it is the sixth action in the row (primary, Release, Done,
   Share, Edit, 🗑) and wraps on a phone; it reads as a group with Edit and

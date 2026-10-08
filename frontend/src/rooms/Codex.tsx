@@ -31,7 +31,7 @@ export function Codex({ me }: { me: Me }) {
   const { items, loaded, reload } = useList<Section>("/codex");
   // A link to one section (links.tsx). A section keeps no creation day, so
   // its link carries none and a reused id is not caught here.
-  const gone = useLanding("section", items, loaded);
+  const gone = useLanding("section", items, loaded, undefined, undefined, true);
   // The language a section is shown in: the reader's if it has text, else the
   // first of the village's that does.
   const shown = (s: Section) => [lang, ...languages].find((l) => s.texts[l]?.title || s.texts[l]?.body) || lang;

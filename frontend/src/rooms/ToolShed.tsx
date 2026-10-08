@@ -49,8 +49,8 @@ export function ToolShed({ me, houses }: { me: Me; houses: House[] }) {
   // seen, the wishlist unfolds and the wish's thread opens.
   const [wishOpen, setWishOpen] = useState(false);
   const gone = [
-    useLanding("tool", items, loaded, () => { setOwner(null); setCat(null); }),
-    useLanding("wish", wishes.items, wishes.loaded, (w) => { setWishOpen(true); setThreadFor(w.id); }),
+    useLanding("tool", items, loaded, () => { setOwner(null); setCat(null); }, undefined, true),
+    useLanding("wish", wishes.items, wishes.loaded, (w) => { setWishOpen(true); setThreadFor(w.id); }, undefined, true),
   ].find(Boolean) ?? null;
 
   const add = async (e: React.FormEvent) => {

@@ -44,7 +44,9 @@ export function entryURL(kind: string, id: number, made: string, day?: string) {
 // deleted — a day in the link that is not the row's, or an unknown kind;
 // "hidden" is a row the list no longer shows: a run the day after its
 // cut-off, a need or a give-away seven days after done, an event after
-// sixty days. The honest line for those says shown, not deleted.
+// sixty days. The honest line for those says shown, not deleted. A room
+// whose list is whole (the codex, the shed, the wishlist) says so with
+// `whole`, and there an absent row is "gone": nothing hides it but a delete.
 export type LinkNote = "off" | "gone" | "hidden";
 
 export function Go() {
@@ -75,7 +77,7 @@ export function LinkLine({ note }: { note: LinkNote | null | undefined }) {
 // the row to the room (which pages its view, picks a tab, opens a thread),
 // then scrolls the card that carries data-entry="<param>-<id>" into view and
 // marks it for a moment. It answers with the landing line the room owes, or null.
-export function useLanding(param: string, items: any[], loaded: boolean, onFound?: (row: any) => void, kind?: string): LinkNote | null {
+export function useLanding(param: string, items: any[], loaded: boolean, onFound?: (row: any) => void, kind?: string, whole?: boolean): LinkNote | null {
   const [params] = useSearchParams();
   const id = Number(params.get(param) || 0);
   const made = params.get("made") || "";
@@ -89,14 +91,14 @@ export function useLanding(param: string, items: any[], loaded: boolean, onFound
     if (!loaded || done.current === key) return;
     done.current = key;
     const row = items.find((x) => x.id === id);
-    if (!row) { setMissing("hidden"); return; }
+    if (!row) { setMissing(whole ? "gone" : "hidden"); return; }
     if (made && madeOf(row, kind) !== made) { setMissing("gone"); return; }
     setMissing(null);
     found.current?.(row);
     // After the room has drawn what onFound changed: the card may sit in
     // another place once the month or the tab moved.
     setTimeout(() => reveal(`${param}-${id}`), 100);
-  }, [key, loaded, items, id, made, param, kind]);
+  }, [key, loaded, items, id, made, param, kind, whole]);
   return missing;
 }
 

@@ -1,7 +1,7 @@
 import { Children, isValidElement, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, ApiError, setToken, type House, type Me } from "./api";
-import { syncPushLang } from "./push";
+import { isInApp, syncPushLang } from "./push";
 import { useT } from "./i18n";
 import { VillageMap } from "./map/VillageMap";
 import { Hall } from "./rooms/Hall";
@@ -308,7 +308,8 @@ function Gate({ onJoined }: { onJoined: () => Promise<void> }) {
     <div className="parchment gate">
       <h2>🏰 {t("Enter the village")}</h2>
       <p className="small">{bootstrap ? t("The village is empty. The first steward founds it with the bootstrap code from the server log.") : t("You need an invite link from a steward. Ask in the WhatsApp group.")}</p>
-      {!bootstrap && pathname.startsWith("/go/") && <p className="small">{t("Already a member? Open this link in Safari or Chrome, where you are signed in.")}</p>}
+      {/* A member whose WhatsApp browser holds no session: inside WhatsApp the install banner above already says how to leave it, so this line speaks only where that banner is silent — iOS, whose webview is not detected. */}
+      {!bootstrap && pathname.startsWith("/go/") && !isInApp() && <p className="small">{t("Already a member? Open this link in Safari or Chrome, where you are signed in — on an iPhone the share icon, then Open in Safari.")}</p>}
       {!bootstrap && <p className="small">{t("Already signed in in your browser? Open the portal there, go to Houses and press Add another device — it gives you a 6-digit code for this one.")}</p>}
       <form onSubmit={submit} className="inline">
         <label>{bootstrap ? t("Bootstrap code") : t("Invite or pairing code")}<input value={code} onChange={(e) => setCode(e.target.value)} autoCapitalize="off" autoComplete="off" required /></label>

@@ -866,7 +866,13 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   links. **The day is the row's `created_at` as stored, the UTC day it was
   written**, because no table uses `AUTOINCREMENT`: a deleted newest
   entry's id goes to the next one written, so a row of another day reads
-  "not here any more" instead of opening the wrong entry. **A link is an
+  "not here any more — it may have been deleted" instead of opening the
+  wrong entry; a row a windowed list no longer shows (a run past its
+  cut-off, a need or a give-away seven days after done, an event after
+  sixty days) reads "no longer shown here", and a whole list (codex, shed,
+  wishlist) says deleted for an absent row. The lines and the Share rule —
+  the system sheet on a coarse pointer, the clipboard on a laptop — are
+  § As built. **A link is an
   address, never an access**: the gate stands in front of it and keeps it
   through the join; never put an entry's words in `index.html` or any
   public answer, so no unfurl. **The 🔗 Share button is never on an away
@@ -879,6 +885,10 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   the owner 2026-10-08**: a link tapped in the group opens WhatsApp's own
   browser, which holds no session, so it lands on the gate until that
   browser pairs once, and on iOS a link never opens the home-screen app.
+  The gate opened from a link tells a member to open it in Safari or
+  Chrome, where they are signed in — on iOS only, with the gesture, because
+  on Android the install banner above it already says how to leave
+  WhatsApp's browser.
 - **The Codex is the village's text, so it lives in the database, never in
   the repo** (owner's decision 2026-09-09). `codex_sections` holds the founding
   document — values and the agreements the council adopted — as ordered
