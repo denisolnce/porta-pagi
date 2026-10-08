@@ -117,7 +117,8 @@ main { flex: 1; max-width: 1100px; width: 100%; margin: 0 auto; padding: 1rem 1r
 .parchment h2 .sub { font-family: Alegreya, serif; font-size: .9rem; color: var(--ink3); font-style: italic; }
 
 .buildings { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .8rem; margin-top: 1rem; }
-.building { display: block; text-decoration: none; color: var(--ink); background: linear-gradient(#f3e6c6, var(--parch2)); border: 3px solid #7a5a3a; border-radius: 10px; padding: .8rem; box-shadow: var(--shadow); text-align: center; transition: transform .1s; }
+/* A column, centred: a building with no subtitle sits level with a neighbour that has one, not top-heavy. */
+.building { display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: var(--ink); background: linear-gradient(#f3e6c6, var(--parch2)); border: 3px solid #7a5a3a; border-radius: 10px; padding: .8rem; box-shadow: var(--shadow); text-align: center; transition: transform .1s; }
 .building:hover { transform: translateY(-2px); }
 .building .icon { font-size: 2.2rem; line-height: 1; filter: drop-shadow(0 2px 1px rgba(0,0,0,.3)); }
 .building .sign { display: block; font-size: 1.2rem; color: var(--wood2); margin-top: .3rem; }
