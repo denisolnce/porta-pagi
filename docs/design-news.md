@@ -92,5 +92,6 @@ writing rule), `README.md`. No migration and no new table.
 3. **The kind is called "Portal News".**
 4. **A push, not the quiet way** (a dot on the 🔨 chip, or a pinned board
    line): "if 2 new features roll per week — notif on both makes sense".
-5. **The calendar is the first note** and rings Mokri Potok with its next
-   roll, together with the weather's fifteen days.
+5. **The calendar is the first note**, and it rang Mokri Potok with the
+   weather's fifteen days in one push when the village rolled `9f56321`
+   (2026-10-08).
