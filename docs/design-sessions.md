@@ -75,52 +75,60 @@ page script writes, and sends it on every call as `Authorization: Bearer`.
 The server keeps a hash of it in `devices`. Nothing expires it; it dies
 when the drawer is emptied.
 
-**A, the cookie.** The join answers with the same token as a cookie
-instead: `Set-Cookie: potok=<token>; HttpOnly; Secure; SameSite=Strict;
-Path=/; Max-Age=<a year>`. The browser then sends it by itself on every
-call to this origin — the page's fetches default to `same-origin`
-credentials, so `api.ts`, `photo.ts` and `push.ts` change nothing but
-dropping the header. What that buys, and why each flag:
+**A, the cookie — built 2026-10-08** (`auth.go`, `TestSessionCookie`; the
+invariant is `CLAUDE.md` § A session is a cookie and a drawer). The join
+still answers with the token string and the page still keeps it in the
+drawer and sends it as the bearer. What is new: `GET /api/me` answers every
+load with the same token as a cookie, `Set-Cookie: potok=<token>; HttpOnly;
+SameSite=Strict; Path=/; Max-Age=<a year>`, `Secure` when `PUBLIC_URL` is
+https. The browser sends it by itself on every call to this origin — the
+page's fetches default to `same-origin` credentials — so a browser whose
+drawer Safari emptied is still signed in. Why each flag:
 
 - *Server-set* is the point: Safari's seven-day eviction applies to what
   page script writes (`localStorage`, `document.cookie`) and not to a cookie
   the server set. The quiet-week logout on a non-installed iPhone goes.
 - `HttpOnly`: page script cannot read it, so a script that got into the
-  page cannot carry it off.
-- `SameSite=Strict`: another site cannot make the browser send it, which is
-  the CSRF surface a cookie opens and a header never had. A browser may
-  withhold it on the first page load that arrives from a link — harmless
-  either way, because `index.html` is public and the page's own calls
-  after it are same-site and carry it.
-- `Secure`: HTTPS only. The Vite dev proxy is plain `http://127.0.0.1`,
-  which Chrome and Firefox treat as secure enough for the flag and Safari
-  may not, so the flag follows the request's TLS, or dev in Safari is
-  checked once.
+  page cannot carry it off. The drawer still holds the token, so this
+  buys less than it would alone; the CSP keeping page script to this
+  origin is the real fence there, and the drawer stays so that a browser
+  that blocks cookies is still signed in by the header.
+- `SameSite=Strict`: another **site** cannot make the browser send it. A
+  sibling subdomain is the same site — the demo beside the landing, every
+  village under a cloud domain — and its page could post a text/plain body
+  that sends no preflight, with the cookie attached and `readJSON` decoding
+  whatever arrives. So a write by cookie (POST, PUT, DELETE, logout
+  included) is taken only when the request's `Origin` is `PUBLIC_URL`'s;
+  a browser always sends one on those, and a request without one is not a
+  browser's. Reads need no check: without CORS a sibling cannot read the
+  answer.
+- `Secure` follows `PUBLIC_URL`, so the dev proxy on plain http gets a
+  cookie too, and a village behind Caddy gets a Secure one.
 - A year, under Chrome's 400-day cap. **A cookie is renewed only when the
-  server sends it again**, so `/api/me` re-issues it on every load; without
-  that line every phone lands at the gate a year to the day after the roll.
+  server sends it again**, which is why `/api/me` re-issues it on every
+  load — and how every phone from before the cookie got one at the roll,
+  with nobody logged out.
 - `devices` is untouched: the cookie carries the token the hash already
   knows. No migration.
 
-What it costs, each one small (as built: the re-issue on `/api/me` is the
-exchange, so there is no `POST /api/session`, and the drawer is kept — a
-browser that blocks cookies stays signed in by the header, and the CSP
-already keeps page script to this origin, so `HttpOnly` loses little by
-the token also sitting in `localStorage`): a route `DELETE /api/session`
-for logout, because
-`HttpOnly` means the page cannot clear it itself; the re-issue on
-`/api/me` above; `auth.go` reading the cookie where there is no header,
-**except at `/api/mcp`**, which reads the header only — the cookie rides
-on every same-origin fetch, and the agent door must stay closed to a
-phone's session; the demo door answering with the cookie too; tests keep
-the header, which stays accepted. And one thing `HttpOnly` takes away: the
-page can no longer tell gate from loading by looking in its drawer
-(`getToken()` in `App.tsx`), so a fresh browser asks `/api/me` first and
-sees the gate one round trip and one 401 later; the server clears the
-cookie on that 401 so a dead one is not sent forever. Open and to be seen
-on a phone, not assumed: whether the home-screen app on iOS shares
-Safari's cookie jar (it has had its own storage since iOS 11.3; cookies
-may or may not be in it).
+The rest of the build: `auth.go` reads the cookie where there is no header,
+the header winning when both arrive (the demo switcher writes the next
+house to the drawer and reloads while the cookie still holds the last one),
+**except at `/api/mcp`**, which reads the header only — the cookie rides on
+every same-origin fetch, and the agent door must stay closed to a phone's
+session. A 401 on a cookie takes it off, so a removed phone or the demo's
+hourly reset does not send a dead one for a year. `DELETE /api/session` is
+logout, no token needed, because `HttpOnly` means the page cannot clear it
+itself. The page can no longer tell gate from loading by its drawer, so it
+asks `/api/me` first and alone — a fresh browser sees the gate one round
+trip later, and asked beside the other calls their 401 would reload the
+page forever. Seen on the dev servers: drawer emptied and reloaded, still
+signed in; logout, reload, the gate. **Owed, one phone, one week after the
+roll**: the owner's iPhone, a Safari tab, the portal not installed, opened
+again after a week of other browsing — the claim rests on Apple's
+documented rule until then. Not known either way: whether the home-screen
+app on iOS shares Safari's cookie jar (it has had its own storage since
+iOS 11.3). No Portal News note: the owner's call, nobody needs to know.
 
 **B, the pairing code as a link.** Houses → Add another device shows "883
 559" for fifteen minutes, one use. `/api/join` already takes an invite and
