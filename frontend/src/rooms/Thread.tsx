@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, type Me } from "../api";
 import { useT } from "../i18n";
 import { Crest, When } from "./shared";
+import { Linkify } from "../links";
 
 // One comment thread, wherever a room wants one: an event, a wish, an away
 // notice, a number in the phone book. The board's own shape, one reply level. The name field starts filled
@@ -42,7 +43,7 @@ export function Thread({ subject, id, me, onChanged }: { subject: "event" | "wis
   const one = (c: any, reply?: boolean) => (
     <div key={c.id} className="card comment" style={reply ? { marginLeft: "1.4rem" } : undefined}>
       <div className="head"><Crest crest={c.house_crest} color={c.house_color} /><span className="who">{c.author || c.house_name}</span><When iso={c.created_at} /></div>
-      <div className="body">{c.body}</div>
+      <div className="body"><Linkify text={c.body} /></div>
       <div className="actions">
         {!reply && <button className="ghost" onClick={() => setReplyTo(c.id)}>↩ {t("Reply")}</button>}
         {(c.house_id === me.id || me.is_steward === 1) && <button className="ghost" onClick={() => del(c.id)}>🗑</button>}

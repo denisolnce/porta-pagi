@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, type Me } from "../api";
 import { localeOf, useT } from "../i18n";
 import { Crest, When, answersFor, canEdit, isOver, parse } from "./shared";
 import { Thread } from "./Thread";
 import { DatePicker } from "../DatePicker";
+import { Share, madeOf } from "../links";
 
 // `alarm` is gone (2026-09-06) but old rows still render.
 export const ICON: Record<string, string> = { event: "🔔", work: "🤝", birthday: "🎂", alarm: "🚨" };
@@ -29,13 +30,16 @@ const RSVP: { state: string; icon: string; label: string }[] = [
 // that day's, and the form edits the series as written. A birthday is a date
 // for the village to know, not a gathering: no answers, no place, and no
 // crest, because it belongs to no house.
-export function EventCard({ ev, me, reload, linkToTavern }: { ev: any; me: Me; reload: () => void; linkToTavern?: boolean }) {
+// `landed` is a link that brought the village here (links.tsx): its thread
+// opens, because a link in a conversation is usually about the conversation.
+export function EventCard({ ev, me, reload, linkToTavern, landed }: { ev: any; me: Me; reload: () => void; linkToTavern?: boolean; landed?: boolean }) {
   const { t, lang } = useT();
   const src = ev.series || ev;
   const birthday = ev.kind === "birthday";
   const [editing, setEditing] = useState(false);
   const [f, setF] = useState({ title: src.title, kind: src.kind, starts_at: src.starts_at, ends_at: src.ends_at || "", place: src.place || "", notes: src.notes || "", recur: src.recur || "" });
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(!!landed);
+  useEffect(() => { if (landed) setShowComments(true); }, [landed]);
 
   const list = answersFor(ev);
   const mine = (list.find((x) => x.house_id === me.id)?.state as string | undefined) ?? null;
@@ -78,7 +82,7 @@ export function EventCard({ ev, me, reload, linkToTavern }: { ev: any; me: Me; r
   const edge = over ? "var(--parch3)" : ev.kind === "alarm" ? "var(--red)" : ev.kind === "work" ? "var(--green)" : birthday ? "var(--plum)" : "var(--brass)";
 
   return (
-    <div className={"card" + (over ? " faded" : "")} style={{ borderLeftColor: edge }}>
+    <div className={"card" + (over ? " faded" : "")} style={{ borderLeftColor: edge }} data-entry={"event-" + ev.id}>
       {editing ? (
         <form className="inline" onSubmit={(e) => { e.preventDefault(); save(); }}>
           <div className="row">
@@ -126,6 +130,9 @@ export function EventCard({ ev, me, reload, linkToTavern }: { ev: any; me: Me; r
           </button>
         ))}
         <button className="ghost" onClick={() => setShowComments(!showComments)}>💬 {t("Comments")}{ev.comments ? ` (${ev.comments})` : ""}</button>
+        {/* A birthday is a person's data: no button sends it on. A day of a
+            series links to that day, whose answers are its own. */}
+        {!birthday && <Share kind="event" id={ev.id} made={madeOf(src)} day={ev.occurs_on || undefined} />}
         {!editing && <button className="ghost" onClick={() => setEditing(true)}>✎ {t("Edit")}</button>}
         {canEdit(me, ev) && <button className="ghost" onClick={() => confirm(ev.recur && !birthday ? `${ev.title} — ${t("every date of it")}?` : ev.title + "?") && api(`/events/${ev.id}`, { method: "DELETE" }).then(reload)}>🗑 {t("Delete")}</button>}
       </div>

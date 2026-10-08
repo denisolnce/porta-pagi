@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Me } from "../api";
+import { Share, madeOf } from "../links";
 import { localeOf, useT } from "../i18n";
 import { When, isOver } from "./shared";
 import { Thread } from "./Thread";
@@ -103,13 +104,14 @@ function lines(row: any, t: (s: string) => string, locale: string): string[] {
   return [];
 }
 
-export function SkyCard({ row, me, reload }: { row: any; me: Me; reload: () => void }) {
+export function SkyCard({ row, me, reload, landed }: { row: any; me: Me; reload: () => void; landed?: boolean }) {
   const { t, lang } = useT();
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(!!landed);
+  useEffect(() => { if (landed) setShowComments(true); }, [landed]);
   const over = isOver(row);
   const eclipse = row.kind.endsWith("eclipse");
   return (
-    <div className={"card sky" + (over ? " faded" : "")} style={{ borderLeftColor: over ? "var(--parch3)" : "var(--blue)" }}>
+    <div className={"card sky" + (over ? " faded" : "")} style={{ borderLeftColor: over ? "var(--parch3)" : "var(--blue)" }} data-entry={"almanac-" + row.id}>
       <div className="head">
         <strong>{skyIcon(row)} {t(row.title || row.kind)}</strong>
         <span className="tag sky">{t("celestial")}</span>
@@ -118,6 +120,7 @@ export function SkyCard({ row, me, reload }: { row: any; me: Me; reload: () => v
       <div className="body small">{lines(row, t, localeOf(lang)).map((l, i) => <p key={i}>{l}</p>)}</div>
       <div className="actions">
         <button className="ghost" onClick={() => setShowComments(!showComments)}>💬 {t("Comments")}{row.comments ? ` (${row.comments})` : ""}</button>
+        <Share kind="almanac" id={row.id} made={madeOf(row, "almanac")} />
       </div>
       {showComments && <Thread subject="almanac" id={row.id} me={me} onChanged={reload} />}
     </div>

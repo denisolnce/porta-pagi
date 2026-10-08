@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { api, type Me } from "../api";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { api, ApiError, type Me } from "../api";
 import { useT } from "../i18n";
 import { EventCard } from "./EventCard";
 import { Crest, Empty, When, ahead, canEdit, isOver, useList } from "./shared";
 import { DatePicker } from "../DatePicker";
 import { photoURL, uploadPhoto } from "../photo";
+import { LinkLine, Share, madeOf } from "../links";
 
 // Projects: a long job split into tasks. A task is taken, never handed to a
 // house. Done is a state that stays visible. "3 of 5" is a project's progress,
@@ -84,8 +85,14 @@ export function Project({ me, houses: allHouses }: { me: Me; houses: { id: numbe
   const [pf, setPf] = useState({ title: "", due_at: "", notes: "" });
   const [editTask, setEditTask] = useState<number | null>(null);
   const [ef, setEf] = useState({ title: "", due_at: "", notes: "" });
-  const load = () => api<any>(`/projects/${id}`).then(setP).catch(() => setP(null));
-  useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  // A link carries the day the project was written (links.tsx): a project
+  // of another day under the same id is not the one it pointed at.
+  const [params] = useSearchParams();
+  const made = params.get("made") || "";
+  const [gone, setGone] = useState(false);
+  const load = () => api<any>(`/projects/${id}`).then((x) => { setGone(!!made && madeOf(x) !== made); setP(x); }).catch((e) => { setP(null); setGone(e instanceof ApiError && e.status === 404); });
+  useEffect(() => { setGone(false); load(); }, [id, made]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (gone) return <div className="parchment"><p className="small"><Link to="/projects">← {t("Projects")}</Link></p><LinkLine note="gone" /></div>;
   if (!p) return <div className="parchment">{t("Loading…")}</div>;
 
   const editable = canEdit(me, p);
@@ -159,14 +166,17 @@ export function Project({ me, houses: allHouses }: { me: Me; houses: { id: numbe
         ) : (<>
         <h2>📋 {p.title} {p.state === "done" && <span className="tag done">✓ {t("Finished")}</span>}{p.state === "planned" && <span className="tag">🗓 {t("Planned")}</span>}
           <span className="sub"><Crest crest={p.house_crest} color={p.house_color} /> {p.house_name}{p.due_at ? <> · {t("by")} <When iso={p.due_at} /></> : null}</span>
-          {editable && <span style={{ marginLeft: "auto", display: "flex", gap: ".4rem" }}>
+          <span style={{ marginLeft: "auto", display: "flex", gap: ".4rem" }}>
+            <Share kind="project" id={p.id} made={madeOf(p)} />
+            {editable && <>
             <button className="ghost" onClick={startEdit}>✎ {t("Edit")}</button>
             {/* Planned → in progress → finished, and each step back. */}
             {p.state === "planned" && <button className="primary" onClick={() => put(`/projects/${p.id}`, { state: "open" })}>▶ {t("Start")}</button>}
             {p.state === "open" && <button onClick={() => put(`/projects/${p.id}`, { state: "planned" })}>{t("Back to planned")}</button>}
             {p.state === "open" && <button onClick={() => put(`/projects/${p.id}`, { state: "done" })}>✓ {t("Mark finished")}</button>}
             {p.state === "done" && <button onClick={() => put(`/projects/${p.id}`, { state: "open" })}>{t("Reopen")}</button>}
-          </span>}
+            </>}
+          </span>
         </h2>
         {p.notes && <p>{p.notes}</p>}
         </>)}

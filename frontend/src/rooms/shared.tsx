@@ -4,13 +4,18 @@ import { localeOf, useT } from "../i18n";
 
 // useList: load a resource, expose reload. Rooms are lists with a form on top.
 // A null path is a list behind a switch that is off: nothing is fetched and
-// the list is empty.
+// the list is empty. `loaded` turns true once the first good answer is in, so a
+// link landing in the room (links.tsx) can tell "not in the list" from "not
+// asked yet".
 export function useList<T = any>(path: string | null) {
   const [items, setItems] = useState<T[]>([]);
   const [err, setErr] = useState("");
-  const reload = useCallback(() => (path ? api<T[]>(path).then(setItems).catch((e) => setErr(String(e.message))) : Promise.resolve(setItems([]))), [path]);
+  const [loaded, setLoaded] = useState(false);
+  // Only an answer counts as loaded: a phone with no signal must not read
+  // "not here any more" off a list it never got.
+  const reload = useCallback(() => (path ? api<T[]>(path).then((x) => { setItems(x); setLoaded(true); }).catch((e) => setErr(String(e.message))) : Promise.resolve(setItems([])).then(() => setLoaded(true))), [path]);
   useEffect(() => { reload(); }, [reload]);
-  return { items, err, reload };
+  return { items, err, loaded, reload };
 }
 
 export function Crest({ crest, color }: { crest: string; color: string }) {

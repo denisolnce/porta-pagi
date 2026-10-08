@@ -5,6 +5,7 @@ import { useT } from "../i18n";
 import { Calendar } from "./Calendar";
 import { Board } from "./Board";
 import { Crest, When, useList } from "./shared";
+import { LinkLine, Linkify, useLanding } from "../links";
 
 // The tavern is one room: pinned notices on the door, the calendar on the wall,
 // the board under it. It was two rooms until 2026-09-04 — a village opens one
@@ -18,17 +19,20 @@ export function Hall({ me, houses }: { me: Me; houses: any[] }) {
   useEffect(() => {
     if (params.get("at") === "board") document.getElementById("board")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [params, posts.items.length]);
+  // A link to one post (links.tsx) scrolls to its card on the board.
+  const postGone = useLanding("post", posts.items, posts.loaded);
 
   const pinned = posts.items.filter((p: any) => p.pinned && !p.parent_id);
   return (
     <>
+      <LinkLine note={postGone ? "gone" : null} />
       {pinned.length > 0 && (
         <div className="parchment pinned-strip">
           <h2>📌 {t("Pinned")}</h2>
           {pinned.map((p: any) => (
             <div key={p.id} className="card pinned">
               <div className="head"><Crest crest={p.house_crest} color={p.house_color} /><span className="who">{p.house_name}</span><When iso={p.created_at} /></div>
-              <div className="body">{p.body}</div>
+              <div className="body"><Linkify text={p.body} /></div>
             </div>
           ))}
         </div>

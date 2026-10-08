@@ -1,6 +1,10 @@
 # A link to one entry: events, posts, needs, tools, and most things
 
-Researched 2026-10-08 on the owner's ask, not built. The owner's words:
+Researched 2026-10-08 on the owner's ask, and built the same day, options A
+and C ("let's actually implement the shareable links. We document and accept
+the inconvenience that it might be working badly in WhatsApp for now"). The
+invariant is `CLAUDE.md` § A link to one entry; § As built below says what
+differs from the design. The owner's words:
 "make events, projects, maybe even market orders and tools, and basically
 most things a link-shareable thing … our frontend and its urls might have
 to have a significant overhaul for this to work … this feature would help
@@ -13,6 +17,54 @@ under the thumb** — and the same for "I drive to Kočevje Thursday, add
 what you need", "the chainsaw is in the shed, here", "read the new codex
 section". Today the villager types "look in the portal, under Market" and
 the neighbour opens Home and hunts. The answer first, then the argument.
+
+## As built
+
+- **The code**: `frontend/src/links.tsx` holds the resolver (`Go`, the route
+  `#/go/:kind/:id/:made?` in `App.tsx`), `useLanding` that each room calls
+  with its list, the `Share` button, the landing lines and `Linkify`.
+  Cards carry `data-entry="<kind>-<id>"`, not an `id`: a series draws one
+  event on many days, and an attribute may repeat where an `id` may not.
+- **The addresses** are the table below, as designed: `#/tavern?event=`
+  (`&day=` for a series), `?post=`, `?almanac=`; `#/market?run=`,
+  `?need=`, `?offer=`; `#/shed?tool=`, `?wish=`; `#/codex?section=`;
+  `#/projects/ID`. The kinds the resolver knows are `KINDS` in
+  `links.tsx`; the sky's `almanac` sits behind `celestial`.
+- **A landing** waits for the room's list to answer (a failed fetch says
+  nothing, never "deleted"), pages the view — the calendar's month and
+  day, the Market's tab, the wishlist unfolded, the shed's filters
+  cleared — scrolls the card's head under the top bar, opens its thread
+  and lights its frame for 1.5 s. The two lines are worded as designed
+  and go with the next navigation. `Gate` goes to Home only from
+  `#/join/…`; any other address stays, so a phone that joins lands on it.
+- **Links in text** (`Linkify`): only `http(s)://` runs, a trailing full
+  stop or bracket left out; one into this portal is a router link in the
+  same tab, a foreign one opens beside it with `noreferrer noopener`.
+- **The day travels as `made`**: `#/go/event/12/2026-10-08` redirects to
+  `#/tavern?event=12&made=2026-10-08`. It is the row's `created_at` as
+  stored, the UTC day, the same on both ends (`madeOf`, `entryLink`). Two
+  kinds differ: a sky row has no `created_at` and carries its own
+  `starts_at` day, which `UNIQUE (kind, starts_at)` makes its identity; a
+  codex section has no creation stamp at all, so its link carries no day
+  and a reused section id is not caught, until `AUTOINCREMENT`.
+- **A series link without a day** (a comment push, an agent) opens on the
+  series' next day, not its first.
+- **The landing lines** ride in the router's state on Home, and on the
+  room's own address in a room, so the next navigation takes them away.
+- **The project page** checks `made` too, and says "not here any more"
+  where it used to say Loading… forever for a deleted project.
+- **Pushes**: only comment pushes moved (`entryLink` in `threads.go`: an
+  event, a wish, a sky row; pinned in `TestRsvpAndComments`,
+  `TestWishOptionsAndThread` and `TestAlmanac`). Creation pushes keep
+  their room addresses, and the away notice's stays `#/watch`.
+- **A birthday** has no button, but the route opens one: a comment on its
+  thread rings the house that wrote it down, and that push links to the
+  card. The agent's sentence in `mcp.go` says not to hand one out.
+- **The button** is `ghost`, the assistant's pick pending the owner. A post
+  carries it after Reply, a tool and a run before Edit, a codex section in
+  its tools beside Edit, the project page in its heading row.
+- **Not done**: no Portal News note, by the owner's call 2026-10-08. No
+  link kinds for the counting rooms (`later.md`).
 
 ## Answer first
 
@@ -200,7 +252,8 @@ the neighbour opens Home and hunts. The answer first, then the argument.
 
 ## Open
 
-- `ghost` or `lesser` for the button (above).
-- Whether the away card gets one. Recommended no.
+- `ghost` or `lesser` for the button (above). Built as `ghost`.
 - Whether events get a page of their own (option B) once the 60-day window
   is decided.
+
+The away card gets none: decided by the owner with the build, 2026-10-08.

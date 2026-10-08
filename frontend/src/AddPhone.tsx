@@ -30,7 +30,12 @@ export function AddPhone({ compact }: { compact?: boolean }) {
 
   // Six digits read off one device and typed into another is where a villager
   // gives up. The clipboard carries the raw code; the gate strips spaces anyway.
+  // The link is the gate's own address for a code (#/join/<code>, the invite
+  // link's shape): opened on the other device it fills the code in, and a
+  // pairing code joins through the same route as an invite.
+  const [copiedLink, setCopiedLink] = useState(false);
   const copy = () => { navigator.clipboard?.writeText(pin); setCopied(true); setTimeout(() => setCopied(false), 1500); };
+  const copyLink = () => { navigator.clipboard?.writeText(`${location.origin}${location.pathname}#/join/${pin}`); setCopiedLink(true); setTimeout(() => setCopiedLink(false), 1500); };
 
   const expired = pin !== "" && left === 0 && until !== 0 && Date.now() > until;
   if (!pin || expired) {
@@ -41,10 +46,11 @@ export function AddPhone({ compact }: { compact?: boolean }) {
     <div>
       <div className="pin">{pin.slice(0, 3)} {pin.slice(3)}</div>
       <div style={{ textAlign: "center" }}>
-        <button className="lesser" onClick={copy}>📋 {copied ? t("Copied") : t("Copy")}</button>
+        <button className="lesser" onClick={copy}>📋 {copied ? t("Copied") : t("Copy")}</button>{" "}
+        <button className="lesser" onClick={copyLink}>🔗 {copiedLink ? t("Copied") : t("Copy link")}</button>
       </div>
       <p className="small">
-        {t("On the other device open the portal and type this code. It works once, and only for")} {mm}:{ss}.
+        {t("On the other device open the link, or open the portal and type this code. It works once, and only for")} {mm}:{ss}.
         {!compact && <> {t("This is how a second device of the same house gets in, and how you sign in again after adding the portal to your home screen.")}</>}
       </p>
     </div>

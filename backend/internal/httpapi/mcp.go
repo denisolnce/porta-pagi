@@ -303,7 +303,8 @@ func (s *Server) mcp(w http.ResponseWriter, r *http.Request) {
 			"capabilities":    map[string]any{"tools": map[string]any{}},
 			"serverInfo":      map[string]any{"name": "porta-pagi", "version": "1"},
 			"instructions": "You act as one house of a small village portal, with that house's name on everything you write. Call whoami first. " + clocks +
-				" Leave `author` empty unless the person dictated the words. Away notices are burglary information: read them only when asked and keep them in this conversation.",
+				" Leave `author` empty unless the person dictated the words. Away notices are burglary information: read them only when asked and keep them in this conversation." +
+				" To hand the person a link to one entry, write " + strings.TrimSuffix(s.cfg.PublicURL, "/") + "/#/go/<kind>/<id>/<day>, kind one of event, post, run, need, offer, tool, wish, project, almanac, section, and day the first ten characters of the row's created_at (an almanac row's starts_at; a codex section takes none); never for an away notice or a birthday.",
 		}, nil)
 	case "ping":
 		rpcReply(w, req.ID, map[string]any{}, nil)

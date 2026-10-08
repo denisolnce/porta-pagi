@@ -151,12 +151,18 @@ func (s *Server) tellThread(r *http.Request, subject string, id int64, from *Hou
 		}
 		return
 	}
-	kind, icon, url := "events", "💬", "#/tavern"
+	kind, icon, room, table := "events", "💬", "#/tavern", "events"
 	q := `SELECT DISTINCT house_id FROM event_signups WHERE event_id=? AND state IN ('yes','maybe')`
 	if subject == "wish" {
-		kind, url = "tools", "#/shed"
+		kind, room, table = "tools", "#/shed", "wishes"
 		q = `SELECT DISTINCT house_id FROM wish_wants WHERE wish_id=?`
 	}
+	if subject == "almanac" {
+		table = "almanac"
+	}
+	// The push opens the entry, not the room: the away notice above is the
+	// one thread whose push stays at the room.
+	url := s.entryLink(r.Context(), subject, table, id, room)
 	// The sky has no caller and no answers: whoever already talks about this
 	// full moon hears the reply, and nobody else is woken for it.
 	if subject == "almanac" {
@@ -181,6 +187,25 @@ func (s *Server) tellThread(r *http.Request, subject string, id int64, from *Hou
 			return Payload{Title: icon + " " + from.Name + tr(lang, " on: ") + label, Body: body, URL: url}
 		})
 	}
+}
+
+// entryLink is the address of one entry, the resolver route the page's Share
+// button writes too (frontend/src/links.tsx): #/go/<kind>/<id>/<day>. The day
+// is the UTC day the row was written, its created_at as stored, so the page
+// can tell a reused id — no table uses AUTOINCREMENT — from the entry the link
+// meant. The sky has no created_at, and its own day is what names a row. A
+// row that cannot be read keeps the room's address.
+func (s *Server) entryLink(ctx context.Context, kind, table string, id int64, room string) string {
+	col := "created_at"
+	if kind == "almanac" {
+		col = "starts_at"
+	}
+	row, _ := s.st.One(ctx, `SELECT substr(`+col+`, 1, 10) AS day FROM `+table+` WHERE id=?`, id)
+	day, _ := row["day"].(string)
+	if day == "" {
+		return room
+	}
+	return "#/go/" + kind + "/" + strconv.FormatInt(id, 10) + "/" + day
 }
 
 func (s *Server) deleteComment(w http.ResponseWriter, r *http.Request) {

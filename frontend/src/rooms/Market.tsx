@@ -3,6 +3,7 @@ import { api, type House, type Me } from "../api";
 import { useT } from "../i18n";
 import { Crest, Empty, When, canEdit, useList } from "./shared";
 import { DatePicker } from "../DatePicker";
+import { LinkLine, Share, madeOf, useLanding } from "../links";
 
 // A run is a trip or an order: one house, a cut-off, the needs that join it.
 // Only the words differ — a trip drives to a place and leaves, an order is
@@ -40,6 +41,14 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
     <label>{t("Kind")}<select value={kind} onChange={(e) => set(e.target.value)}>{(["trip", "order"] as const).map((k) => <option key={k} value={k}>{RUN[k].icon} {t(k)}</option>)}</select></label>
   );
   const setState = (path: string, id: number, state: string, reload: () => void) => api(`${path}/${id}`, { method: "PUT", body: { state } }).then(reload);
+  // A link to one need, give-away or run (links.tsx) opens its tab. A done
+  // need or give-away leaves the list after seven days, and its link then
+  // says so.
+  const gone = [
+    useLanding("need", needs.items, needs.loaded, () => setTab("needs")),
+    useLanding("offer", offers.items, offers.loaded, () => setTab("offers")),
+    useLanding("run", runs.items, runs.loaded, () => setTab("runs")),
+  ].some(Boolean);
 
   // Render functions, not components: a component declared inside the room is
   // a new type on every render, so React would remount the card on each
@@ -49,8 +58,9 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
     const mine = x.house_id === me.id;
     const claimer = (x.taken_by ?? x.claimed_by) === me.id;
     const byName: string | undefined = x[byCol];
+    const kind = path === "/needs" ? "need" : "offer";
     return (
-      <div key={x.id} className="card" style={{ opacity: x.state === "done" ? 0.55 : 1 }}>
+      <div key={x.id} className="card" style={{ opacity: x.state === "done" ? 0.55 : 1 }} data-entry={kind + "-" + x.id}>
         {editing === path + x.id ? (
           <form className="inline" onSubmit={(e) => { e.preventDefault(); saveEdit(path, x.id, reload); }}>
             <div className="row">
@@ -70,6 +80,7 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
           {x.state === "open" && !mine && <button className="primary" onClick={() => setState(path, x.id, claimedState, reload)}>{claimedState === "taken" ? "🛒 " + t("I take it") : "🙋 " + t("I want it")}</button>}
           {x.state === claimedState && (claimer || canEdit(me, x)) && <button onClick={() => setState(path, x.id, "open", reload)}>{t("Release")}</button>}
           {x.state !== "done" && (claimer || canEdit(me, x)) && <button onClick={() => setState(path, x.id, "done", reload)}>✓ {t("Done")}</button>}
+          <Share kind={kind} id={x.id} made={madeOf(x)} />
           {canEdit(me, x) && editing !== path + x.id && <button className="ghost" onClick={() => startEdit(path + x.id, x.tag ? { text: x.text, tag: x.tag } : { text: x.text })}>✎ {t("Edit")}</button>}
           {canEdit(me, x) && <button className="ghost" onClick={() => confirm("?") && api(`${path}/${x.id}`, { method: "DELETE" }).then(reload)}>🗑</button>}
         </div>
@@ -80,6 +91,7 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
   return (
     <div className="parchment">
       <h2>🧺 {t("Market")} <span className="sub">{t("needs, give-aways, runs, orders")}</span></h2>
+      <LinkLine note={gone ? "gone" : null} />
       <div className="tabs">
         <button className={tab === "needs" ? "active" : ""} onClick={() => setTab("needs")}>🛒 {t("Needs")} ({needs.items.filter((x) => x.state === "open").length})</button>
         <button className={tab === "offers" ? "active" : ""} onClick={() => setTab("offers")}>🎁 {t("Give-aways")} ({offers.items.filter((x) => x.state === "open").length})</button>
@@ -109,7 +121,7 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
       {tab === "needs" && (needs.items.length ? needs.items.map(claimable("/needs", "taken_by_name", "taken", needs.reload)) : <Empty text={t("Nothing here yet.")} />)}
       {tab === "offers" && (offers.items.length ? offers.items.map(claimable("/offers", "claimed_by_name", "claimed", offers.reload)) : <Empty text={t("Nothing here yet.")} />)}
       {tab === "runs" && (runs.items.length ? runs.items.map((r) => (
-        <div key={r.id} className="card">
+        <div key={r.id} className="card" data-entry={"run-" + r.id}>
           {editing === "/runs" + r.id ? (
             <form className="inline" onSubmit={(e) => { e.preventDefault(); saveEdit("/runs", r.id, runs.reload); }}>
               <div className="row">
@@ -125,10 +137,11 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
           {r.notes && <div className="body small">{r.notes}</div>}
           </>)}
           <div className="small">{needs.items.filter((n) => n.run_id === r.id && n.state !== "done").map((n) => <div key={n.id}>• {n.house_name}: {n.text}</div>)}</div>
-          {canEdit(me, r) && <div className="actions">
-            {editing !== "/runs" + r.id && <button className="ghost" onClick={() => startEdit("/runs" + r.id, { kind: r.kind === "order" ? "order" : "trip", destination: r.destination, cutoff_at: r.cutoff_at, notes: r.notes || "" })}>✎ {t("Edit")}</button>}
-            <button className="ghost" onClick={() => confirm("?") && api(`/runs/${r.id}`, { method: "DELETE" }).then(runs.reload)}>🗑</button>
-          </div>}
+          <div className="actions">
+            <Share kind="run" id={r.id} made={madeOf(r)} />
+            {canEdit(me, r) && editing !== "/runs" + r.id && <button className="ghost" onClick={() => startEdit("/runs" + r.id, { kind: r.kind === "order" ? "order" : "trip", destination: r.destination, cutoff_at: r.cutoff_at, notes: r.notes || "" })}>✎ {t("Edit")}</button>}
+            {canEdit(me, r) && <button className="ghost" onClick={() => confirm("?") && api(`/runs/${r.id}`, { method: "DELETE" }).then(runs.reload)}>🗑</button>}
+          </div>
         </div>
       )) : <Empty text={t("Nothing here yet.")} />)}
     </div>

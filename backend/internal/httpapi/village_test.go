@@ -786,6 +786,13 @@ func TestRsvpAndComments(t *testing.T) {
 	code, c1, _ := steward.do("POST", "/api/threads/event/"+id, map[string]any{"body": "Kdaj točno?", "author": "Ana"})
 	steward.must(201, code, "comment")
 	waitFor(t, 1, fake) // the house that called it hears
+	// The push opens the event itself, through the resolver, with the day
+	// the row was written, so a reused id is caught on the page.
+	var cp Payload
+	json.Unmarshal(fake.payloads[0], &cp)
+	if want := "#/go/event/" + id + "/" + evs[0]["created_at"].(string)[:10]; cp.URL != want {
+		t.Fatalf("comment push URL %q, want %q", cp.URL, want)
+	}
 	rootID := itoa(c1["id"].(float64))
 	_, c2, _ := volk.do("POST", "/api/threads/event/"+id, map[string]any{"body": "Ob osmih", "parent_id": c1["id"]})
 	_, c3, _ := steward.do("POST", "/api/threads/event/"+id, map[string]any{"body": "Prav", "parent_id": c2["id"]})
@@ -829,6 +836,13 @@ func TestWishOptionsAndThread(t *testing.T) {
 	code, _, _ = steward.do("POST", "/api/wishes/"+wid+"/options", map[string]any{"text": "Vevor 7t, 180 EUR", "url": "example.com/vevor"})
 	steward.must(201, code, "option")
 	waitFor(t, 1, fake)
+	// The push opens the wish itself, with the day it was written.
+	_, _, ws := volk.do("GET", "/api/wishes", nil)
+	var wp Payload
+	json.Unmarshal(fake.payloads[0], &wp)
+	if want := "#/go/wish/" + wid + "/" + ws[0]["created_at"].(string)[:10]; wp.URL != want {
+		t.Fatalf("wish push URL %q, want %q", wp.URL, want)
+	}
 	code, _, _ = steward.do("POST", "/api/wishes/"+wid+"/options", map[string]any{"text": ""})
 	steward.must(400, code, "empty option")
 
