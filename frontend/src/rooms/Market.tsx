@@ -48,7 +48,7 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
     useLanding("need", needs.items, needs.loaded, () => setTab("needs")),
     useLanding("offer", offers.items, offers.loaded, () => setTab("offers")),
     useLanding("run", runs.items, runs.loaded, () => setTab("runs")),
-  ].some(Boolean);
+  ].find(Boolean) ?? null;
 
   // Render functions, not components: a component declared inside the room is
   // a new type on every render, so React would remount the card on each
@@ -91,7 +91,7 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
   return (
     <div className="parchment">
       <h2>🧺 {t("Market")} <span className="sub">{t("needs, give-aways, runs, orders")}</span></h2>
-      <LinkLine note={gone ? "gone" : null} />
+      <LinkLine note={gone} />
       <div className="tabs">
         <button className={tab === "needs" ? "active" : ""} onClick={() => setTab("needs")}>🛒 {t("Needs")} ({needs.items.filter((x) => x.state === "open").length})</button>
         <button className={tab === "offers" ? "active" : ""} onClick={() => setTab("offers")}>🎁 {t("Give-aways")} ({offers.items.filter((x) => x.state === "open").length})</button>

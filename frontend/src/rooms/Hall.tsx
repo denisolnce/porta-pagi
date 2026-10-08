@@ -25,7 +25,7 @@ export function Hall({ me, houses }: { me: Me; houses: any[] }) {
   const pinned = posts.items.filter((p: any) => p.pinned && !p.parent_id);
   return (
     <>
-      <LinkLine note={postGone ? "gone" : null} />
+      <LinkLine note={postGone} />
       {pinned.length > 0 && (
         <div className="parchment pinned-strip">
           <h2>📌 {t("Pinned")}</h2>

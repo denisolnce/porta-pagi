@@ -298,7 +298,8 @@ others in `later.md`:
 - Methods: `initialize` (echoes `2025-03-26` when the client says so, else
   answers `2025-06-18`; capabilities `{"tools":{}}`; `serverInfo`
   `{"name":"porta-pagi"}`; `instructions` with the two clocks, the
-  `author` rule and the away-notice rule), any `notifications/*` (202, empty
+  `author` rule, the away-notice rule and the link shape
+  `<PUBLIC_URL>/#/go/<kind>/<id>/<day>`), any `notifications/*` (202, empty
   body), `ping` (`{}`), `tools/list`, `tools/call`. Anything else is
   `-32601`; unparseable is `-32700`; an unknown tool is `-32602`.
 - `tools/call` returns `{"content":[{"type":"text","text":<the API's JSON

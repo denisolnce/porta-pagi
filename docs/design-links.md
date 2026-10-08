@@ -60,6 +60,19 @@ the neighbour opens Home and hunts. The answer first, then the argument.
 - **A birthday** has no button, but the route opens one: a comment on its
   thread rings the house that wrote it down, and that push links to the
   card. The agent's sentence in `mcp.go` says not to hand one out.
+- **Two landing lines, not one.** A row the list no longer shows reads "no
+  longer shown here": a run the day after its cut-off (`listRuns`), a need
+  or a give-away seven days after done, an event after sixty days — the
+  three windows, in one place. "Not here any more — it may have been
+  deleted" is kept for the one case that means it: a day in the link that
+  is not the row's, or an unknown kind.
+- **The gate, opened from a link**, adds one line for a member whose
+  WhatsApp browser holds no session: open this link in Safari or Chrome,
+  where you are signed in. The webview's cost is accepted; a sentence that
+  tells a member to ask for an invite is not part of it.
+- **Share** opens the system sheet only on a coarse pointer (a phone, where
+  WhatsApp is two taps away) and copies on a laptop, where Chrome's sheet
+  offers Mail and AirDrop and a villager at WhatsApp Web wants to paste.
 - **The button** is `ghost`, the assistant's pick pending the owner. A post
   carries it after Reply, a tool and a run before Edit, a codex section in
   its tools beside Edit, the project page in its heading row.
@@ -252,7 +265,10 @@ the neighbour opens Home and hunts. The answer first, then the argument.
 
 ## Open
 
-- `ghost` or `lesser` for the button (above). Built as `ghost`.
+- `ghost` or `lesser` for the button (above). Built as `ghost`. On a
+  Market need it is the sixth action in the row (primary, Release, Done,
+  Share, Edit, 🗑) and wraps on a phone; it reads as a group with Edit and
+  🗑, so it passes for now — the owner picks with that row in view.
 - Whether events get a page of their own (option B) once the 60-day window
   is decided.
 

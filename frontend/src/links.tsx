@@ -40,8 +40,12 @@ export function entryURL(kind: string, id: number, made: string, day?: string) {
 }
 
 // The landing lines travel in the router's state, so the next navigation,
-// which carries none, takes them away.
-export type LinkNote = "off" | "gone";
+// which carries none, takes them away. "gone" is the one case that means
+// deleted — a day in the link that is not the row's, or an unknown kind;
+// "hidden" is a row the list no longer shows: a run the day after its
+// cut-off, a need or a give-away seven days after done, an event after
+// sixty days. The honest line for those says shown, not deleted.
+export type LinkNote = "off" | "gone" | "hidden";
 
 export function Go() {
   const { kind = "", id = "", made = "" } = useParams();
@@ -63,30 +67,31 @@ export function Go() {
 export function LinkLine({ note }: { note: LinkNote | null | undefined }) {
   const { t } = useT();
   if (!note) return null;
-  return <p className="small muted link-note">{note === "off" ? t("That room is switched off in this village.") : t("That entry is not here any more — it may have been deleted.")}</p>;
+  return <p className="small muted link-note">{note === "off" ? t("That room is switched off in this village.") : note === "hidden" ? t("That entry is no longer shown here.") : t("That entry is not here any more — it may have been deleted.")}</p>;
 }
 
 // useLanding opens one entry a link points at, once per address: it waits
 // for the room's list, finds the row by ?<param>= and checks ?made=, hands
 // the row to the room (which pages its view, picks a tab, opens a thread),
 // then scrolls the card that carries data-entry="<param>-<id>" into view and
-// marks it for a moment. It answers whether the entry is missing.
-export function useLanding(param: string, items: any[], loaded: boolean, onFound?: (row: any) => void, kind?: string): boolean {
+// marks it for a moment. It answers with the landing line the room owes, or null.
+export function useLanding(param: string, items: any[], loaded: boolean, onFound?: (row: any) => void, kind?: string): LinkNote | null {
   const [params] = useSearchParams();
   const id = Number(params.get(param) || 0);
   const made = params.get("made") || "";
   const key = id ? `${param}:${id}:${made}` : "";
   const done = useRef("");
-  const [missing, setMissing] = useState(false);
+  const [missing, setMissing] = useState<LinkNote | null>(null);
   const found = useRef(onFound);
   found.current = onFound;
   useEffect(() => {
-    if (!key) { done.current = ""; setMissing(false); return; }
+    if (!key) { done.current = ""; setMissing(null); return; }
     if (!loaded || done.current === key) return;
     done.current = key;
     const row = items.find((x) => x.id === id);
-    if (!row || (made && madeOf(row, kind) !== made)) { setMissing(true); return; }
-    setMissing(false);
+    if (!row) { setMissing("hidden"); return; }
+    if (made && madeOf(row, kind) !== made) { setMissing("gone"); return; }
+    setMissing(null);
     found.current?.(row);
     // After the room has drawn what onFound changed: the card may sit in
     // another place once the month or the tab moved.
@@ -117,7 +122,10 @@ export function Share({ kind, id, made, day }: { kind: string; id: number; made:
   const [copied, setCopied] = useState(false);
   const share = async () => {
     const url = entryURL(kind, id, made, day);
-    if (navigator.share) {
+    // The system sheet on a phone, where WhatsApp is two taps away; the
+    // clipboard on a laptop, where the sheet offers Mail and AirDrop and a
+    // villager at WhatsApp Web wants to paste.
+    if (navigator.share && matchMedia("(pointer: coarse)").matches) {
       try { await navigator.share({ url }); } catch { /* the sheet was closed */ }
       return;
     }
@@ -143,7 +151,6 @@ export function Linkify({ text }: { text: string }) {
     const at = m.index!;
     if (at > last) out.push(text.slice(last, at));
     if (url.startsWith(here + "#/")) out.push(<Link key={at} to={url.slice(here.length + 1)}>{url}</Link>);
-    else if (url.startsWith(location.origin + "/")) out.push(<a key={at} href={url}>{url}</a>);
     else out.push(<a key={at} href={url} target="_blank" rel="noreferrer noopener">{url}</a>);
     last = at + url.length;
   }

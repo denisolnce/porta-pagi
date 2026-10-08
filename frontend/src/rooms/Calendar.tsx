@@ -181,7 +181,7 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
       <h2>🔔 {t("The village calendar")} <span className="sub">{t("calendar and work bees")}</span>
         <button style={{ marginLeft: "auto" }} onClick={openForm}>+ {t("Add an event")}</button>
       </h2>
-      <LinkLine note={eventGone || skyGone ? "gone" : null} />
+      <LinkLine note={eventGone || skyGone} />
 
       {open && (
         <form className="inline" onSubmit={save}>

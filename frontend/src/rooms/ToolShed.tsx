@@ -51,7 +51,7 @@ export function ToolShed({ me, houses }: { me: Me; houses: House[] }) {
   const gone = [
     useLanding("tool", items, loaded, () => { setOwner(null); setCat(null); }),
     useLanding("wish", wishes.items, wishes.loaded, (w) => { setWishOpen(true); setThreadFor(w.id); }),
-  ].some(Boolean);
+  ].find(Boolean) ?? null;
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,7 +120,7 @@ export function ToolShed({ me, houses }: { me: Me; houses: House[] }) {
       <div className="parchment">
         <h2>🛠 {t("Tool shed")} <span className="sub">{t("what the village has")}</span><button style={{ marginLeft: "auto" }} onClick={() => setAdding(!adding)}>+ {t("I share a tool")}</button></h2>
         <p className="small muted" style={{ fontStyle: "italic", marginTop: "-.3rem" }}>{t("Take and return are for when it helps. A tool may simply be listed, so the village knows it exists.")}</p>
-        <LinkLine note={gone ? "gone" : null} />
+        <LinkLine note={gone} />
         {adding && <form className="inline" onSubmit={add}>
           <div className="row">
             <label>{t("I share a tool")}<input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder={t("chainsaw, ladder, trailer…")} maxLength={80} /></label>

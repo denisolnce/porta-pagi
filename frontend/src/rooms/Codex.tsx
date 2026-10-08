@@ -107,7 +107,7 @@ export function Codex({ me }: { me: Me }) {
     <div className="parchment codex">
       <h2>📜 {t("Codex")} <span className="sub">{t("the village's values and agreements")}</span></h2>
       {last && <p className="cx-stamp cx-head"><Stamp s={last} /></p>}
-      <LinkLine note={gone ? "gone" : null} />
+      <LinkLine note={gone} />
       {items.length === 0 && <Empty text={t("The codex is empty. A steward brings in the adopted text.")} />}
       {items.map((s, i) => {
         const l = shown(s);

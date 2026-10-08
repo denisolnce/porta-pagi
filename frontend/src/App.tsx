@@ -308,6 +308,7 @@ function Gate({ onJoined }: { onJoined: () => Promise<void> }) {
     <div className="parchment gate">
       <h2>🏰 {t("Enter the village")}</h2>
       <p className="small">{bootstrap ? t("The village is empty. The first steward founds it with the bootstrap code from the server log.") : t("You need an invite link from a steward. Ask in the WhatsApp group.")}</p>
+      {!bootstrap && pathname.startsWith("/go/") && <p className="small">{t("Already a member? Open this link in Safari or Chrome, where you are signed in.")}</p>}
       {!bootstrap && <p className="small">{t("Already signed in in your browser? Open the portal there, go to Houses and press Add another device — it gives you a 6-digit code for this one.")}</p>}
       <form onSubmit={submit} className="inline">
         <label>{bootstrap ? t("Bootstrap code") : t("Invite or pairing code")}<input value={code} onChange={(e) => setCode(e.target.value)} autoCapitalize="off" autoComplete="off" required /></label>

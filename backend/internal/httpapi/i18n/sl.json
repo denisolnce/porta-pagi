@@ -626,5 +626,7 @@
   "Link copied": "Povezava kopirana",
   "That room is switched off in this village.": "Ta soba je v tej vasi izklopljena.",
   "That entry is not here any more — it may have been deleted.": "Tega vnosa ni več — morda je bil izbrisan.",
-  "Copy link": "Kopiraj povezavo"
+  "Copy link": "Kopiraj povezavo",
+  "That entry is no longer shown here.": "Ta vnos tu ni več prikazan.",
+  "Already a member? Open this link in Safari or Chrome, where you are signed in.": "Ste že član? Odprite to povezavo v Safariju ali Chromu, kjer ste prijavljeni."
 }
