@@ -206,7 +206,10 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   Open-Meteo 15 (its API stops at 16), ARSO 10, the ten its own page shows
   (its answer carries an eleventh, a stub whose page is empty). ‹ › page by
   five and are absent at their end. **A day links to the provider's page for
-  that day only where the provider has one**: ARSO does
+  that day only where the provider has one** — the assistant's call of
+  2026-10-08, awaiting the owner's yes, because the owner made the links
+  hang on both providers having pages and Open-Meteo has none
+  (`docs/later.md` § Open decisions): ARSO does
   (`vreme.arso.gov.si/napoved/<place>/graf/<n>`, n counted from today, so
   neither the cache nor the browser keeps a copy past midnight), and the
   link opens beside the app. **That address is not a published API**: it is
@@ -752,7 +755,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   forecast day wears `.lesser`'s border, fill and thin shadow (`.w-day`).
   Reuse the frame where a small box needs to belong; the affordance goes
   only on what a tap opens. A forecast day is both cases: where the provider
-  has a page for that day (ARSO) it is a link (owner's ask 2026-10-08) and
+  has a page for that day (ARSO) it is a link (the assistant's call of
+  2026-10-08 on the owner's ask, awaiting his yes) and
   takes the affordance — the date dotted underneath, which is the one cue a
   phone shows before the tap, as the house name in the top bar has, and the
   pointer, the hover and the press for a mouse. Where it has none

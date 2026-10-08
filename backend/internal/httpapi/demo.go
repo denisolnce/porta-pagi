@@ -431,7 +431,9 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 	// The demo shows every room, so every switch is on, and stays on: the
 	// demo server refuses a flip (demoLocked) and the settings page greys
 	// the switches out. The steward switched them on a year ago, so the
-	// settings page reads "switched on by", not "had it before switches".
+	// settings page reads "switched on by", not "had it before switches" —
+	// except a switch that is on by default, which nobody flipped and which
+	// therefore has no row (CLAUDE.md § Switches).
 	var steward any
 	for _, h := range seed.Houses {
 		if h.Steward {
@@ -439,6 +441,9 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 		}
 	}
 	for _, f := range Features {
+		if f.Default {
+			continue
+		}
 		if _, err := tx.Exec(ctx, `INSERT INTO features(key, enabled, set_by, set_at) VALUES (?, 1, ?, ?)`, f.Key, steward, past(-365, "21:00")); err != nil {
 			return nil, err
 		}
