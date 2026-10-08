@@ -65,9 +65,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
 - **Done means seen on the VM**, not the push: `docker inspect` shows the
   new image healthy, and `task vm:logs` in the village's repo shows the
   `migrated` lines when there were any. The village answers at
-  `vas.mokri-potok.si`, the demo at `pp-demo.gardenofatlantis.com`, the
-  landing at `porta-pagi.gardenofatlantis.com` (a test address, `noindex`
-  until the real domain).
+  `vas.mokri-potok.si`, the demo at `demo.portapagi.com`, the landing at
+  `portapagi.com` (`noindex` until this repo is public; the plan's §10).
 - **The VM belongs to gaias-choice.** A new route, poll entry or secret is a
   commit there. A step done by hand on the box goes into that repo's
   `deploy/infra-log.md` in the same change, and a village's own steps into
