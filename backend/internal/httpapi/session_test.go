@@ -133,6 +133,14 @@ func TestSessionCookie(t *testing.T) {
 	if rec := post("https://demo.example.si", "", tok); rec.Code != 201 {
 		t.Fatalf("bearer from anywhere: want 201, got %d %s", rec.Code, rec.Body.String())
 	}
+	// Logout is the one write by cookie outside requireHouse: same fence.
+	req = httptest.NewRequest("DELETE", "/api/session", nil)
+	req.Header.Set("Origin", "https://demo.example.si")
+	rec = httptest.NewRecorder()
+	h2.ServeHTTP(rec, req)
+	if rec.Code != 403 {
+		t.Fatalf("sibling origin logout: want 403, got %d", rec.Code)
+	}
 
 	// The header wins over the cookie, and /api/me then re-issues the
 	// header's token: the demo switcher writes the next house to the drawer

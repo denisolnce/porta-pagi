@@ -180,6 +180,12 @@ func (s *Server) clearSession(w http.ResponseWriter) {
 // logout takes the cookie off. No token needed: a browser clearing its own
 // cookie harms nobody, and a dead one is exactly the case that calls it.
 func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
+	// The one write by cookie outside requireHouse, so the same Origin fence
+	// here: a sibling page must not log a phone out of its cookie.
+	if o := r.Header.Get("Origin"); o != "" && !sameOrigin(o, s.cfg.PublicURL) {
+		writeErr(w, http.StatusForbidden, "a write by cookie is taken from "+s.cfg.PublicURL+" only, not from "+o)
+		return
+	}
 	s.clearSession(w)
 	w.WriteHeader(http.StatusNoContent)
 }
