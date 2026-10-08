@@ -57,7 +57,7 @@ holds and can type anywhere**, which is option D below, made long enough.
 
 | Option | What the villager does | What it costs | What it breaks | Verdict |
 | --- | --- | --- | --- | --- |
-| A. **The token as a server-set cookie** (`HttpOnly`, `SameSite=Strict`, a year) | Nothing | `auth.go` reads the cookie beside the header; `api.ts` stops sending one; logout is a route. CSRF is covered by `SameSite=Strict` and the JSON content type the handlers already require. **Two more, each an invariant**: the roll must exchange what every phone holds — `api.ts` posts its `localStorage` token once and gets the cookie back, or the whole village is at the gate after the roll, the opposite of the ask; and `auth.go` must ignore the cookie at `/api/mcp`, because a cookie rides on every same-origin fetch and "the door takes a key and nothing else" (`CLAUDE.md` § A door for agents) would otherwise get the side door it forbids | Nothing seen. Whether Safari and the home-screen app share it is to be verified on a phone, not assumed | **First.** A server-set cookie is exempt from Safari's seven-day eviction, so an iPhone that never installed stays in |
+| A. **The token as a server-set cookie** (`HttpOnly`, `SameSite=Strict`, a year) | Nothing | Two routes, a re-issue, a cookie read in `auth.go` that `/api/mcp` must not take, and a one-time exchange at the roll so nobody is logged out by it — the whole list in § A and B in detail | Nothing seen. Whether Safari and the home-screen app share it is to be verified on a phone, not assumed | **First.** A server-set cookie is exempt from Safari's seven-day eviction, so an iPhone that never installed stays in |
 | B. **The pairing code as a link too** | On a phone that is in: Houses → Add another device → *Copy link*, sent to the laptop (AirDrop, "message yourself", mail) and opened there | A second button beside the code; the gate takes `#/join/<code>` already | Nothing. Same fifteen minutes, one use | **With A.** No typing, and a link opened from WhatsApp Desktop lands in the system browser, logged in |
 | C. **Reverse pairing with a QR** | The laptop's gate shows a QR; the phone's camera reads it, opens the portal logged in, and asks "let this browser in?" | A pending-pairings table, a QR encoder (a small dependency or ~150 lines), an approve page. iOS reads a QR with the camera app, so no scanner page is needed | Nothing; it is a second shape of today's code | **When laptops matter.** The WhatsApp Web pattern villagers already know |
 | D. **A house passphrase** — a few words the house sets at first login, typed with the house name on any gate | Types "Zeleni Volk" and three words | A column, a form in the Houses room, a second mode on the gate. Three words of a two-thousand-word list are eight billion, and the join cap holds | **The invariant "no in-app password to reset"** (`CLAUDE.md` § The way back in). The reset exists — a steward rotates the invite and the house sets new words — but it is a password, and a thing written on the fridge | The owner's PIN made safe. A decision against an invariant, so the owner's |
@@ -65,6 +65,74 @@ holds and can type anywhere**, which is option D below, made long enough.
 | F. **Passkeys** (WebAuthn) | Face ID or a fingerprint; the laptop by the phone's QR, which the OS draws itself | A credentials table, the ceremony on the gate, CBOR and COSE verification — a Go dependency (`go-webauthn`) or some hundreds of lines, a decision in `CLAUDE.md` | Nothing in the model: a passkey is per person on a platform account, which is a device row each. WhatsApp's webview may not offer passkeys at all | **The solid end state**: nothing to remember, nothing to reset, nothing phishable, synced across one person's phones and laptops by Apple and Google. The heaviest, so after A–C |
 | G. **Android link capture** | Nothing | Nothing, if true: an installed app on Android registers its scope, so a link tapped in WhatsApp may open the installed portal, logged in | iOS never does this | **Verify on an Android phone** before any of the above is built for WhatsApp's sake |
 | H. **A way-in by email** through the mailer that feedback already uses | Types the house's address, taps the link in the mail | An address per house, a privacy line, the "no email to send" line in `CLAUDE.md` turned around | Email as identity, in a village that runs on WhatsApp. `later.md` keeps WhatsApp one-time codes at "v2 or never" for Meta's fee | No, for now |
+
+## A and B in detail (the owner asked, 2026-10-08)
+
+**What a session is today.** The join answers with a token string. The page
+puts it in `localStorage`, a drawer each browser keeps per site and only
+page script writes, and sends it on every call as `Authorization: Bearer`.
+The server keeps a hash of it in `devices`. Nothing expires it; it dies
+when the drawer is emptied.
+
+**A, the cookie.** The join answers with the same token as a cookie
+instead: `Set-Cookie: potok=<token>; HttpOnly; Secure; SameSite=Strict;
+Path=/; Max-Age=<a year>`. The browser then sends it by itself on every
+call to this origin — the page's fetches default to `same-origin`
+credentials, so `api.ts`, `photo.ts` and `push.ts` change nothing but
+dropping the header. What that buys, and why each flag:
+
+- *Server-set* is the point: Safari's seven-day eviction applies to what
+  page script writes (`localStorage`, `document.cookie`) and not to a cookie
+  the server set. The quiet-week logout on a non-installed iPhone goes.
+- `HttpOnly`: page script cannot read it, so a script that got into the
+  page cannot carry it off.
+- `SameSite=Strict`: another site cannot make the browser send it, which is
+  the CSRF surface a cookie opens and a header never had. A browser may
+  withhold it on the first page load that arrives from a link — harmless
+  either way, because `index.html` is public and the page's own calls
+  after it are same-site and carry it.
+- `Secure`: HTTPS only. The Vite dev proxy is plain `http://127.0.0.1`,
+  which Chrome and Firefox treat as secure enough for the flag and Safari
+  may not, so the flag follows the request's TLS, or dev in Safari is
+  checked once.
+- A year, under Chrome's 400-day cap. **A cookie is renewed only when the
+  server sends it again**, so `/api/me` re-issues it on every load; without
+  that line every phone lands at the gate a year to the day after the roll.
+- `devices` is untouched: the cookie carries the token the hash already
+  knows. No migration.
+
+What it costs, each one small: a route `POST /api/session` that takes the
+old bearer and answers with the cookie, called once by a page that finds a
+token in its drawer and no session, so the roll logs nobody out — then the
+page empties the drawer; a route `DELETE /api/session` for logout, because
+`HttpOnly` means the page cannot clear it itself; the re-issue on
+`/api/me` above; `auth.go` reading the cookie where there is no header,
+**except at `/api/mcp`**, which reads the header only — the cookie rides
+on every same-origin fetch, and the agent door must stay closed to a
+phone's session; the demo door answering with the cookie too; tests keep
+the header, which stays accepted. And one thing `HttpOnly` takes away: the
+page can no longer tell gate from loading by looking in its drawer
+(`getToken()` in `App.tsx`), so a fresh browser asks `/api/me` first and
+sees the gate one round trip and one 401 later; the server clears the
+cookie on that 401 so a dead one is not sent forever. Open and to be seen
+on a phone, not assumed: whether the home-screen app on iOS shares
+Safari's cookie jar (it has had its own storage since iOS 11.3; cookies
+may or may not be in it).
+
+**B, the pairing code as a link.** Houses → Add another device shows "883
+559" for fifteen minutes, one use. `/api/join` already takes an invite and
+a pairing code through the one route, and the gate already prefills a
+code from `#/join/<code>`, which is how an invite link works. So the same
+code as `https://<the portal>/#/join/883559` is a *Copy link* button beside
+the code and nothing in the backend. The villager sends it to themselves —
+AirDrop to the laptop, "message yourself" in WhatsApp and open it on
+WhatsApp Desktop, which hands links to the system browser — and lands on
+the gate with the code filled, names the device, taps Join. Same fifteen
+minutes, same one use, same burn after five wrong guesses: the arithmetic
+in `CLAUDE.md` § Codes does not move. On a phone the link has the same
+trap as every link: tapped inside WhatsApp it opens WhatsApp's browser, so
+B is for the laptop and for a browser the villager opens the link in
+knowingly.
 
 ## The ladder
 
