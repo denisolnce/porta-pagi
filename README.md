@@ -83,7 +83,10 @@ the container log under `FEEDBACK` until email is set up: `RESEND_API_KEY` (a
 Resend API key) and `FEEDBACK_TO` (the address that reads it) send it through
 Resend instead, from `EMAIL_FROM` — a sender on a domain verified in Resend,
 e.g. `Porta Pagi <feedback@example.org>`; unset, it is
-`Porta Pagi <feedback@<PUBLIC_URL's host>>`. The picture behind the gate is the built-in `backdrop.jpg` until
+`Porta Pagi <feedback@<PUBLIC_URL's host>>`. A village above ten houses runs with
+`PAGI_LICENCE_KEY` (the licence for its domain; free up to ten houses, see
+`LICENSE`); the container's first lines say `licence: free`, `licensed (…)`
+or what else it reads. The picture behind the gate is the built-in `backdrop.jpg` until
 a village imports its own (`/server site-import backdrop < picture.jpg`, a row
 in `site_files`). The founding text enters once with `/server codex-import <
 codex.json` (shape in `backend/internal/httpapi/codex.go`).

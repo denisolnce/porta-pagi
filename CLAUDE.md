@@ -106,6 +106,22 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
 
 ## Invariants
 
+- **The licence cap is ten house accounts, and it only refuses creating the
+  eleventh** (`backend/internal/licence`, `httpapi/licence.go`; the design is
+  `porta-pagi-cloud/docs/commercial.md` §13, "The cap in code, honestly").
+  It counts rows in `houses` with `kind = 'house'`, never people, devices or
+  common places, and checks after `createHouse` turns an unknown kind into
+  `house`. Without a valid key (`PAGI_LICENCE_KEY`: the village's domain and
+  a last day, signed with the owner's private key, checked offline against
+  the public key in `licence.go`) the steward's eleventh house is refused,
+  and nothing else: no house is evicted, an invite already handed out still
+  works, a lapsed key only refuses the next house again. **No number in any
+  room**: the state is one line in the steward's ⚙️ settings
+  (`GET /api/licence`, steward only, no count in it), and the refusal is
+  one sentence on the steward's new-house form. The demo build is exempt
+  (`DemoMode`). A build past its BSL Change Date — four years after the
+  date the Dockerfile stamps into `licence.BuildDate` — asks for no key.
+  Keys are signed in porta-pagi-cloud (`task licence:sign`), never here.
 - **Switches: a village turns some rooms on or off, one binary for all**
   (owner's decision 2026-09-23, the business plan's Decided block, kept privately in `porta-pagi-cloud/docs/commercial.md`). The list is
   `Features` in `backend/internal/httpapi/features.go`, each with a default;
@@ -1054,6 +1070,7 @@ frontend/public/    manifest.webmanifest, sw.js (push only, no caching), icons, 
                     src/push.ts, src/Install.tsx, src/AddPhone.tsx, src/photo.ts (auth'd photo fetch + browser-side shrink)
                     src/links.tsx = a link to one entry: the #/go resolver, the landing hook a room calls, the Share button, Linkify
 backend/internal/httpapi/codex.go  the codex: four routes and the one-time stdin import
+backend/internal/licence  the ten-house grant: a key's signature, domain and last day, the build's Change Date; httpapi/licence.go applies it
 backend/internal/httpapi/feedback.go  the feedback door; internal/mailer = one Resend POST, stdlib; frontend src/Feedback.tsx is its form
 backend/internal/httpapi/i18n.go   tr() for push texts and the manifest's line, off i18n/<lang>.json — the dictionaries the page imports too (@i18n alias);
                     i18n_test.go refuses a translation whose verbs, end spaces or leading icon differ from its key

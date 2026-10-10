@@ -20,8 +20,11 @@ COPY backend/ ./
 COPY --from=web /web/dist ./internal/httpapi/web
 # CGO_ENABLED=0 keeps it static (modernc.org/sqlite is pure Go). TAGS=demo
 # builds the demo image: the door with no code compiled in (demodoor.go).
+# The build's own date goes in for the licence: four years after it, the
+# BSL's Change Date, the check stands down (internal/licence).
 ARG TAGS=""
-RUN CGO_ENABLED=0 GOFLAGS=-buildvcs=false go build -tags "$TAGS" -o /server .
+RUN CGO_ENABLED=0 GOFLAGS=-buildvcs=false go build -tags "$TAGS" \
+    -ldflags "-X github.com/denisolnce/porta-pagi/backend/internal/licence.BuildDate=$(date -u +%Y-%m-%d)" -o /server .
 
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /server /server

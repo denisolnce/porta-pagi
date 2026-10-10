@@ -115,6 +115,7 @@ func main() {
 		}
 	}
 
+	log.Printf("licence: %s", srv.LicenceState(context.Background()))
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 	go st.RunNightlyBackups(ctx)

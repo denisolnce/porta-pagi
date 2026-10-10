@@ -23,6 +23,8 @@ const OFF: Record<string, string> = {
 };
 
 type Prefs = { kinds: string[]; global_off: string[]; global_detail: { kind: string; set_by: string | null; set_at: string }[] };
+// The licence as one line (backend licence.go): a state, never a count of houses.
+type Licence = { state: string; domain?: string; until?: string };
 
 // Village settings: what a steward decides for the village as a whole — its
 // switches, the village-wide mutes, the export. Reached by ⚙️ in the top bar;
@@ -40,6 +42,20 @@ export function Settings({ icons }: { icons: Record<string, string> }) {
   const [err, setErr] = useState("");
   const loadPrefs = () => api<Prefs>("/me/prefs").then(setPrefs).catch(() => {});
   useEffect(() => { loadPrefs(); }, []);
+  const [lic, setLic] = useState<Licence | null>(null);
+  useEffect(() => { if (!demo) api<Licence>("/licence").then(setLic).catch(() => {}); }, [demo]);
+  const licLine = (l: Licence) => {
+    const until = l.until ? day(l.until) : "";
+    switch (l.state) {
+      case "free": return t("Free licence, for a village of up to ten houses.");
+      case "outgrown": return t("This village has outgrown the free licence. A new house needs a licence key.");
+      case "licensed": return `${t("Licensed to")} ${l.domain} ${t("until")} ${until}.`;
+      case "lapsed": return `${t("The licence ended on")} ${until}. ${t("Every house stays. A new house needs a new key.")}`;
+      case "other_domain": return `${t("The licence key is for")} ${l.domain}, ${t("not for this portal's address.")}`;
+      case "open": return t("This version is open source (AGPL). It needs no licence key.");
+      default: return t("The licence key is not valid.");
+    }
+  };
 
   const flip = async (f: FeatureRow) => {
     const on = !f.on;
@@ -143,6 +159,11 @@ export function Settings({ icons }: { icons: Record<string, string> }) {
           {own && <button type="button" className="ghost" onClick={resetPic}>{t("Back to the original")}</button>}
         </p>}
       {picErr && <div className="err">{picErr}</div>}
+
+      {lic && (<>
+        <h3>📜 {t("Licence")}</h3>
+        <p className="small">{licLine(lic)}</p>
+      </>)}
 
       <h3>📦 {t("Export")}</h3>
       <p className="small">{t("Everything the village wrote, in one file. Take one before deleting a house.")}</p>

@@ -25,6 +25,7 @@ type Config struct {
 	ResendKey       string   // optional: with FeedbackTo set, the feedback door emails through Resend; unset = it logs the message
 	FeedbackTo      string   // optional: the address the feedback door writes to
 	EmailFrom       string   // optional: the sender; unset = "Porta Pagi <feedback@<PUBLIC_URL's host>>", a domain verified in Resend
+	LicenceKey      string   // optional: a village above ten houses runs with one (internal/licence); unset = the free grant
 	Debug           bool
 }
 
@@ -44,6 +45,7 @@ func Load() Config {
 		ResendKey:       os.Getenv("RESEND_API_KEY"),
 		FeedbackTo:      os.Getenv("FEEDBACK_TO"),
 		EmailFrom:       os.Getenv("EMAIL_FROM"),
+		LicenceKey:      os.Getenv("PAGI_LICENCE_KEY"),
 		Debug:           os.Getenv("DEBUG") == "1",
 	}
 }

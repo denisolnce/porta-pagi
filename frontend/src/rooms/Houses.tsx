@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, type House, type Me } from "../api";
+import { api, ApiError, type House, type Me } from "../api";
 import { useT } from "../i18n";
 import { VillageMap } from "../map/VillageMap";
 import { Crest } from "./shared";
@@ -31,6 +31,7 @@ export function Houses({ me, houses, refresh, logout }: { me: Me; houses: House[
   const [myColor, setMyColor] = useState(me.color);
   const [copied, setCopied] = useState<number | null>(null);
   const [newOpen, setNewOpen] = useState(false);
+  const [createErr, setCreateErr] = useState("");
   // An MCP key: a device row an agent holds (mcp.go). The portal keeps its
   // hash and cannot show it twice, so the answer stays on screen until the
   // house leaves the room, and the devices list gains a 🤖 row.
@@ -70,8 +71,15 @@ export function Houses({ me, houses, refresh, logout }: { me: Me; houses: House[
     `${t("Hello")} ${h.name}! ${t("This is the village portal:")}\n${inviteLink(code)}\n\n${t("Open the link in Chrome or Safari, not inside WhatsApp, then add the portal to your home screen and allow notifications. Everyone in the house can open the same link.")}`;
   const copyMessage = (h: House, code: string) => { navigator.clipboard?.writeText(inviteMessage(h, code)); setCopied(-h.id); setTimeout(() => setCopied(null), 1800); };
   const create = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await api("/houses", { method: "POST", body: nh });
+    e.preventDefault(); setCreateErr("");
+    try {
+      await api("/houses", { method: "POST", body: nh });
+    } catch (err) {
+      // The one refusal a steward can meet here: the free licence's ten houses (backend licence.go).
+      const lic = err instanceof ApiError && err.status === 403 && err.message.startsWith("licence:");
+      setCreateErr(lic ? t("This village has outgrown the free licence. A new house needs a licence key: see the village settings.") : t("Something went wrong"));
+      return;
+    }
     setNh({ name: "", crest: "🏠", color: "#b5651d", kind: "house" }); setNewOpen(false); await refresh();
   };
   const rotate = async (id: number) => { const i = await api(`/houses/${id}/invite`, { method: "POST" }); setInvites((s) => ({ ...s, [id]: i })); };
@@ -147,6 +155,7 @@ export function Houses({ me, houses, refresh, logout }: { me: Me; houses: House[
               <label>{t("Colour")}<input type="color" value={nh.color} onChange={(e) => setNh({ ...nh, color: e.target.value })} /></label>
             </div>
             <div className="submit"><button className="primary" type="submit">{t("Create")}</button></div>
+            {createErr && <div className="err">{createErr}</div>}
           </form>}
         </>)}
       </div>

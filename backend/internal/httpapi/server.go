@@ -91,6 +91,7 @@ func (s *Server) routes() {
 
 	m.HandleFunc("GET /api/houses", s.requireHouse(s.listHouses))
 	m.HandleFunc("POST /api/houses", s.requireSteward(s.createHouse))
+	m.HandleFunc("GET /api/licence", s.requireSteward(s.getLicence))
 	m.HandleFunc("PUT /api/houses/{id}", s.requireHouse(s.updateHouse))
 	m.HandleFunc("DELETE /api/houses/{id}", s.requireSteward(s.deleteHouse))
 	m.HandleFunc("GET /api/houses/{id}/invite", s.requireSteward(s.getInvite))
@@ -559,6 +560,20 @@ func (s *Server) createHouse(w http.ResponseWriter, r *http.Request) {
 	}
 	if kind != "common" {
 		kind = "house"
+	}
+	// After the coercion above, so an unknown kind is counted as the house it
+	// becomes. Only the creating is refused: nobody leaves, an invite already
+	// handed out still works (licence.go).
+	if kind == "house" {
+		ok, err := s.mayAddHouse(r.Context())
+		if err != nil {
+			fail(w, err)
+			return
+		}
+		if !ok {
+			writeErr(w, 403, "licence: the free licence covers ten houses")
+			return
+		}
 	}
 	steward := 0
 	if b, _ := m["is_steward"].(bool); b {

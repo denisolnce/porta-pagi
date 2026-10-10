@@ -628,5 +628,17 @@
   "That entry is not here any more — it may have been deleted.": "Tega vnosa ni več — morda je bil izbrisan.",
   "Copy link": "Kopiraj povezavo",
   "That entry is no longer shown here.": "Ta vnos tu ni več prikazan.",
-  "Already a member? Open this link in Safari or Chrome, where you are signed in — on an iPhone the share icon, then Open in Safari.": "Ste že član? Odprite to povezavo v Safariju ali Chromu, kjer ste prijavljeni — na iPhonu ikona za deljenje, nato Odpri v Safariju."
+  "Already a member? Open this link in Safari or Chrome, where you are signed in — on an iPhone the share icon, then Open in Safari.": "Ste že član? Odprite to povezavo v Safariju ali Chromu, kjer ste prijavljeni — na iPhonu ikona za deljenje, nato Odpri v Safariju.",
+  "Licence": "Licenca",
+  "Free licence, for a village of up to ten houses.": "Brezplačna licenca, za vas z največ desetimi hišami.",
+  "This village has outgrown the free licence. A new house needs a licence key.": "Vas je prerasla brezplačno licenco. Za novo hišo je potreben licenčni ključ.",
+  "Licensed to": "Licenca za",
+  "until": "do",
+  "The licence ended on": "Licenca je potekla",
+  "Every house stays. A new house needs a new key.": "Vse hiše ostanejo. Za novo hišo je potreben nov ključ.",
+  "The licence key is for": "Licenčni ključ je za",
+  "not for this portal's address.": "ne za naslov tega portala.",
+  "This version is open source (AGPL). It needs no licence key.": "Ta različica je odprtokodna (AGPL). Licenčnega ključa ne potrebuje.",
+  "The licence key is not valid.": "Licenčni ključ ni veljaven.",
+  "This village has outgrown the free licence. A new house needs a licence key: see the village settings.": "Vas je prerasla brezplačno licenco. Za novo hišo je potreben licenčni ključ: glejte nastavitve vasi."
 }
