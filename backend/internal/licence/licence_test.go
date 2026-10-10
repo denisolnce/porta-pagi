@@ -14,7 +14,7 @@ import (
 // ops/licence.mjs sign test.example.org 2020-01-01): the format on both sides
 // is one format. Its last day is long past, so it licenses nothing today —
 // this repo goes public, and a live key here would be anyone's.
-const realKey = "PP1.eyJkb21haW4iOiJ0ZXN0LmV4YW1wbGUub3JnIiwidW50aWwiOiIyMDIwLTAxLTAxIn0.XIbQyRsjiKPKEmhE-umQQIJwlo7Adh66BLMAgknXfLWH5vQ89G2g8Npy5m5CXnl-bIaF8cdbBzOJibyIFQaNDw"
+const realKey = "PP1.eyJkb21haW4iOiJ0ZXN0LmV4YW1wbGUub3JnIiwidW50aWwiOiIyMDIwLTAxLTAxIn0.PcAlXISxkO1FM2UVM2R30soUGdynvN-tpbmpiJdnMl8qDcBSrR1qnj6MEcywf55F8aQsgmpjVPBe7Q-HKocyBQ"
 
 func day(s string) time.Time { t, _ := time.Parse(time.DateOnly, s); return t.Add(12 * time.Hour) }
 

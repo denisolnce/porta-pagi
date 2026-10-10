@@ -30,8 +30,10 @@ const FreeHouses = 10
 
 // publicKey is the half of the owner's signing key that checks a licence.
 // The private half: ~/.config/porta-pagi/licence-ed25519.pem on the owner's
-// machine and its password manager, never a repo.
-var publicKey = mustKey("eH3b5MnSVBZAIPLxXZZ0hwVEzoO5RkO8nlhZpvuL5w0")
+// machine and its password manager, never a repo. The pair before it, made
+// and retired on 2026-10-10 because a live test key signed with it reached
+// this history, checks in no build after 2d815ba.
+var publicKey = mustKey("Gd7JPbS2GaXLHP9zoXRCLykLwucn_QI-qOO6PoZpljo")
 
 // BuildDate is the day this binary was built, set by the Dockerfile:
 // -ldflags "-X .../internal/licence.BuildDate=2026-10-10". Empty in a

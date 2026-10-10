@@ -13,7 +13,7 @@ import (
 // Signed by the owner's tool for an example domain, last day 2020-01-01
 // (internal/licence's test says why it is long past): the villages below
 // set their clock to 2019 to be licensed by it, and to 2020 to see it lapse.
-const exampleKey = "PP1.eyJkb21haW4iOiJ0ZXN0LmV4YW1wbGUub3JnIiwidW50aWwiOiIyMDIwLTAxLTAxIn0.XIbQyRsjiKPKEmhE-umQQIJwlo7Adh66BLMAgknXfLWH5vQ89G2g8Npy5m5CXnl-bIaF8cdbBzOJibyIFQaNDw"
+const exampleKey = "PP1.eyJkb21haW4iOiJ0ZXN0LmV4YW1wbGUub3JnIiwidW50aWwiOiIyMDIwLTAxLTAxIn0.PcAlXISxkO1FM2UVM2R30soUGdynvN-tpbmpiJdnMl8qDcBSrR1qnj6MEcywf55F8aQsgmpjVPBe7Q-HKocyBQ"
 
 func licenceVillage(t *testing.T, key, on string) *client {
 	t.Helper()
