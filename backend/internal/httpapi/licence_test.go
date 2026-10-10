@@ -10,9 +10,10 @@ import (
 	"github.com/denisolnce/porta-pagi/backend/internal/store"
 )
 
-// Signed by the owner's tool for an example domain (internal/licence's test
-// says so too): licensed for test.example.org until 2027-10-10.
-const exampleKey = "PP1.eyJkb21haW4iOiJ0ZXN0LmV4YW1wbGUub3JnIiwidW50aWwiOiIyMDI3LTEwLTEwIn0.g6-5Zve6KWTc62BLbrwC94JmqwOr9ReXwmCkqKN0eonjnJ9kU4Ak85gR_njwJtDIES7kxlvkZDGXHMiLq-yvDQ"
+// Signed by the owner's tool for an example domain, last day 2020-01-01
+// (internal/licence's test says why it is long past): the villages below
+// set their clock to 2019 to be licensed by it, and to 2020 to see it lapse.
+const exampleKey = "PP1.eyJkb21haW4iOiJ0ZXN0LmV4YW1wbGUub3JnIiwidW50aWwiOiIyMDIwLTAxLTAxIn0.XIbQyRsjiKPKEmhE-umQQIJwlo7Adh66BLMAgknXfLWH5vQ89G2g8Npy5m5CXnl-bIaF8cdbBzOJibyIFQaNDw"
 
 func licenceVillage(t *testing.T, key, on string) *client {
 	t.Helper()
@@ -68,14 +69,14 @@ func TestLicenceCap(t *testing.T) {
 		t.Fatalf("ten houses, no key: want only {state: free}, got %v", obj)
 	}
 
-	lic := licenceVillage(t, exampleKey, "2026-10-10")
+	lic := licenceVillage(t, exampleKey, "2019-06-01")
 	addHouses(lic, 12)
 	_, obj, _ = lic.do("GET", "/api/licence", nil)
-	if obj["state"] != "licensed" || obj["domain"] != "test.example.org" || obj["until"] != "2027-10-10" {
+	if obj["state"] != "licensed" || obj["domain"] != "test.example.org" || obj["until"] != "2020-01-01" {
 		t.Fatalf("licensed line: %v", obj)
 	}
 
-	lapsed := licenceVillage(t, exampleKey, "2027-10-11")
+	lapsed := licenceVillage(t, exampleKey, "2020-01-02")
 	addHouses(lapsed, 10)
 	code, _, _ = lapsed.do("POST", "/api/houses", map[string]any{"name": "House 11"})
 	lapsed.must(403, code, "a lapsed key refuses the next house")

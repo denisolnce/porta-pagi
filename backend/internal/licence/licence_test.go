@@ -5,14 +5,16 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 )
 
 // A key the owner's tool signed with the real private key (porta-pagi-cloud
-// ops/licence.mjs sign test.example.org 2027-10-10): the format on both sides
-// is one format. It licenses an example domain only.
-const realKey = "PP1.eyJkb21haW4iOiJ0ZXN0LmV4YW1wbGUub3JnIiwidW50aWwiOiIyMDI3LTEwLTEwIn0.g6-5Zve6KWTc62BLbrwC94JmqwOr9ReXwmCkqKN0eonjnJ9kU4Ak85gR_njwJtDIES7kxlvkZDGXHMiLq-yvDQ"
+// ops/licence.mjs sign test.example.org 2020-01-01): the format on both sides
+// is one format. Its last day is long past, so it licenses nothing today —
+// this repo goes public, and a live key here would be anyone's.
+const realKey = "PP1.eyJkb21haW4iOiJ0ZXN0LmV4YW1wbGUub3JnIiwidW50aWwiOiIyMDIwLTAxLTAxIn0.XIbQyRsjiKPKEmhE-umQQIJwlo7Adh66BLMAgknXfLWH5vQ89G2g8Npy5m5CXnl-bIaF8cdbBzOJibyIFQaNDw"
 
 func day(s string) time.Time { t, _ := time.Parse(time.DateOnly, s); return t.Add(12 * time.Hour) }
 
@@ -28,13 +30,25 @@ func signWith(t *testing.T, domain, until string) string {
 	return msg + "." + base64.RawURLEncoding.EncodeToString(ed25519.Sign(priv, []byte(msg)))
 }
 
+// tamper flips the first byte of a key's signature: a sure change, unlike
+// editing its last characters, whose spare bits may decode to the same bytes.
+func tamper(key string) string {
+	parts := strings.Split(key, ".")
+	sig, _ := base64.RawURLEncoding.DecodeString(parts[2])
+	sig[0] ^= 0xff
+	return parts[0] + "." + parts[1] + "." + base64.RawURLEncoding.EncodeToString(sig)
+}
+
 func TestTheOwnersToolSignsWhatThePortalReads(t *testing.T) {
 	k, err := Parse(realKey)
-	if err != nil || k.Domain != "test.example.org" || k.Until != "2027-10-10" {
+	if err != nil || k.Domain != "test.example.org" || k.Until != "2020-01-01" {
 		t.Fatalf("got %+v, %v", k, err)
 	}
-	if s := Check(realKey, "test.example.org", 40, day("2027-01-01")); s.State != Licensed {
-		t.Fatalf("got %+v", s)
+	if s := Check(realKey, "test.example.org", 40, day("2019-06-01")); s.State != Licensed {
+		t.Fatalf("before its last day: got %+v", s)
+	}
+	if s := Check(realKey, "test.example.org", 40, time.Now()); s.State != Lapsed {
+		t.Fatalf("today: got %+v", s)
 	}
 }
 
@@ -57,7 +71,7 @@ func TestStates(t *testing.T) {
 		{"lapsed but under the grant", key, "vas.example.org", 4, "2027-10-11", Lapsed, true},
 		{"another village's key", key, "other.example.org", 30, "2026-10-10", OtherDomain, false},
 		{"not a key", "hello", "vas.example.org", 30, "2026-10-10", Invalid, false},
-		{"a tampered key", key[:len(key)-2] + "AA", "vas.example.org", 30, "2026-10-10", Invalid, false},
+		{"a tampered key", tamper(key), "vas.example.org", 30, "2026-10-10", Invalid, false},
 	} {
 		s := Check(c.raw, c.host, c.houses, day(c.on))
 		if s.State != c.want || s.AllowsAnother(c.houses) != c.another {
