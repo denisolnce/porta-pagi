@@ -72,7 +72,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   `deploy/infra-log.md` in the same change, and a village's own steps into
   its own `infra-log.md`. The demo runs beside the village on this one VM by
   the owner's choice, fenced by a tmpfs, resource caps and a network of its
-  own, until it moves to a host of its own (the plan's Decided block).
+  own. It stays there (owner, 2026-10-12): paying villages go on a hosting
+  server of their own instead (the plan's Decided block).
 - **The private line runs between repos.** What is in `porta-pagi-cloud` —
   prices, the plan's numbers, later customers — is pointed at by path and
   section, never copied into a public repo. The landing keeps what the
