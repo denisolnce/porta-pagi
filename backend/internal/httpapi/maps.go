@@ -76,7 +76,7 @@ func (s *Server) getMap(w http.ResponseWriter, r *http.Request) {
 // ImportMap reads one map file from `in` and upserts its row. parcels must be
 // a GeoJSON FeatureCollection with at least one feature and needs a source and
 // a snapshot date for the caption; water must carry a `lines` array. Run on
-// the VM: `docker exec -i <container> /server map-import parcels GURS 2026-08-15 < parcels.geojson`.
+// the VM: `docker exec -i <container> /server map-import parcels "Geodetska uprava Republike Slovenije, CC BY 4.0" 2026-08-15 < parcels.geojson`.
 func (s *Server) ImportMap(name, source, snapshot string, in io.Reader) error {
 	if _, ok := mapNames[name]; !ok {
 		return fmt.Errorf("name must be parcels or water, got %q", name)

@@ -43,6 +43,11 @@ export function Settings({ icons }: { icons: Record<string, string> }) {
   const loadPrefs = () => api<Prefs>("/me/prefs").then(setPrefs).catch(() => {});
   useEffect(() => { loadPrefs(); }, []);
   const [lic, setLic] = useState<Licence | null>(null);
+  // The line shows only when it asks for something (owner, 2026-10-12):
+  // never while the village is free, and a licence only in its last 30 days.
+  const licAsks = (l: Licence) => l.state === "licensed"
+    ? !!l.until && (parse(l.until).getTime() - Date.now()) / 864e5 <= 30
+    : !["free", "open"].includes(l.state);
   useEffect(() => { if (!demo) api<Licence>("/licence").then(setLic).catch(() => {}); }, [demo]);
   const licLine = (l: Licence) => {
     const until = l.until ? day(l.until) : "";
@@ -160,7 +165,7 @@ export function Settings({ icons }: { icons: Record<string, string> }) {
         </p>}
       {picErr && <div className="err">{picErr}</div>}
 
-      {lic && (<>
+      {lic && licAsks(lic) && (<>
         <h3>📜 {t("Licence")}</h3>
         <p className="small">{licLine(lic)}</p>
       </>)}

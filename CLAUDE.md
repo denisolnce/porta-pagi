@@ -116,9 +116,11 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   the public key in `licence.go`) the steward's eleventh house is refused,
   and nothing else: no house is evicted, an invite already handed out still
   works, a lapsed key only refuses the next house again. **No number in any
-  room**: the state is one line in the steward's ⚙️ settings
-  (`GET /api/licence`, steward only, no count in it), and the refusal is
-  one sentence on the steward's new-house form. The demo build is exempt
+  room**: the state is one line in the steward's ⚙️ settings, and only when
+  it asks for something — outgrown, a key lapsed, for another domain or not
+  valid, or a licence in its last 30 days; nothing while the village is
+  free (owner, 2026-10-12; `GET /api/licence`, steward only, no count in
+  it). The refusal is one sentence on the steward's new-house form. The demo build is exempt
   (`DemoMode`). A build past its BSL Change Date — four years after the
   date the Dockerfile stamps into `licence.BuildDate` — asks for no key.
   Keys are signed in porta-pagi-cloud (`task licence:sign`), never here.
@@ -346,8 +348,12 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   on 2026-09-07 (owner's decision) — a caption nobody finishes reading protects
   nobody. The attribution itself stays, and an outline nobody holds is drawn at
   half stroke so the village reads out of the cadastre mesh.
-  House ↔ parcel assignment lives in the DB only. Licence attribution for the
-  GURS data: `TBD`, required before the portal moves to the collective's domain.
+  House ↔ parcel assignment lives in the DB only. **The source of a Slovenian
+  map is "Geodetska uprava Republike Slovenije, CC BY 4.0"** (owner,
+  2026-10-12): GURS's terms are CC BY 4.0 and ask every map to name the
+  office, the kind of data and its date, and the caption's "Cadastre
+  snapshot <date>" gives the last two. Another country's source names its
+  own office and licence the same way.
 - **One thread implementation.** Comments live in `comments`, keyed by
   `(subject, subject_id)`, and are rendered by `Thread.tsx` everywhere: an
   event, a wish, an away notice, a contact, a row of the almanac. One reply level. The button that
