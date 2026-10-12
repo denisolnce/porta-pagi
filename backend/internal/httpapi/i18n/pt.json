@@ -632,13 +632,13 @@
   "Licence": "Licença",
   "Free licence, for a village of up to ten houses.": "Licença gratuita, para uma aldeia de até dez casas.",
   "This village has outgrown the free licence. A new house needs a licence key.": "Esta aldeia ultrapassou a licença gratuita. Uma casa nova precisa de uma chave de licença.",
-  "Licensed to": "Licenciado para",
-  "until": "até",
   "The licence ended on": "A licença terminou a",
   "Every house stays. A new house needs a new key.": "Todas as casas ficam. Uma casa nova precisa de uma chave nova.",
   "The licence key is for": "A chave de licença é para",
   "not for this portal's address.": "não para o endereço deste portal.",
   "This version is open source (AGPL). It needs no licence key.": "Esta versão é de código aberto (AGPL). Não precisa de chave de licença.",
   "The licence key is not valid.": "A chave de licença não é válida.",
-  "This village has outgrown the free licence. A new house needs a licence key: see the village settings.": "Esta aldeia ultrapassou a licença gratuita. Uma casa nova precisa de uma chave de licença: veja as definições da aldeia."
+  "This village has outgrown the free licence. A new house needs a licence key: see the village settings.": "Esta aldeia ultrapassou a licença gratuita. Uma casa nova precisa de uma chave de licença: veja as definições da aldeia.",
+  "The licence ends on": "A licença termina a",
+  "After that, a new house needs a new key.": "Depois disso, uma casa nova precisa de uma chave nova."
 }

@@ -54,7 +54,8 @@ export function Settings({ icons }: { icons: Record<string, string> }) {
     switch (l.state) {
       case "free": return t("Free licence, for a village of up to ten houses.");
       case "outgrown": return t("This village has outgrown the free licence. A new house needs a licence key.");
-      case "licensed": return `${t("Licensed to")} ${l.domain} ${t("until")} ${until}.`;
+      // Shown only in its last 30 days (licAsks), so it says what comes next.
+      case "licensed": return `${t("The licence ends on")} ${until}. ${t("After that, a new house needs a new key.")}`;
       case "lapsed": return `${t("The licence ended on")} ${until}. ${t("Every house stays. A new house needs a new key.")}`;
       case "other_domain": return `${t("The licence key is for")} ${l.domain}, ${t("not for this portal's address.")}`;
       case "open": return t("This version is open source (AGPL). It needs no licence key.");
