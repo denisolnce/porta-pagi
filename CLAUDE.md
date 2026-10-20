@@ -551,8 +551,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   (handed). A tick on arrival ("I already have the money") lands the row in
   handed at once — to be revisited. A note is optional. No `amount` column, no sums, no plates
   in the label ("grey camper", "family from NL"). The cash box is the ledger.
-  Who the money is handed *to* is `TBD` — the treasurer question in
-  `docs/design-more-rooms.md`. Retention of `from_who` (a steward clears labels
+  Who the money is handed *to* is each village's own answer, kept in the app
+  and with its people; the product records nothing about it. Retention of `from_who` (a steward clears labels
   older than 12 months, by a button) is `TBD` and not built; a privacy note
   decides it. The `camp` push carries the house and the camper label, never
   the note. **The Campground is on the agent surface** (owner's decision
