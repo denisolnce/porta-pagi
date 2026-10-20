@@ -35,7 +35,7 @@ it, an edit there asks for permission first.
 
 | Repo | Visibility | Holds | Ships by |
 | --- | --- | --- | --- |
-| `porta-pagi` | private today, written as public (§ Working rules) | the product: code, invariants, design docs, the demo seed | a push to `main`: CI builds `porta-pagi` and `porta-pagi-demo`, both `sha-<commit>` |
+| `porta-pagi` | public since 2026-10-21, history included | the product: code, invariants, design docs, the demo seed | a push to `main`: CI builds `porta-pagi` and `porta-pagi-demo`, both `sha-<commit>` |
 | `../mokri-potok-portal` | public | the village that built it: compose and env, the tag it runs (`BE_TAG`), the map seed, `deploy/infra-log.md`, who the village is (`.claude/context/village.md`) | `task roll -- sha-<commit>` there, which writes the tag, commits and pushes |
 | `../porta-pagi-cloud` | private, and stays so | the landing page, the business plan (`docs/commercial.md`), later the control plane and its billing | a push to `main`: CI builds `porta-pagi-site:sha-<commit>` |
 | `../gaias-choice` | public | the owner's other project, which owns the shared VM: Caddy, the doco-cd controller, the secrets, and the tags the demo and the landing run (`PAGI_DEMO_TAG`, `PAGI_SITE_TAG` in `.doco-cd.yml`) | a tag edited in `.doco-cd.yml`, committed and pushed |
@@ -66,7 +66,7 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   new image healthy, and `task vm:logs` in the village's repo shows the
   `migrated` lines when there were any. The village answers at
   `vas.mokri-potok.si`, the demo at `demo.portapagi.com`, the landing at
-  `portapagi.com` (`noindex` until this repo is public; the plan's §10).
+  `portapagi.com`, open to search engines since 2026-10-21 (the plan's §10).
 - **The VM belongs to gaias-choice.** A new route, poll entry or secret is a
   commit there. A step done by hand on the box goes into that repo's
   `deploy/infra-log.md` in the same change, and a village's own steps into
