@@ -204,9 +204,9 @@ read, it has read.
 - No system-written "guest" badge. Where somebody lives is a line they write.
 - No host approval step in code. Putting the landlord in the app as a gatekeeper
   turns an agreement between neighbours into a permission screen.
-- **A pairing code cannot do this job.** It adds one more phone to a house that
-  is already inside (`pairings.house_id`), so handing one to a lodger makes them
-  a phone of the host's house — that is option B under another name.
+- **A PIN cannot do this job.** It signs one more browser into the house whose
+  PIN it is, so telling one to a lodger makes them a phone of the host's house
+  — that is option B under another name.
 - No steward by default, and no rule that a household may never be one. It is
   the village's call, made in the room, not a class in the schema.
 - Nothing on the cadastre map about who sleeps where.

@@ -1,6 +1,8 @@
 # Getting in, and staying in: the session problem
 
-Brainstormed 2026-10-08 on the owner's ask; A and B below are built since. The owner's
+Brainstormed 2026-10-08 on the owner's ask. A below was built that day; the
+owner's PIN was built on 2026-11-02 (§ The PIN), and B, the pairing code as a
+link, went with it. The owner's
 words: the WhatsApp webview and a desktop browser opening a link logged out
 "yet again highlights that our code access for houses is a bit wonky and
 uncomfortable for people … maybe a pincode that each user sets upon
@@ -37,37 +39,70 @@ laptop, the second phone — which is most of "wonky", not all of it.
   and had a quiet week opens the gate. The install banner is the fix, and
   it is the villager's to take.
 - Clearing site data, a private window, a new phone: the gate, by design.
-- The way back in is a steward's invite link (10 characters, 14 days,
-  multi-use) or a pairing code from a phone that is in (6 digits, 15
-  minutes, one use, burnt after five wrong guesses). Both are typed or
-  tapped from WhatsApp, which lands in WhatsApp's browser.
+- The way back in is the house and a PIN, on the gate of any browser; the
+  first time, and after a forgotten PIN, the house's invite link (10
+  characters, 7 days, any number of uses), tapped or typed from WhatsApp,
+  which lands in WhatsApp's browser — where the PIN now works too.
 
-## The owner's PIN idea, examined
+## The PIN (owner's decision 2026-11-02, built)
 
-A phone's lock code unlocks a device that already holds the key. It never
-gets a new phone in. The need here is the second thing: a browser that has
-nothing yet. A PIN used for that is a password, and a short one — ten houses
-times ten thousand PINs, standing, against `/api/join`. The per-IP cap slows
-one address; the pairing code survives the same arithmetic only because it
-lives fifteen minutes and burns after five wrong guesses, and a standing PIN
-can do neither. What survives of the idea is **a thing the house itself
-holds and can type anywhere**, which is option D below, made long enough.
+The owner, 2026-11-02: "this URL with the code for each house is not
+convenient for people. They lose the codes, they have to generate extra code
+if they want to add as an app … upon opening the URL for the first time from
+a device, a person can choose a PIN code, and that PIN code would be
+associated for that device, for that house. And then when they would log in
+again … they will be able to see all houses, click their house, and enter
+their PIN. I understand that putting all house names on login page might not
+be secure, but let's do it for now."
+
+**As built** (`auth.go` § PINs, `Pin.tsx`, the gate in `App.tsx`, migration
+`030_pins.sql`; the invariant is `CLAUDE.md` § Codes and PINs):
+
+- **The link is the house's own**, any number of uses, 7 days. Opened, it
+  asks for a PIN, 4 to 12 digits, twice, and an optional name for the
+  device. One link for the whole village, the person picking a house, was
+  offered and refused by the owner: anyone holding it could become any
+  house, a steward's included.
+- **The gate without a link lists the houses that have a PIN** — name,
+  crest, colour, public (`GET /api/doors`) — and a tap asks for the PIN
+  (`POST /api/login`). A right PIN makes that browser a new device of the
+  house, under the label and PIN of the device that chose it.
+- **A PIN is per device row, not per house**: each person of a house keeps
+  their own, and a change (🔑 in Your devices) moves every device that
+  carried the old one. A device from before the PIN is asked on Home to
+  choose one, until it does or says later.
+- The pairing code and Add another device are gone: the PIN does their job
+  — the home-screen app on an iPhone, which starts with storage of its own,
+  the laptop, a second browser — with nothing to carry across.
+
+**What it costs, said before it was built** (2026-10-08, and again in the
+question the owner answered): a PIN is a password, and a short one, and the
+house names say where to guess. The per-IP cap slows one address; what holds
+against many is the wait per house — five wrong PINs free, then each try
+waits four times the last, a minute up to a day, refused before the PIN is
+read. That is about eleven tries the first day and one a day after, so a
+four-digit PIN of a house with two PINs falls to a patient guesser in about
+one year in thirteen; six digits would make it one in a thousand. The owner
+chose four or more. And the other way round: a guesser can keep a house's
+doors waiting, and its link is then the way in, since a join by the link
+clears the wait. The hash folds in the house id and nothing else; against a
+stolen database it protects nothing, like everything else in that database.
 
 ## Options
 
 | Option | What the villager does | What it costs | What it breaks | Verdict |
 | --- | --- | --- | --- | --- |
 | A. **The token as a server-set cookie** (`HttpOnly`, `SameSite=Strict`, a year) | Nothing | **Built 2026-10-08** ("i see only the benefits so lets implement it"): `auth.go`, `TestSessionCookie`, the invariant in `CLAUDE.md` § A session is a cookie and a drawer. One change from the detail below: the drawer is kept, the cookie is the copy that survives | Nothing seen. Whether Safari and the home-screen app share it is to be verified on a phone, not assumed | **First.** A server-set cookie is exempt from Safari's seven-day eviction, so an iPhone that never installed stays in |
-| B. **The pairing code as a link too** | On a phone that is in: Houses → Add another device → *Copy link*, sent to the laptop (AirDrop, "message yourself", mail) and opened there | A second button beside the code; the gate takes `#/join/<code>` already. **Built 2026-10-08** ("Adding a Copy link together with Copy for the add-device code is also good"): `AddPhone.tsx`, no backend change, `CLAUDE.md` § Codes | Nothing. Same fifteen minutes, one use | **With A.** No typing, and a link opened from WhatsApp Desktop lands in the system browser, logged in |
+| B. **The pairing code as a link too** | On a phone that is in: Houses → Add another device → *Copy link*, sent to the laptop and opened there | Built 2026-10-08, **removed 2026-11-02** with the pairing code itself: the PIN lets the laptop in with nothing to carry | — | Gone |
 | C. **Reverse pairing with a QR** | The laptop's gate shows a QR; the phone's camera reads it, opens the portal logged in, and asks "let this browser in?" | A pending-pairings table, a QR encoder (a small dependency or ~150 lines), an approve page. iOS reads a QR with the camera app, so no scanner page is needed | Nothing; it is a second shape of today's code | **When laptops matter.** The WhatsApp Web pattern villagers already know |
-| D. **A house passphrase** — a few words the house sets at first login, typed with the house name on any gate | Types "Zeleni Volk" and three words | A column, a form in the Houses room, a second mode on the gate. Three words of a two-thousand-word list are eight billion, and the join cap holds | **The invariant "no in-app password to reset"** (`CLAUDE.md` § The way back in). The reset exists — a steward rotates the invite and the house sets new words — but it is a password, and a thing written on the fridge | The owner's PIN made safe. A decision against an invariant, so the owner's |
+| D. **A house passphrase** — a few words the house sets at first login, typed with the house name on any gate | Types "Zeleni Volk" and three words | A column, a form in the Houses room, a second mode on the gate. Three words of a two-thousand-word list are eight billion, and the join cap holds | **The invariant "no in-app password to reset"** (`CLAUDE.md` § The way back in). The reset exists — a steward rotates the invite and the house sets new words — but it is a password, and a thing written on the fridge | Not built: the owner chose the short PIN itself (§ The PIN), with the arithmetic in front of him |
 | E. **The house's own standing link** — the invite shown to the house itself, not expiring, pinned in the house's own chat | Taps the pinned link in any browser | A longer life on `invites`, and the link shown in the Houses room to its house | A leak is now standing, not fourteen days; rotation by a steward is the brake, as today. A link tapped in WhatsApp still opens WhatsApp's browser | The cheapest. The owner weighs the leak |
 | F. **Passkeys** (WebAuthn) | Face ID or a fingerprint; the laptop by the phone's QR, which the OS draws itself | A credentials table, the ceremony on the gate, CBOR and COSE verification — a Go dependency (`go-webauthn`) or some hundreds of lines, a decision in `CLAUDE.md` | Nothing in the model: a passkey is per person on a platform account, which is a device row each. WhatsApp's webview may not offer passkeys at all | **The solid end state**: nothing to remember, nothing to reset, nothing phishable, synced across one person's phones and laptops by Apple and Google. The heaviest, so after A–C |
 | G. **Android link capture** | Nothing | Nothing, if true: an installed app on Android registers its scope, so a link tapped in WhatsApp may open the installed portal, logged in | iOS never does this | **Verify on an Android phone** before any of the above is built for WhatsApp's sake |
 | H. **A way-in by email** through the mailer that feedback already uses | Types the house's address, taps the link in the mail | An address per house, a privacy line, the "no email to send" line in `CLAUDE.md` turned around | Email as identity, in a village that runs on WhatsApp. `later.md` keeps WhatsApp one-time codes at "v2 or never" for Meta's fee | No, for now |
 | I. **A native app**, iOS and Android, as a shell around the same web code (the owner asked 2026-10-08: "if we had a fullblown ios and android app, would that be solved well?") | Taps the link in WhatsApp; the app opens, signed in | Both platforms let an installed app claim a domain through a file the portal serves (Universal Links, App Links), so a link opens the app itself — **the only thing that solves the WhatsApp case on iOS**. The costs: an Apple developer account at 99 dollars a year and a review that needs a demo account (the demo village serves); a shell such as Capacitor — a dependency and a second build; push moved from web push to Apple's and Google's services inside it; and the claimed domains baked into the app, so every village on its own domain needs an app release, which argues for the cloud plan's one domain | Per-village naming on the home screen goes; one app for every village | The real answer to the iOS case, at the price of a second product. After A–C, and after the cloud plan decides the domain |
 
-## A and B in detail (the owner asked, 2026-10-08)
+## A in detail (the owner asked, 2026-10-08)
 
 **What a session is today.** The join answers with a token string. The page
 puts it in `localStorage`, a drawer each browser keeps per site and only
@@ -130,39 +165,27 @@ documented rule until then. Not known either way: whether the home-screen
 app on iOS shares Safari's cookie jar (it has had its own storage since
 iOS 11.3). No Portal News note: the owner's call, nobody needs to know.
 
-**B, the pairing code as a link.** Houses → Add another device shows "883
-559" for fifteen minutes, one use. `/api/join` already takes an invite and
-a pairing code through the one route, and the gate already prefills a
-code from `#/join/<code>`, which is how an invite link works. So the same
-code as `https://<the portal>/#/join/883559` is a *Copy link* button beside
-the code and nothing in the backend. The villager sends it to themselves —
-AirDrop to the laptop, "message yourself" in WhatsApp and open it on
-WhatsApp Desktop, which hands links to the system browser — and lands on
-the gate with the code filled, names the device, taps Join. Same fifteen
-minutes, same one use, same burn after five wrong guesses: the arithmetic
-in `CLAUDE.md` § Codes does not move. On a phone the link has the same
-trap as every link: tapped inside WhatsApp it opens WhatsApp's browser, so
-B is for the laptop and for a browser the villager opens the link in
-knowingly.
-
 ## The ladder
 
-1. **A and B**, together, small, no decision against an invariant: the
-   quiet-week logout on iPhones goes, and a laptop is let in without typing.
-2. **G verified** on one Android phone, because it may make the WhatsApp
+1. **A**, built 2026-10-08: the quiet-week logout on iPhones goes.
+2. **The PIN**, built 2026-11-02 in place of B, D and E: a browser gets in by
+   the house and a PIN, and the link is needed once per person.
+3. **G verified** on one Android phone, because it may make the WhatsApp
    case free there.
-3. **E** if the owner accepts a standing link, **D** if he wants the
-   passphrase after all — one of the two, not both.
 4. **C** when laptops are a habit, **F** as the end state once a dependency
-   is accepted.
+   is accepted — passkeys would also end the guessing the PIN invites.
 
 Whatever rung, **Remove in Your devices stays the brake**: every option
 hands a browser the whole house, away notices included, and the house must
-be able to take it back from a phone that is in.
+be able to take it back from a phone that is in. With the PIN, Remove takes
+a browser back, and changing the PIN takes back the way in.
 
 ## What was considered and refused
 
-- A short PIN as the credential (above).
+- One invite link for the whole village, the person picking a house
+  (2026-11-02, the owner's choice): whoever holds it becomes any house.
+- One PIN per house, shared by its people: a change by one would shut the
+  others out of every new browser, and nobody could change theirs alone.
 - A session that expires. Nothing is gained: a villager who is logged out
   for safety's sake is a villager who asks in the group for a code.
 - A "remember me" box. Every session is remembered already; the problem is

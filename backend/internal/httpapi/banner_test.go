@@ -24,11 +24,11 @@ func TestNotificationBanners(t *testing.T) {
 	h := srv.Handler()
 
 	steward := &client{t: t, h: h}
-	_, obj, _ := steward.do("POST", "/api/bootstrap", map[string]any{"code": "x", "name": "S"})
+	_, obj, _ := steward.do("POST", "/api/bootstrap", map[string]any{"pin": "1234", "code": "x", "name": "S"})
 	steward.token = obj["token"].(string)
 	_, o, _ := steward.do("POST", "/api/houses", map[string]any{"name": "House Zeleni Volk"})
 	volk := &client{t: t, h: h}
-	_, j, _ := volk.do("POST", "/api/join", map[string]any{"code": o["invite"].(map[string]any)["code"]})
+	_, j, _ := volk.do("POST", "/api/join", map[string]any{"pin": "1234", "code": o["invite"].(map[string]any)["code"]})
 	volk.token = j["token"].(string)
 
 	// The steward's phones listen, one in each language.

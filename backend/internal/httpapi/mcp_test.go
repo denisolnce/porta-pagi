@@ -153,7 +153,7 @@ func TestMCPFence(t *testing.T) {
 	agent := &client{t: t, h: srv.Handler(), token: key}
 	for _, rt := range []struct{ method, path string }{
 		{"GET", "/api/me"}, {"GET", "/api/events"}, {"GET", "/api/away"}, {"GET", "/api/camp"},
-		{"DELETE", "/api/devices/" + keyID}, {"GET", "/api/devices"}, {"POST", "/api/pair"},
+		{"DELETE", "/api/devices/" + keyID}, {"GET", "/api/devices"}, {"PUT", "/api/me/pin"},
 		{"POST", "/api/devices/agent"}, {"PUT", "/api/houses/2"}, {"POST", "/api/push/subscribe"},
 		{"PUT", "/api/me/device"}, {"DELETE", "/api/events/1"}, {"GET", "/api/export"},
 	} {
@@ -249,7 +249,7 @@ func TestMCPSurface(t *testing.T) {
 		if strings.HasPrefix(tl.Name, "delete") || tl.Method == "DELETE" {
 			t.Fatalf("a delete on the surface: %s", tl.Name)
 		}
-		for _, forbidden := range []string{"/api/devices", "/api/pair", "/api/push", "/api/me/", "/api/export", "/api/houses/", "/api/bootstrap", "/api/join", "/api/prefs"} {
+		for _, forbidden := range []string{"/api/devices", "/api/login", "/api/me/pin", "/api/push", "/api/me/", "/api/export", "/api/houses/", "/api/bootstrap", "/api/join", "/api/prefs"} {
 			if strings.HasPrefix(tl.Path, forbidden) {
 				t.Fatalf("%s reaches %s", tl.Name, tl.Path)
 			}

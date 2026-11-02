@@ -267,9 +267,15 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   takes `url(...)`, so an unchecked colour is a beacon fired from every
   villager's browser; the backend answers anything else with a 400.
 - **Nothing is public.** Every API route except `/api/healthz`, `/api/status`,
-  `/api/bootstrap`, `/api/join` requires a bearer token. **No unauthenticated
-  write surface, ever** — a camper self-check-in link from park4night was asked
-  for on 2026-09-06 and refused for that reason. The one public image
+  `/api/bootstrap`, `/api/join`, `/api/doors` and `/api/login` requires a
+  bearer token. **No unauthenticated write surface, ever** — a camper
+  self-check-in link from park4night was asked for on 2026-09-06 and refused
+  for that reason; `/api/login` writes only the device it signs in, and a
+  wrong PIN's count. **The houses' names, crests and colours are public**:
+  the gate lists every house with a PIN so a person taps theirs (owner's
+  decision 2026-11-02: "might not be secure, but let's do it for now",
+  better ways in `docs/later.md`); a house nobody has opened the link of,
+  and a common place, are not listed. The one public image
   is `backdrop.jpg` behind the gate — a Google Maps screenshot; the owner
   keeps it as the default, in the demo and in the village that built it, knowing the
   licence is Google's and accepting the risk (owner's decision 2026-09-28).
@@ -747,15 +753,16 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   signed in by the header, and the CSP already keeps page script to this
   origin. Not verified on a phone: whether iOS's home-screen app shares
   Safari's cookie jar.
-- **The way back in.** When nobody holds a session — a steward's phone wiped,
-  the origin changed — `docker exec <container> /server code "<house>"` on the
-  VM rotates that house's invite and prints the link (`cli.go`).
-  SSH to the machine is the credential; there is no in-app password to reset
-  and no email to send. Keep it that way. **Questioned, not changed**
-  (owner's ask 2026-10-08, "code access is a bit wonky"): a house
-  passphrase and a way-in by email are two of the options in
-  `docs/design-sessions.md`, both decisions against this sentence and
-  both the owner's; the rungs recommended first there move nothing here.
+- **The way back in.** A person who forgot their PIN opens the house's link
+  again and chooses a new one; a steward sends it, or a new one with ♻ when
+  it has expired. When nobody can sign in at all — the steward's phone wiped
+  and the PIN forgotten, the origin changed — `docker exec <container>
+  /server code "<house>"` on the VM rotates that house's invite and prints
+  the link (`cli.go`): SSH to the machine is the credential under every
+  other. There is no email to send. The PIN is the one in-app secret, and
+  its reset is the link, never a form (owner's decision 2026-11-02, which
+  turned around this sentence's "no in-app password"; the options weighed,
+  passkeys among them, are `docs/design-sessions.md`).
 - **A door for agents: `POST /api/mcp`, and a key that is a device.** The
   portal's API as MCP tools (`mcp.go`), so a house tells its assistant and it
   is in the portal — the owner's agent and a villager's alike. JSON-RPC by
@@ -770,7 +777,7 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   route unless the request carries the `viaMCP` context mark the dispatcher
   sets — so the tool table in `mcp.go` is the whole surface (52 tools in the
   table whatever the switches, pinned by `TestMCPSurface`: reads and writes in every room, a project picture in,
-  **no deletes**, no devices, pairing, push, house row or steward route), and
+  **no deletes**, no devices, PIN, push, house row or steward route), and
   the raw REST API is closed to a key on purpose. **And the door takes a key
   and nothing else**: a phone's own session token is answered 403 at
   `/api/mcp`, which is the other half of the same fence — without it a steward
@@ -793,14 +800,35 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   loop, and Remove is the brake. No expiry. Tool descriptions are English —
   a model reads them, not a villager — the one place `t()` does not apply.
   Rationale and the options rejected: `docs/design-mcp.md`.
-- **Codes.** A steward's invite is 10 characters and multi-use for 14 days — it
-  travels through WhatsApp and lets a whole house in. A pairing code is 6
-  digits, single use, 15 minutes, and only ever adds one more phone to a house
-  that is already inside; Add another device copies it as a link too,
-  `#/join/<code>`, which the gate fills in like an invite (`AddPhone.tsx`,
-  no backend change). The small keyspace is paid for by a per-IP cap on
-  `/api/join` and by burning every live pairing code after five wrong guesses.
-  Do not widen either without redoing that arithmetic.
+- **Codes and PINs** (owner's decisions 2026-11-02, `auth.go` § PINs,
+  `Pin.tsx`, `docs/design-sessions.md` § The PIN). **A house's invite is its
+  own link** — 10 characters, any number of uses, **7 days** — sent through
+  WhatsApp; one link for the whole village was refused, because anyone
+  holding it could become any house, a steward's included. **Whoever opens
+  it chooses a PIN** of 4 to 12 digits, asked twice, and that browser joins.
+  From then on, in any browser — the home-screen app, a laptop, WhatsApp's
+  own browser — the gate lists the houses that have a PIN; the person taps
+  theirs, types the PIN, and that browser is one more device of the house,
+  under the label and the PIN of the device that chose it. **A PIN lives on
+  device rows** (`devices.pin_hash`, hashed with the house id), so each
+  person of a house has their own, and it outlives the browser it was
+  chosen in until every device carrying it is removed. Changing it (🔑 in
+  Your devices) moves every device of the house that carried the old one;
+  two people who chose the same PIN share it, the cost paid knowingly. A
+  device from before the PIN has none, and Home asks it to choose one until
+  it does or says later; an agent key never has one. **What guessing
+  costs**: the per-IP cap on `/api/join`, `/api/login` and `/api/bootstrap`
+  (12 in 10 minutes), and a wait per house in `pin_tries` — five wrong PINs
+  in a row are free, then each try waits four times the last, one minute
+  up to a day, refused before the PIN is read; a right PIN or a join by the
+  link clears it. About eleven tries the first day and one a day after: a
+  four-digit PIN of a house with two PINs falls to a patient guesser in
+  about one year in thirteen, the owner's choice over six digits
+  (2026-11-02). The cost the other way: a guesser can keep a house's doors
+  waiting, and its link is then the way in. The six-digit pairing code and
+  Add another device are gone with it; its table stays, unused, so an image
+  rolled back still runs. Do not shorten the waits or lengthen the free
+  tries without redoing that arithmetic.
 - **One date control.** Every date or date-time in the app is `DatePicker.tsx`
   (parchment button + month grid in the calendar's own classes). Never a native
   `type=date` / `datetime-local` again — they look foreign and cannot prefill a
@@ -911,7 +939,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   pending the owner, against § Buttons. **The WhatsApp cost, accepted by
   the owner 2026-10-08**: a link tapped in the group opens WhatsApp's own
   browser, which holds no session, so it lands on the gate until that
-  browser pairs once, and on iOS a link never opens the home-screen app.
+  browser signs in once by the house and its PIN, and on iOS a link never
+  opens the home-screen app.
   The gate opened from a link tells a member to open it in Safari or
   Chrome, where they are signed in — on iOS only, with the gesture, because
   on Android the install banner above it already says how to leave
@@ -1074,7 +1103,7 @@ frontend/           Vite + React; src/rooms/* one file per room (Projects.tsx ho
 frontend/public/    manifest.webmanifest, sw.js (push only, no caching), icons, backdrop.jpg (aerial photo behind the gate), fonts/ (self-hosted, OFL)
                     icon.svg is hand-drawn paths, full-bleed, content inside the central 80 % safe circle
                     (an emoji glyph renders off-centre and monochrome — do not go back to one)
-                    src/push.ts, src/Install.tsx, src/AddPhone.tsx, src/photo.ts (auth'd photo fetch + browser-side shrink)
+                    src/push.ts, src/Install.tsx, src/Pin.tsx (choosing and changing a PIN, the Home prompt), src/photo.ts (auth'd photo fetch + browser-side shrink)
                     src/links.tsx = a link to one entry: the #/go resolver, the landing hook a room calls, the Share button, Linkify
 backend/internal/httpapi/codex.go  the codex: four routes and the one-time stdin import
 backend/internal/licence  the ten-house grant: a key's signature, domain and last day, the build's Change Date; httpapi/licence.go applies it
@@ -1100,7 +1129,7 @@ docs/               design docs the owner and the assistant decide on together (
                     `design-mcp.md` — the API as MCP tools for agents: built, with the options rejected and their costs;
                     `design-news.md` — a curated "what's new" that rings when a roll brings it: researched, not built;
                     `design-links.md` — a link to one entry, to paste into the group: built 2026-10-08, with the options refused;
-                    and `design-sessions.md` — getting in and staying in, the options from a cookie to passkeys: brainstormed 2026-10-08, the cookie and the pairing link built);
+                    and `design-sessions.md` — getting in and staying in, the options from a cookie to passkeys: brainstormed 2026-10-08, the cookie built that day, the PIN on 2026-11-02);
                     `later.md` = the one home for what is brainstormed, designed-and-set-aside, or still undecided
 docs/diagrams/      hand-drawn SVG sketches belonging to those docs
 .github/workflows/  build-backend: the image to GHCR (ghcr.io/denisolnce/porta-pagi), sha-<commit> and latest; nothing deploys from here

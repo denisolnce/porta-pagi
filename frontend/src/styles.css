@@ -525,8 +525,8 @@ a.card:hover { background: #fff8e4; }
 /* The select is invisible, so the label shows where the keyboard is. */
 .demo-switch:focus-within { outline: 2px solid var(--parch); outline-offset: 2px; border-radius: 6px; }
 /* One column of full-width doors: on a phone a ragged wrap of ten widths is harder to hit. */
-.demo-doors { display: grid; gap: .5rem; margin-top: .8rem; }
-.demo-doors button { display: flex; align-items: center; gap: .5rem; justify-content: flex-start; }
+.doors { display: grid; gap: .5rem; margin: .8rem 0; }
+.doors button { display: flex; align-items: center; gap: .5rem; justify-content: flex-start; }
 
 /* Duty roster. A turn is one line under its duty; its buttons sit at the end
    of that line and wrap under it on a narrow phone. The count table is houses

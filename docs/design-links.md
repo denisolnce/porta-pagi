@@ -117,9 +117,9 @@ the neighbour opens Home and hunts. The answer first, then the argument.
   browser, which holds no session (`isInApp` in `push.ts`; the install
   banner already tells a villager so), and on iOS no link ever opens the
   home-screen app. The first tap lands on the gate. The way through is the
-  one the invite already takes: "open in browser", then that browser pairs
-  once (a 6-digit code from a phone that is in) and keeps its token, so
-  every later link opens the card. A cost paid once per browser, not per
+  one the invite already takes: "open in browser", or sign that browser in
+  once by the house and its PIN (since 2026-11-02), and it keeps its token,
+  so every later link opens the card. A cost paid once per browser, not per
   link — but a neighbour who never paid it reads "look under Market" faster.
 - **A Share button on the card**, 🔗 beside 💬 Comments: the phone's share
   sheet (`navigator.share`, Android Chrome and iOS Safari both open WhatsApp

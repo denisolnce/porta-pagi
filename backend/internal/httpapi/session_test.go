@@ -32,7 +32,7 @@ func TestSessionCookie(t *testing.T) {
 	srv := New(st, config.Config{BootstrapCode: "letmein", Languages: []string{"sl", "en"}})
 	h := srv.Handler()
 	c := &client{t: t, h: h}
-	code, obj, _ := c.do("POST", "/api/bootstrap", map[string]any{"code": "letmein", "name": "Stewards"})
+	code, obj, _ := c.do("POST", "/api/bootstrap", map[string]any{"pin": "1234", "code": "letmein", "name": "Stewards"})
 	c.must(201, code, "bootstrap")
 	tok := obj["token"].(string)
 
@@ -149,7 +149,7 @@ func TestSessionCookie(t *testing.T) {
 	code, obj, _ = c.do("POST", "/api/houses", map[string]any{"name": "Pisani Petelin", "crest": "🌳", "color": "#4a7c3f"})
 	c.must(201, code, "create house")
 	inv := obj["invite"].(map[string]any)["code"].(string)
-	code, obj, _ = c.do("POST", "/api/join", map[string]any{"code": inv, "device": "phone"})
+	code, obj, _ = c.do("POST", "/api/join", map[string]any{"pin": "1234", "code": inv, "device": "phone"})
 	c.must(201, code, "join")
 	tokB := obj["token"].(string)
 	req = httptest.NewRequest("GET", "/api/me", nil)

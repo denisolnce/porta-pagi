@@ -7,6 +7,8 @@ import (
 	"encoding/hex"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -47,18 +49,6 @@ func inviteCode() string {
 		b[i] = alphabet[int(b[i])%len(alphabet)]
 	}
 	return string(b)
-}
-
-// pairingCode is six digits: short enough to read across a kitchen table,
-// short-lived and single-use to make up for the small keyspace.
-func pairingCode() string {
-	b := make([]byte, 6)
-	rand.Read(b)
-	out := make([]byte, 6)
-	for i := range b {
-		out[i] = '0' + b[i]%10
-	}
-	return string(out)
 }
 
 func hashToken(t string) string {
@@ -200,21 +190,188 @@ func (s *Server) requireSteward(next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
-// newDevice mints a token for a house and stores its hash.
-func (s *Server) newDevice(ctx context.Context, houseID int64, label string) (string, error) {
+// newDevice mints a token for a house and stores its hash, with the hash of
+// the PIN the device signs in by, when it has one ("" for none).
+func (s *Server) newDevice(ctx context.Context, houseID int64, label, pin string) (string, error) {
 	tok := randomToken(32)
-	_, err := s.st.Exec(ctx, `INSERT INTO devices(house_id, token_hash, label) VALUES (?,?,?)`, houseID, hashToken(tok), label)
+	_, err := s.st.Exec(ctx, `INSERT INTO devices(house_id, token_hash, label, pin_hash) VALUES (?,?,?,?)`, houseID, hashToken(tok), label, nullIfEmpty(pin))
 	return tok, err
 }
 
+// An invite is a house's own link, for any number of its people, for seven
+// days: each opens it once and chooses a PIN (owner's decision 2026-11-02).
 func (s *Server) newInvite(ctx context.Context, houseID int64) (store.Row, error) {
 	if _, err := s.st.Exec(ctx, `DELETE FROM invites WHERE house_id=?`, houseID); err != nil {
 		return nil, err
 	}
 	code := inviteCode()
-	exp := time.Now().UTC().Add(14 * 24 * time.Hour).Format(time.RFC3339)
+	exp := time.Now().UTC().Add(7 * 24 * time.Hour).Format(time.RFC3339)
 	if _, err := s.st.Exec(ctx, `INSERT INTO invites(code, house_id, expires_at) VALUES (?,?,?)`, code, houseID, exp); err != nil {
 		return nil, err
 	}
 	return store.Row{"code": code, "expires_at": exp}, nil
+}
+
+// PINs (owner's decision 2026-11-02; CLAUDE.md § Codes and PINs). Whoever
+// opens a house's invite link chooses a PIN on that device. Later, in any
+// browser — the home-screen app, a laptop, WhatsApp's own browser — the gate
+// lists the houses that have a PIN, the person taps theirs and types it, and
+// that browser is a new device of the house carrying the same PIN.
+//
+// A PIN is four to twelve digits, so it is guessable, and the house names on
+// the gate say where to guess. What makes guessing cost something is the
+// wait per house: five wrong PINs in a row are free, then each next try waits
+// four times longer than the last, from a minute up to a day — about eleven
+// tries the first day and one a day after. A right PIN, or a join by the
+// house's link, clears the count. The cost, paid knowingly: whoever guesses
+// can keep a house waiting, and the house's link is then the way in.
+//
+// The hash folds in the house id, so the same PIN in two houses is two
+// hashes; against a stolen database it protects nothing, and nothing else in
+// that database is protected either.
+var pinShape = regexp.MustCompile(`^[0-9]{4,12}$`)
+
+func pinHash(houseID int64, pin string) string {
+	return hashToken("pin:" + strconv.FormatInt(houseID, 10) + ":" + pin)
+}
+
+// pinWait is how long a house's next try waits after `misses` wrong PINs in a row.
+func pinWait(misses int64) time.Duration {
+	if misses < 5 {
+		return 0
+	}
+	d := time.Minute
+	for i := int64(5); i < misses && d < 24*time.Hour; i++ {
+		d *= 4
+	}
+	return min(d, 24*time.Hour)
+}
+
+// doors lists the houses the gate offers: every house with at least one PIN,
+// by name. Public, like the gate picture: the owner's decision 2026-11-02,
+// for now (docs/later.md). Never a common place, never a house nobody has
+// opened the link of — its door would take no PIN.
+func (s *Server) doors(w http.ResponseWriter, r *http.Request) {
+	rows, err := s.st.Rows(r.Context(), `SELECT h.id, h.name, h.crest, h.color FROM houses h
+		WHERE h.kind='house' AND EXISTS (SELECT 1 FROM devices d WHERE d.house_id=h.id AND d.pin_hash IS NOT NULL)
+		ORDER BY h.name`)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, 200, rows)
+}
+
+// login signs a browser in by a house and a PIN one of its devices chose.
+// The new device takes the matched device's label, which is the best guess
+// at who holds it, and its PIN, so the person's PIN outlives the browser it
+// was chosen in.
+func (s *Server) login(w http.ResponseWriter, r *http.Request) {
+	if !s.tries.allow(clientIP(r), 12, 10*time.Minute) {
+		writeErr(w, http.StatusTooManyRequests, "too many attempts, wait a few minutes")
+		return
+	}
+	m, err := readJSON(r)
+	if err != nil {
+		writeErr(w, 400, "bad json")
+		return
+	}
+	id, _ := m["house_id"].(float64)
+	houseID, pin := int64(id), str(m, "pin")
+	if !pinShape.MatchString(pin) {
+		writeErr(w, 400, "a PIN is 4 to 12 digits")
+		return
+	}
+	ctx := r.Context()
+	if h, err := s.st.One(ctx, `SELECT kind FROM houses WHERE id=?`, houseID); err != nil {
+		fail(w, err)
+		return
+	} else if h == nil || h["kind"] != "house" {
+		writeErr(w, 404, "no such house")
+		return
+	}
+	// One login at a time, so two tries at once cannot both pass the wait.
+	s.pinMu.Lock()
+	defer s.pinMu.Unlock()
+	now := s.now().UTC()
+	tries, err := s.st.One(ctx, `SELECT misses, wait_until FROM pin_tries WHERE house_id=?`, houseID)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	var misses int64
+	if tries != nil {
+		misses = tries["misses"].(int64)
+		if wu, ok := tries["wait_until"].(string); ok {
+			if until, _ := time.Parse(time.RFC3339, wu); now.Before(until) {
+				// Refused before the PIN is looked at: a right PIN in the wait
+				// would make the wait no wait at all.
+				writeJSON(w, http.StatusTooManyRequests, map[string]any{"error": "too many wrong PINs for this house", "wait_until": wu})
+				return
+			}
+		}
+	}
+	dev, err := s.st.One(ctx, `SELECT label, pin_hash FROM devices WHERE house_id=? AND agent=0 AND pin_hash=? LIMIT 1`, houseID, pinHash(houseID, pin))
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	if dev == nil {
+		misses++
+		var until any
+		if d := pinWait(misses); d > 0 {
+			until = now.Add(d).Format(time.RFC3339)
+		}
+		if _, err := s.st.Exec(ctx, `INSERT INTO pin_tries(house_id, misses, wait_until) VALUES (?,?,?)
+			ON CONFLICT(house_id) DO UPDATE SET misses=excluded.misses, wait_until=excluded.wait_until`, houseID, misses, until); err != nil {
+			fail(w, err)
+			return
+		}
+		writeErr(w, http.StatusForbidden, "wrong PIN")
+		return
+	}
+	if _, err := s.st.Exec(ctx, `DELETE FROM pin_tries WHERE house_id=?`, houseID); err != nil {
+		fail(w, err)
+		return
+	}
+	tok, err := s.newDevice(ctx, houseID, str(dev, "label"), str(dev, "pin_hash"))
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, 201, map[string]any{"token": tok, "house_id": houseID})
+}
+
+// putPin sets this device's PIN, or changes it. A change moves every device
+// of the house that carried the old PIN — the browsers it signed in — so the
+// old PIN stops working everywhere at once. The cost, paid knowingly: two
+// people of one house who chose the same PIN share it, and a change by one
+// is a change for both.
+func (s *Server) putPin(w http.ResponseWriter, r *http.Request) {
+	h := houseFrom(r)
+	m, err := readJSON(r)
+	if err != nil {
+		writeErr(w, 400, "bad json")
+		return
+	}
+	pin := str(m, "pin")
+	if !pinShape.MatchString(pin) {
+		writeErr(w, 400, "a PIN is 4 to 12 digits")
+		return
+	}
+	old, err := s.st.One(r.Context(), `SELECT pin_hash FROM devices WHERE id=?`, h.DeviceID)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	if was := str(old, "pin_hash"); was != "" {
+		_, err = s.st.Exec(r.Context(), `UPDATE devices SET pin_hash=? WHERE house_id=? AND pin_hash=?`, pinHash(h.ID, pin), h.ID, was)
+	} else {
+		_, err = s.st.Exec(r.Context(), `UPDATE devices SET pin_hash=? WHERE id=?`, pinHash(h.ID, pin), h.DeviceID)
+	}
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(204)
 }
