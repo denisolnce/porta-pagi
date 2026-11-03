@@ -114,6 +114,11 @@ func (s *Server) routes() {
 	m.HandleFunc("POST /api/events/{id}/signup", s.requireHouse(s.signUp))
 	m.HandleFunc("DELETE /api/events/{id}/signup", s.requireHouse(s.signOff))
 	m.HandleFunc("GET /api/news", s.requireHouse(s.listNews))
+	// The calendar as a feed (ical.go): the house's link, a new one, and the
+	// feed itself, public by the secret in its address.
+	m.HandleFunc("GET /api/calendar/feed", s.requireHouse(s.getFeed))
+	m.HandleFunc("POST /api/calendar/feed", s.requireHouse(s.newFeed))
+	m.HandleFunc("GET /api/ical/{name}", s.ical)
 	m.HandleFunc("GET /api/almanac", s.requireHouse(s.requireFeature("celestial", s.listAlmanac)))
 	// Comment threads: one shape for every room that has them (threads.go).
 	m.HandleFunc("GET /api/threads/{subject}/{id}", s.requireHouse(s.listThread))

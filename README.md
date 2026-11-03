@@ -22,7 +22,9 @@ three off by default — and switches off the sky in the calendar, which is on
 by default. One shared login per house, handed
 out as an invite link: whoever opens it chooses a PIN, and from then on
 signs in on any phone or computer by tapping their house and typing it.
-Installs to the home screen and sends notifications.
+Installs to the home screen and sends notifications, and the calendar's
+events and work parties can be subscribed to from a house's own Google or
+Apple calendar.
 
 Built by and for one collective in the Slovenian karst; the reasons behind
 every room are in `CLAUDE.md`, and the village that built it runs it from its

@@ -268,7 +268,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   villager's browser; the backend answers anything else with a 400.
 - **Nothing is public.** Every API route except `/api/healthz`, `/api/status`,
   `/api/bootstrap`, `/api/join`, `/api/doors` and `/api/login` requires a
-  bearer token. **No unauthenticated write surface, ever** — a camper
+  bearer token — and `/api/ical/<secret>.ics`, which a house's secret opens
+  instead (§ The calendar as a feed). **No unauthenticated write surface, ever** — a camper
   self-check-in link from park4night was asked for on 2026-09-06 and refused
   for that reason; `/api/login` writes only the device it signs in, and a
   wrong PIN's count. **The houses' names, crests, colours and tries left
@@ -499,6 +500,24 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   the `celestial` switch, on by default** (owner's ask 2026-10-08, § Switches):
   a village that does not want it switches it off, and its rows and threads
   wait.
+- **The calendar as a feed** (owner's ask 2026-11-03, `ical.go`, `Subscribe`
+  in `rooms/Calendar.tsx`, `docs/design-calendar-feed.md`). 📅 *Add to your
+  calendar* under the calendar's cards gives a house **one secret link**
+  (`calendar_feeds`), which Apple's calendar takes as `webcal://`, Google's
+  through its own "add by URL" page, and anything else as plain https; ♻
+  makes a new one and the old answers 404 everywhere. A calendar cannot sign
+  in, so **the link is the credential**: whoever holds it reads the feed. It
+  carries **events and work parties only** — the owner's pick: never an away
+  notice, never a birthday, not the sky, no answers and no headcount — sixty
+  days back and every series, the window the room reads, each with its
+  place, notes, the house that called it and a link back. RFC 5545 by hand,
+  no dependency: times on the village's `TZ` with a `VTIMEZONE`, floating
+  without one; a series is one `RRULE` that says the page's rule
+  (`BYMONTHDAY=d,-1;BYSETPOS=1` for a monthly 31st). **Google keeps a copy**
+  on its servers and refreshes at its own pace — the house's choice, as an
+  MCP key's provider is; the panel says so, and the privacy note owes a
+  line. Not in the demo, whose village is wiped on the hour. Not an export:
+  the table is a credential and stays out of `/api/export`.
 - **No tally of favours.** Work-bee sign-ups are a headcount for one day and
   die with the event. Tool loans record who holds a tool now, never how many
   times a house borrowed. Do not add a total anywhere. The **return reminder**
@@ -1121,6 +1140,7 @@ backend/internal/httpapi/roster.go    the duty roster behind its switch: duties 
 backend/internal/httpapi/almanac.go   the sky in the calendar: the yearly write, the place off the weather's setting, the list route;
                     internal/astro is the arithmetic (Meeus, stdlib only); frontend rooms/Almanac.tsx words a row per language
 backend/internal/httpapi/birthdays.go a birthday's write and its morning ring; recur.go = the one rule for which days a series lands on
+backend/internal/httpapi/ical.go      the calendar as a feed: a house's secret link and the RFC 5545 it serves, events and work parties only
 backend/internal/httpapi/news.go      Portal News: news/news.json embedded, the list route, the once-per-roll ring; frontend src/Changelog.tsx is its tab
 backend/internal/httpapi/dues.go   the dues ledger, behind its switch: five routes, the amount parser, the one total besides the roster's
 backend/internal/httpapi/mcp.go    the door for agents: the tool table (the whole surface), the JSON-RPC endpoint, the in-process
@@ -1135,6 +1155,7 @@ docs/               design docs the owner and the assistant decide on together (
                     `design-mcp.md` — the API as MCP tools for agents: built, with the options rejected and their costs;
                     `design-news.md` — a curated "what's new" that rings when a roll brings it: researched, not built;
                     `design-links.md` — a link to one entry, to paste into the group: built 2026-10-08, with the options refused;
+                    `design-calendar-feed.md` — the village's events in a house's own Google or Apple calendar: built 2026-11-03;
                     and `design-sessions.md` — getting in and staying in, the options from a cookie to passkeys: brainstormed 2026-10-08, the cookie built that day, the PIN on 2026-11-02);
                     `later.md` = the one home for what is brainstormed, designed-and-set-aside, or still undecided
 docs/diagrams/      hand-drawn SVG sketches belonging to those docs
