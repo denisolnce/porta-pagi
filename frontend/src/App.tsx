@@ -136,7 +136,7 @@ export default function App() {
         )}
         {state === "in" && me && (
           <Routes>{withoutOff(<>
-            <Route path="/" element={<Home me={me} houses={houses} />} />
+            <Route path="/" element={<Home me={me} houses={houses} refresh={refresh} />} />
             <Route path="/tavern" element={<Hall me={me} houses={houses} />} />
             {/* Notifications sent before the merge point at #/bell — keep it alive. */}
             <Route path="/bell" element={<Hall me={me} houses={houses} />} />
@@ -155,8 +155,8 @@ export default function App() {
             {steward && <Route path="/settings" element={<Settings icons={icons} />} />}
             {/* A link to one entry: kind → room, then the room's own address (links.tsx). */}
             <Route path="/go/:kind/:id/:made?" element={<Go />} />
-            <Route path="/join/:code" element={<Home me={me} houses={houses} />} />
-            <Route path="*" element={<Home me={me} houses={houses} />} />
+            <Route path="/join/:code" element={<Home me={me} houses={houses} refresh={refresh} />} />
+            <Route path="*" element={<Home me={me} houses={houses} refresh={refresh} />} />
           </>, rooms)}</Routes>
         )}
       </main>
@@ -180,8 +180,9 @@ export default function App() {
 type Topper = "map" | "weather" | "tavern" | "codex";
 type Foot = "" | "changelog" | "feedback";
 
-function Home({ me, houses }: { me: Me; houses: House[] }) {
+function Home({ me, houses, refresh }: { me: Me; houses: House[]; refresh: () => Promise<void> }) {
   const { t, demo } = useT();
+  const [pinSaved, setPinSaved] = useState(false);
   const rooms = useRooms();
   // A switched-off room's list is a 404, so its badge is not even asked for.
   const campOn = rooms.some((r) => r.feature === "camp");
@@ -236,7 +237,8 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
   return (
     <>
       {/* A device from before the PIN; the demo is entered by its doors and has none. */}
-      {me.has_pin === false && !demo && <PinPrompt />}
+      {/* Kept after the save, so "PIN saved" stays on screen while /api/me answers that it has one. */}
+      {(me.has_pin === false || pinSaved) && !demo && <PinPrompt onSaved={() => { setPinSaved(true); refresh().catch(() => {}); }} />}
       <InstallBanner />
       <LinkLine note={linkNote} />
       <div className="topper-pick">

@@ -64,7 +64,9 @@ export function SetPin({ has, onSaved }: { has: boolean; onSaved: () => void }) 
 // PinPrompt: on Home, for a device signed in before the PIN existed, until it
 // chooses one or says later. Without a PIN the home-screen app and every
 // other browser need a new link from a steward, which is what the PIN ends.
-export function PinPrompt() {
+// `onSaved` has the page read /api/me again: a home-screen app rarely
+// reloads, and a stale "no PIN" would ask again the next time Home opens.
+export function PinPrompt({ onSaved }: { onSaved: () => void }) {
   const { t } = useT();
   const [later, setLater] = useState(() => { try { return localStorage.getItem("potok.pinLater") === "1"; } catch { return false; } });
   const [done, setDone] = useState(false);
@@ -75,7 +77,7 @@ export function PinPrompt() {
       <div className="body">
         {done ? <><strong>🔑 {t("PIN saved.")}</strong> {t("On another phone or computer, or in the app on your home screen: tap your house and type it.")}</>
           : <><strong>🔑 {t("Choose a PIN")}</strong> — {t("then you sign in on any phone or computer, and in the app on your home screen, by tapping your house and typing it. Nobody has to send you a code again.")}
-            <SetPin has={false} onSaved={() => setDone(true)} /></>}
+            <SetPin has={false} onSaved={() => { setDone(true); onSaved(); }} /></>}
       </div>
       <button className="ghost dismiss" aria-label={t("Dismiss")} onClick={dismiss}>✕</button>
     </div>
