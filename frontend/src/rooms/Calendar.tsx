@@ -8,6 +8,7 @@ import { EventCard, ICON, REPEATS } from "./EventCard";
 import { SkyCard, skyIcon } from "./Almanac";
 import { useFeature } from "../features";
 import { DatePicker } from "../DatePicker";
+import { isIOS } from "../push";
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
@@ -272,25 +273,36 @@ export function Calendar({ me, houses }: { me: Me; houses: House[] }) {
 }
 
 // Subscribe: the village's events and work parties in a house's own calendar
-// (backend ical.go). The link is the house's secret, so it is fetched only
-// when the panel opens, and ♻ makes a new one. Apple opens webcal:// itself;
-// Google takes the same address through its "add by URL" page, which works
-// on a computer — its phone app cannot add one, and shows it once added.
-// Not in the demo: the village there is wiped on the hour, and every
-// calendar that subscribed would hold a dead link.
+// (backend ical.go). The link is the house's secret, so it is asked for only
+// when the panel opens, and made then if the house has none; ♻ makes a new
+// one. Each device sees only the doors that open there: Apple's calendar
+// takes webcal:// on an iPhone and a Mac and nowhere else, and Google adds a
+// calendar by URL only on a computer — its phone app cannot, and shows it
+// once added — so a phone gets the words for that instead of a dead button.
+// The address also sits in a field a thumb can copy from, for a browser with
+// no clipboard (WhatsApp's own). Not in the demo: the village there is wiped
+// on the hour, and every calendar that subscribed would hold a dead link.
 function Subscribe() {
   const { t, demo } = useT();
   const [open, setOpen] = useState(false);
   const [token, setToken] = useState("");
+  const [failed, setFailed] = useState(false);
   const [copied, setCopied] = useState(false);
   if (demo) return null;
-  const toggle = () => {
-    if (!open && !token) api<{ token: string }>("/calendar/feed").then((r) => setToken(r.token)).catch(() => {});
+  const apple = isIOS() || /Macintosh/.test(navigator.userAgent);
+  const phone = matchMedia("(pointer: coarse)").matches;
+  const toggle = async () => {
     setOpen(!open);
+    if (open || token) return;
+    setFailed(false);
+    try {
+      const r = await api<{ token?: string }>("/calendar/feed");
+      setToken(r.token || (await api<{ token: string }>("/calendar/feed", { method: "POST" })).token);
+    } catch { setFailed(true); }
   };
   const https = `${location.origin}/api/ical/${token}.ics`;
   const webcal = https.replace(/^https?:/, "webcal:");
-  const copy = () => { navigator.clipboard?.writeText(https); setCopied(true); setTimeout(() => setCopied(false), 1500); };
+  const copy = () => navigator.clipboard?.writeText(https).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {});
   const renew = async () => {
     if (!confirm(t("The old link stops working in every calendar that has it, and each of them has to add the new one. Make a new link?"))) return;
     const r = await api<{ token: string }>("/calendar/feed", { method: "POST" });
@@ -299,15 +311,17 @@ function Subscribe() {
   return (
     <div className="subscribe">
       <button className="lesser" onClick={toggle}>📅 {t("Add to your calendar")}</button>
+      {open && failed && <div className="err">{t("Something went wrong")}</div>}
       {open && token && (<>
         <p className="small">{t("The village's events and work parties in your own calendar, beside your own, kept up to date by themselves.")}</p>
         <div className="actions">
-          <button onClick={() => { location.href = webcal; }}>{t("Apple Calendar")}</button>
-          <button onClick={() => window.open(`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}`, "_blank", "noopener,noreferrer")}>{t("Google Calendar")}</button>
-          <button onClick={copy}>📋 {copied ? t("Copied") : t("Copy link")}</button>
+          {apple && <button onClick={() => { location.href = webcal; }}>{t("Apple Calendar")}</button>}
+          {!phone && <button onClick={() => window.open(`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}`, "_blank", "noopener,noreferrer")}>{t("Google Calendar")}</button>}
+          {navigator.clipboard && <button onClick={copy}>📋 {copied ? t("Copied") : t("Copy link")}</button>}
         </div>
+        <input className="feed-url" readOnly value={https} onFocus={(e) => e.target.select()} aria-label={t("Copy link")} />
         <p className="small muted">
-          {t("Google adds a calendar by link only on a computer, and updates it every few hours; it then shows on your phone too. An iPhone or a Mac reads it itself.")}{" "}
+          {phone ? t("Google Calendar adds it only on a computer: Settings, Add calendar, From URL, and paste the link. It then shows on your phone too.") : t("Google updates it every few hours, and it then shows on your phone too.")}{" "}
           {t("The link is your house's: whoever has it sees the village's events, so keep it among you. Away notices and birthdays are never in it.")}{" "}
           <button className="ghost" onClick={renew}>♻ {t("New link")}</button>
         </p>

@@ -29,7 +29,11 @@ func TestCalendarFeed(t *testing.T) {
 	volk.must(201, code, "away")
 
 	code, f, _ := volk.do("GET", "/api/calendar/feed", nil)
-	volk.must(201, code, "the first ask makes the link")
+	if code != 200 || f["token"] != nil {
+		t.Fatalf("a read made a link: %d %v", code, f)
+	}
+	code, f, _ = volk.do("POST", "/api/calendar/feed", nil)
+	volk.must(201, code, "the first link")
 	tok := f["token"].(string)
 	if _, again, _ := volk.do("GET", "/api/calendar/feed", nil); again["token"] != tok {
 		t.Fatal("the link changed on a second ask")
@@ -95,7 +99,7 @@ func TestFeedWithoutZone(t *testing.T) {
 	t.Setenv("TZ", "")
 	srv, _, _, volk := newVillage(t)
 	volk.do("POST", "/api/events", map[string]any{"title": "Kino", "starts_at": "2026-09-12T20:00"})
-	_, f, _ := volk.do("GET", "/api/calendar/feed", nil)
+	_, f, _ := volk.do("POST", "/api/calendar/feed", nil)
 	rec := httptest.NewRecorder()
 	srv.Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/api/ical/"+f["token"].(string)+".ics", nil))
 	body := rec.Body.String()

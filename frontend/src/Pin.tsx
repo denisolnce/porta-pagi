@@ -72,12 +72,15 @@ export function PinPrompt({ onSaved }: { onSaved: () => void }) {
   const [done, setDone] = useState(false);
   if (later) return null;
   const dismiss = () => { setLater(true); try { localStorage.setItem("potok.pinLater", "1"); } catch { /* private mode */ } };
+  // Saved, it is a plain line and no longer the framed ask with its ✕, so
+  // the answer cannot be read as the question again; Home lets it go after
+  // a few seconds.
+  if (done) return <p className="small">🔑 <strong>{t("PIN saved.")}</strong> {t("On another phone or computer, or in the app on your home screen: tap your house and type it.")}</p>;
   return (
     <div className="card banner">
       <div className="body">
-        {done ? <><strong>🔑 {t("PIN saved.")}</strong> {t("On another phone or computer, or in the app on your home screen: tap your house and type it.")}</>
-          : <><strong>🔑 {t("Choose a PIN")}</strong> — {t("then you sign in on any phone or computer, and in the app on your home screen, by tapping your house and typing it. Nobody has to send you a code again.")}
-            <SetPin has={false} onSaved={() => { setDone(true); onSaved(); }} /></>}
+        <strong>🔑 {t("Choose a PIN")}</strong> — {t("then you sign in on any phone or computer, and in the app on your home screen, by tapping your house and typing it. Nobody has to send you a code again.")}
+        <SetPin has={false} onSaved={() => { setDone(true); onSaved(); }} />
       </div>
       <button className="ghost dismiss" aria-label={t("Dismiss")} onClick={dismiss}>✕</button>
     </div>

@@ -659,7 +659,8 @@
   "Apple Calendar": "Calendário Apple",
   "Google Calendar": "Google Calendar",
   "Copy link": "Copiar link",
-  "Google adds a calendar by link only on a computer, and updates it every few hours; it then shows on your phone too. An iPhone or a Mac reads it itself.": "O Google só adiciona um calendário por link num computador, e atualiza-o de poucas em poucas horas; depois aparece também no telemóvel. Um iPhone ou um Mac lê-o sozinho.",
   "The link is your house's: whoever has it sees the village's events, so keep it among you. Away notices and birthdays are never in it.": "O link é da sua casa: quem o tiver vê os eventos da aldeia, por isso guarde-o entre vós. Ausências e aniversários nunca vão nele.",
-  "The old link stops working in every calendar that has it, and each of them has to add the new one. Make a new link?": "O link antigo deixa de funcionar em todos os calendários que o têm, e cada um tem de adicionar o novo. Criar um link novo?"
+  "The old link stops working in every calendar that has it, and each of them has to add the new one. Make a new link?": "O link antigo deixa de funcionar em todos os calendários que o têm, e cada um tem de adicionar o novo. Criar um link novo?",
+  "Google Calendar adds it only on a computer: Settings, Add calendar, From URL, and paste the link. It then shows on your phone too.": "O Google Calendar só o adiciona num computador: Definições, Adicionar calendário, A partir do URL, e cole o link. Depois aparece também no telemóvel.",
+  "Google updates it every few hours, and it then shows on your phone too.": "O Google atualiza-o de poucas em poucas horas, e depois aparece também no telemóvel."
 }

@@ -503,9 +503,12 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
 - **The calendar as a feed** (owner's ask 2026-11-03, `ical.go`, `Subscribe`
   in `rooms/Calendar.tsx`, `docs/design-calendar-feed.md`). 📅 *Add to your
   calendar* under the calendar's cards gives a house **one secret link**
-  (`calendar_feeds`), which Apple's calendar takes as `webcal://`, Google's
-  through its own "add by URL" page, and anything else as plain https; ♻
-  makes a new one and the old answers 404 everywhere. A calendar cannot sign
+  (`calendar_feeds`; a GET reads it, the panel POSTs the first), which
+  Apple's calendar takes as `webcal://` — the button only on Apple's
+  devices — Google's through its own "add by URL" page — the button only
+  on a computer, a phone gets the words — and anything else as plain https
+  from a field a thumb can copy; ♻ makes a new one and the old answers 404
+  everywhere. A calendar cannot sign
   in, so **the link is the credential**: whoever holds it reads the feed. It
   carries **events and work parties only** — the owner's pick: never an away
   notice, never a birthday, not the sky, no answers and no headcount — sixty

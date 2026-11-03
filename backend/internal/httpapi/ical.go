@@ -22,22 +22,22 @@ import (
 // owner's pick) — and no headcount and no answers, as an iPhone's lock
 // screen might show a reminder of it.
 
-// GET /api/calendar/feed: the house's secret, made on first ask.
+// GET /api/calendar/feed: the house's secret, or none yet; a read writes
+// nothing, so the panel POSTs the first one.
 func (s *Server) getFeed(w http.ResponseWriter, r *http.Request) {
-	h := houseFrom(r)
-	row, err := s.st.One(r.Context(), `SELECT token FROM calendar_feeds WHERE house_id=?`, h.ID)
+	row, err := s.st.One(r.Context(), `SELECT token FROM calendar_feeds WHERE house_id=?`, houseFrom(r).ID)
 	if err != nil {
 		fail(w, err)
 		return
 	}
-	if row != nil {
-		writeJSON(w, 200, map[string]any{"token": row["token"]})
+	if row == nil {
+		writeJSON(w, 200, map[string]any{})
 		return
 	}
-	s.newFeed(w, r)
+	writeJSON(w, 200, map[string]any{"token": row["token"]})
 }
 
-// POST /api/calendar/feed: a new secret for the house; the old one stops.
+// POST /api/calendar/feed: the house's first secret, or a new one; the old stops.
 func (s *Server) newFeed(w http.ResponseWriter, r *http.Request) {
 	h := houseFrom(r)
 	tok := randomToken(24)

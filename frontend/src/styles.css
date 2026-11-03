@@ -553,3 +553,4 @@ a.card:hover { background: #fff8e4; }
 /* The calendar's subscription: a lesser button under the cards, and the panel it opens. */
 .subscribe { margin-top: .9rem; }
 .subscribe .actions { display: flex; gap: .4rem; flex-wrap: wrap; margin: .4rem 0; }
+.subscribe .feed-url { width: 100%; font-size: .8rem; }

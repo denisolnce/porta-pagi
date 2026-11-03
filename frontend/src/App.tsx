@@ -237,8 +237,8 @@ function Home({ me, houses, refresh }: { me: Me; houses: House[]; refresh: () =>
   return (
     <>
       {/* A device from before the PIN; the demo is entered by its doors and has none. */}
-      {/* Kept after the save, so "PIN saved" stays on screen while /api/me answers that it has one. */}
-      {(me.has_pin === false || pinSaved) && !demo && <PinPrompt onSaved={() => { setPinSaved(true); refresh().catch(() => {}); }} />}
+      {/* Kept a few seconds after the save, so "PIN saved" is read while /api/me answers that it has one. */}
+      {(me.has_pin === false || pinSaved) && !demo && <PinPrompt onSaved={() => { setPinSaved(true); refresh().catch(() => {}); setTimeout(() => setPinSaved(false), 8000); }} />}
       <InstallBanner />
       <LinkLine note={linkNote} />
       <div className="topper-pick">

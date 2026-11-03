@@ -13,18 +13,24 @@ I already look at, beside the dentist, without opening the portal."**
 
 - **One link per house** (`calendar_feeds`, migration `031`), made the first
   time anyone of the house opens 📅 *Add to your calendar* under the
-  calendar's cards (`Subscribe` in `rooms/Calendar.tsx`). The link is
+  calendar's cards (`Subscribe` in `rooms/Calendar.tsx`): `GET
+  /api/calendar/feed` only reads it, and the panel `POST`s the first one. The link is
   `<the portal>/api/ical/<secret>.ics`; the secret is 24 random bytes, kept
   plain like an invite because the house reads it again whenever a member
   adds the calendar. ♻ *New link* replaces it, and the old one answers 404 in
   every calendar that held it. One per person was offered and refused (owner,
   2026-11-03): more to manage, for a house that is one account anyway.
-- **Three doors in the panel.** *Apple Calendar* opens the same address as
-  `webcal://`, which an iPhone and a Mac hand to their Calendar's subscribe
-  sheet. *Google Calendar* opens Google's own "add by URL" page with the
-  address (`calendar.google.com/calendar/r?cid=…`), in a new tab with no
-  referrer. *Copy link* is the plain https address, for Outlook, Thunderbird
-  or a Google account added by hand (Settings → Add calendar → From URL).
+- **Each device sees the doors that open there.** *Apple Calendar*, on an
+  iPhone, an iPad or a Mac only, opens the same address as `webcal://`, which
+  they hand to their Calendar's subscribe sheet; elsewhere nothing handles
+  it. *Google Calendar*, on a computer only, opens Google's own "add by URL"
+  page with the address (`calendar.google.com/calendar/r?cid=…`), in a new
+  tab with no referrer; on a phone (a coarse pointer) the panel says the
+  words instead — Settings, Add calendar, From URL on a computer — because
+  Google's phone app cannot add one. *Copy link* is the plain https address,
+  for Outlook, Thunderbird or Google by hand, drawn where the browser has a
+  clipboard; the address also sits in a read-only field, for a thumb in a
+  browser without one (WhatsApp's own).
 - **What the feed carries** (`ical.go`, RFC 5545 by hand, no dependency):
   events and work parties only — the owner's pick — sixty days back and every
   series, the window the calendar room reads. Per event: the title (a work
