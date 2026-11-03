@@ -271,7 +271,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   bearer token. **No unauthenticated write surface, ever** — a camper
   self-check-in link from park4night was asked for on 2026-09-06 and refused
   for that reason; `/api/login` writes only the device it signs in, and a
-  wrong PIN's count. **The houses' names, crests and colours are public**:
+  wrong PIN's count. **The houses' names, crests, colours and tries left
+  before a lock are public**:
   the gate lists every house with a PIN so a person taps theirs (owner's
   decision 2026-11-02: "might not be secure, but let's do it for now",
   better ways in `docs/later.md`); a house nobody has opened the link of,

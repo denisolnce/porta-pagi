@@ -650,8 +650,8 @@
   "The village did not answer. Try again in a moment.": "A aldeia não respondeu. Tente outra vez daqui a pouco.",
   "Signs in with a PIN": "Entra com um PIN",
   "A PIN is 6 digits.": "Um PIN tem 6 algarismos.",
-  "Tries left:": "Tentativas restantes:",
   "After three wrong PINs the house locks, and only its link opens it again.": "Depois de três PIN errados a casa fica trancada, e só o link dela a abre outra vez.",
   "This house is locked after three wrong PINs. Open your house's link again and it opens; if you do not have the link, ask the steward.": "Esta casa ficou trancada depois de três PIN errados. Abra outra vez o link da sua casa e ela abre; se não tem o link, peça-o ao zelador.",
-  "Choose a 6-digit PIN for your house. From then on you sign in on any phone or computer, and in the app on your home screen, by tapping your house and typing the PIN.": "Escolha um PIN de 6 algarismos para a sua casa. A partir daí entra em qualquer telemóvel ou computador, e na app do ecrã inicial, tocando na sua casa e escrevendo o PIN."
+  "Choose a 6-digit PIN for your house. From then on you sign in on any phone or computer, and in the app on your home screen, by tapping your house and typing the PIN.": "Escolha um PIN de 6 algarismos para a sua casa. A partir daí entra em qualquer telemóvel ou computador, e na app do ecrã inicial, tocando na sua casa e escrevendo o PIN.",
+  "Tries left for this house:": "Tentativas restantes para esta casa:"
 }

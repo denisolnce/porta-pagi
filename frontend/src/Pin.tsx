@@ -4,10 +4,12 @@ import { useT } from "./i18n";
 
 // A PIN is six digits (auth.go § PINs): the number pad on a phone, dots on
 // the screen, and anything that is not a digit never lands in the field.
-// `remember` lets the phone offer to keep it, per site — the owner's ask was
-// that people lose codes: "new-password" where it is chosen,
-// "current-password" where it is typed to sign in.
-export function PinInput({ label, value, onChange, autoFocus, remember = "off" }: { label: string; value: string; onChange: (v: string) => void; autoFocus?: boolean; remember?: "new-password" | "current-password" | "off" }) {
+// `remember` is "current-password" where the PIN is typed to sign in, so a
+// phone that keeps it can fill it, per house. Where it is chosen it stays
+// "off": "new-password" invites Safari's strong-password suggestion, which
+// the digit filter would cut to a PIN nobody knows. Whether a phone offers
+// to keep a PIN at all is unverified on an iPhone.
+export function PinInput({ label, value, onChange, autoFocus, remember = "off" }: { label: string; value: string; onChange: (v: string) => void; autoFocus?: boolean; remember?: "current-password" | "off" }) {
   return (
     <label>{label}
       <input type="password" inputMode="numeric" pattern="[0-9]{6}" minLength={6} maxLength={6} autoComplete={remember} required autoFocus={autoFocus}
@@ -22,8 +24,8 @@ export function NewPin({ pin, setPin, again, setAgain }: { pin: string; setPin: 
   const { t } = useT();
   return (
     <div className="row">
-      <PinInput label={t("Choose a PIN")} value={pin} onChange={setPin} remember="new-password" />
-      <PinInput label={t("The PIN again")} value={again} onChange={setAgain} remember="new-password" />
+      <PinInput label={t("Choose a PIN")} value={pin} onChange={setPin} />
+      <PinInput label={t("The PIN again")} value={again} onChange={setAgain} />
     </div>
   );
 }

@@ -650,8 +650,8 @@
   "The village did not answer. Try again in a moment.": "Vas se ni odzvala. Poskusite znova čez trenutek.",
   "Signs in with a PIN": "Se prijavlja s PIN-om",
   "A PIN is 6 digits.": "PIN ima 6 števk.",
-  "Tries left:": "Preostali poskusi:",
   "After three wrong PINs the house locks, and only its link opens it again.": "Po treh napačnih PIN-ih se hiša zaklene in odpre jo samo njena povezava.",
   "This house is locked after three wrong PINs. Open your house's link again and it opens; if you do not have the link, ask the steward.": "Hiša je zaklenjena po treh napačnih PIN-ih. Znova odprite povezavo svoje hiše in se odklene; če povezave nimate, prosite oskrbnika.",
-  "Choose a 6-digit PIN for your house. From then on you sign in on any phone or computer, and in the app on your home screen, by tapping your house and typing the PIN.": "Izberite 6-mestni PIN za svojo hišo. Odslej se prijavite na katerem koli telefonu ali računalniku in v aplikaciji na začetnem zaslonu tako, da tapnete svojo hišo in vpišete PIN."
+  "Choose a 6-digit PIN for your house. From then on you sign in on any phone or computer, and in the app on your home screen, by tapping your house and typing the PIN.": "Izberite 6-mestni PIN za svojo hišo. Odslej se prijavite na katerem koli telefonu ali računalniku in v aplikaciji na začetnem zaslonu tako, da tapnete svojo hišo in vpišete PIN.",
+  "Tries left for this house:": "Preostali poskusi za to hišo:"
 }

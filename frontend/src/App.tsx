@@ -344,7 +344,8 @@ function Doors({ enter }: { enter: (r: { token: string }) => Promise<void> }) {
         <PinInput label={t("PIN")} value={pin} onChange={setPin} autoFocus remember="current-password" />
         {err && <div className="err">{err}</div>}
         {/* Said before the first try, not only after a wrong one (owner, 2026-11-03). */}
-        <p className="small">{t("Tries left:")} {pick.left}. {t("After three wrong PINs the house locks, and only its link opens it again.")}</p>
+        {/* The count is the house's, not this person's: a housemate's mistype counts too. */}
+        <p className="small">{t("Tries left for this house:")} {pick.left}. {t("After three wrong PINs the house locks, and only its link opens it again.")}</p>
         <div className="submit">
           {back}{" "}
           <button className="primary" type="submit" disabled={busy}>{t("Sign in")}</button>
