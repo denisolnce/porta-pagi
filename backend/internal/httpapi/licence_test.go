@@ -26,7 +26,7 @@ func licenceVillage(t *testing.T, key, on string) *client {
 	d, _ := time.Parse(time.DateOnly, on)
 	srv.now = func() time.Time { return d.Add(12 * time.Hour) }
 	c := &client{t: t, h: srv.Handler()}
-	_, obj, _ := c.do("POST", "/api/bootstrap", map[string]any{"code": "x", "name": "House 1"})
+	_, obj, _ := c.do("POST", "/api/bootstrap", map[string]any{"pin": "123456", "code": "x", "name": "House 1"})
 	c.token = obj["token"].(string)
 	return c
 }

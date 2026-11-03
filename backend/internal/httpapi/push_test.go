@@ -56,12 +56,12 @@ func TestPushFanout(t *testing.T) {
 	h := srv.Handler()
 
 	steward := &client{t: t, h: h}
-	_, obj, _ := steward.do("POST", "/api/bootstrap", map[string]any{"code": "x", "name": "S"})
+	_, obj, _ := steward.do("POST", "/api/bootstrap", map[string]any{"pin": "123456", "code": "x", "name": "S"})
 	steward.token = obj["token"].(string)
 	mk := func(name string) *client {
 		_, o, _ := steward.do("POST", "/api/houses", map[string]any{"name": name})
 		c := &client{t: t, h: h}
-		_, j, _ := c.do("POST", "/api/join", map[string]any{"code": o["invite"].(map[string]any)["code"]})
+		_, j, _ := c.do("POST", "/api/join", map[string]any{"pin": "123456", "code": o["invite"].(map[string]any)["code"]})
 		c.token = j["token"].(string)
 		return c
 	}

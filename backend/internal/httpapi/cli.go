@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// The way back in when nobody is logged in on a device — a steward who lost the
-// session, or a house that never opened the link. Run on the VM over SSH, so
+// The way back in when nobody can sign in — a steward who lost the session
+// and forgot the PIN, or a house that never opened the link. Run on the VM over SSH, so
 // the credential to use it is SSH access to the machine, which is the strongest
 // one the village has:
 //
@@ -58,6 +58,7 @@ func (s *Server) Code(match string) error {
 	base := strings.TrimSuffix(s.cfg.PublicURL, "/")
 	fmt.Printf("\n  house : %s %s\n  code  : %s\n  link  : %s/#/join/%s\n  until : %s\n\n",
 		hit["crest"], hit["name"], inv["code"], base, inv["code"], inv["expires_at"])
-	fmt.Println("  Any earlier link for this house has stopped working.")
+	fmt.Println("  Any earlier link for this house has stopped working. Whoever opens this one")
+	fmt.Println("  chooses a PIN, and signs in with the house and the PIN from then on.")
 	return nil
 }

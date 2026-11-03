@@ -65,12 +65,12 @@ func TestVillageFlow(t *testing.T) {
 	if obj["bootstrap_needed"] != true {
 		t.Fatal("expected bootstrap_needed")
 	}
-	code, _, _ = steward.do("POST", "/api/bootstrap", map[string]any{"code": "wrong", "name": "x"})
+	code, _, _ = steward.do("POST", "/api/bootstrap", map[string]any{"pin": "123456", "code": "wrong", "name": "x"})
 	steward.must(403, code, "bootstrap wrong code")
-	code, obj, _ = steward.do("POST", "/api/bootstrap", map[string]any{"code": "letmein", "name": "Stewards"})
+	code, obj, _ = steward.do("POST", "/api/bootstrap", map[string]any{"pin": "123456", "code": "letmein", "name": "Stewards"})
 	steward.must(201, code, "bootstrap")
 	steward.token = obj["token"].(string)
-	code, _, _ = steward.do("POST", "/api/bootstrap", map[string]any{"code": "letmein"})
+	code, _, _ = steward.do("POST", "/api/bootstrap", map[string]any{"pin": "123456", "code": "letmein"})
 	steward.must(409, code, "second bootstrap refused")
 
 	// Steward creates a house and gets its invite.
@@ -81,11 +81,11 @@ func TestVillageFlow(t *testing.T) {
 
 	// A villager joins twice (two phones), both devices belong to the house.
 	villager := &client{t: t, h: srv.Handler()}
-	code, obj, _ = villager.do("POST", "/api/join", map[string]any{"code": inv, "device": "phone A"})
+	code, obj, _ = villager.do("POST", "/api/join", map[string]any{"pin": "123456", "code": inv, "device": "phone A"})
 	villager.must(201, code, "join A")
 	villager.token = obj["token"].(string)
 	second := &client{t: t, h: srv.Handler()}
-	code, obj, _ = second.do("POST", "/api/join", map[string]any{"code": inv, "device": "phone B"})
+	code, obj, _ = second.do("POST", "/api/join", map[string]any{"pin": "123456", "code": inv, "device": "phone B"})
 	second.must(201, code, "join B")
 	second.token = obj["token"].(string)
 	code, _, devs := villager.do("GET", "/api/devices", nil)

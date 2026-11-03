@@ -42,7 +42,7 @@ func feedbackVillage(t *testing.T, cfg config.Config) (*Server, *store.Store, *c
 	cfg.BootstrapCode, cfg.VillageName, cfg.Languages, cfg.PublicURL = "x", "Testna vas", []string{"sl", "en"}, "https://portal.example.org"
 	srv := New(st, cfg)
 	c := &client{t: t, h: srv.Handler()}
-	_, obj, _ := c.do("POST", "/api/bootstrap", map[string]any{"code": "x", "name": "Zeleni Hrast"})
+	_, obj, _ := c.do("POST", "/api/bootstrap", map[string]any{"pin": "123456", "code": "x", "name": "Zeleni Hrast"})
 	c.token = obj["token"].(string)
 	return srv, st, c
 }

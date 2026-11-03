@@ -43,67 +43,195 @@ func newVillage(t *testing.T) (*Server, *fakeSender, *client, *client) {
 	srv.demoLocked = false
 	h := srv.Handler()
 	steward := &client{t: t, h: h}
-	_, obj, _ := steward.do("POST", "/api/bootstrap", map[string]any{"code": "x", "name": "S"})
+	_, obj, _ := steward.do("POST", "/api/bootstrap", map[string]any{"pin": "123456", "code": "x", "name": "S"})
 	steward.token = obj["token"].(string)
 	_, o, _ := steward.do("POST", "/api/houses", map[string]any{"name": "Zeleni Volk"})
 	other := &client{t: t, h: h}
-	_, j, _ := other.do("POST", "/api/join", map[string]any{"code": o["invite"].(map[string]any)["code"]})
+	_, j, _ := other.do("POST", "/api/join", map[string]any{"pin": "123456", "code": o["invite"].(map[string]any)["code"]})
 	other.token = j["token"].(string)
 	return srv, fake, steward, other
 }
 
-// TestPairingCode: a logged-in house makes a six-digit code, a second phone of
-// the same house uses it once, and the code then dies.
-func TestPairingCode(t *testing.T) {
-	srv, _, _, volk := newVillage(t)
-	code, obj, _ := volk.do("POST", "/api/pair", nil)
-	volk.must(201, code, "pair")
-	pin := obj["code"].(string)
-	if len(pin) != 6 {
-		t.Fatalf("want 6 digits, got %q", pin)
+// doorOf: the id the gate shows for a house with a PIN, or 0 when it shows none.
+func doorOf(t *testing.T, c *client, name string) float64 {
+	code, _, doors := c.do("GET", "/api/doors", nil)
+	c.must(200, code, "doors")
+	for _, d := range doors {
+		if d["name"] == name {
+			return d["id"].(float64)
+		}
 	}
-	phone2 := &client{t: t, h: srv.Handler()}
-	code, j, _ := phone2.do("POST", "/api/join", map[string]any{"code": pin, "device": "phone B"})
-	phone2.must(201, code, "join by pairing")
-	phone2.token = j["token"].(string)
-	_, me, _ := phone2.do("GET", "/api/me", nil)
-	if me["name"] != "Zeleni Volk" {
-		t.Fatalf("paired into wrong house: %v", me)
+	return 0
+}
+
+// TestPinLogin: the gate lists the houses that have a PIN, and a house and
+// its PIN sign a new browser in as one more device of that house, under the
+// label of the device that chose the PIN.
+func TestPinLogin(t *testing.T) {
+	srv, _, steward, volk := newVillage(t)
+	_, o, _ := steward.do("POST", "/api/houses", map[string]any{"name": "Parkirišče", "kind": "common"})
+	_, o2, _ := steward.do("POST", "/api/houses", map[string]any{"name": "Sova"})
+	stranger := &client{t: t, h: srv.Handler()}
+	id := doorOf(t, stranger, "Zeleni Volk")
+	if id == 0 || doorOf(t, stranger, "S") == 0 {
+		t.Fatal("a house with a PIN has no door")
 	}
-	// Single use.
-	phone3 := &client{t: t, h: srv.Handler()}
-	code, _, _ = phone3.do("POST", "/api/join", map[string]any{"code": pin})
-	phone3.must(404, code, "reuse refused")
-	// Both phones belong to the house.
+	if doorOf(t, stranger, "Parkirišče") != 0 || doorOf(t, stranger, "Sova") != 0 {
+		t.Fatal("a common place, or a house nobody has opened the link of, has a door")
+	}
+	code, _, _ := stranger.do("POST", "/api/login", map[string]any{"house_id": id, "pin": "999999"})
+	stranger.must(403, code, "wrong PIN")
+	code, _, _ = stranger.do("POST", "/api/login", map[string]any{"house_id": id, "pin": "12a456"})
+	stranger.must(400, code, "a PIN that is no PIN")
+	code, _, _ = stranger.do("POST", "/api/login", map[string]any{"house_id": o["id"], "pin": "123456"})
+	stranger.must(404, code, "a common place is no account")
+	code, _, _ = stranger.do("POST", "/api/login", map[string]any{"house_id": o2["id"], "pin": "123456"})
+	stranger.must(403, code, "a house with no PIN takes none")
+
+	// Ana opens the house's link in Safari and chooses a PIN; the app on
+	// her home screen then signs in by the house and the PIN.
+	_, inv, _ := steward.do("GET", fmtID("/api/houses/%d/invite", int64(id)), nil)
+	safari := &client{t: t, h: srv.Handler()}
+	code, sj, _ := safari.do("POST", "/api/join", map[string]any{"code": inv["code"], "pin": "246800", "device": "Ana's phone"})
+	safari.must(201, code, "join by the link")
+	safari.token = sj["token"].(string)
+	app := &client{t: t, h: srv.Handler()}
+	code, j, _ := app.do("POST", "/api/login", map[string]any{"house_id": id, "pin": "246800"})
+	app.must(201, code, "right PIN")
+	app.token = j["token"].(string)
+	_, me, _ := app.do("GET", "/api/me", nil)
+	if me["name"] != "Zeleni Volk" || me["has_pin"] != true || me["device_label"] != "Ana's phone" {
+		t.Fatalf("signed in as: %v", me)
+	}
 	_, _, devs := volk.do("GET", "/api/devices", nil)
-	if len(devs) != 2 {
-		t.Fatalf("want 2 devices got %d", len(devs))
+	if len(devs) != 3 {
+		t.Fatalf("the new device is not one more of the house's: %v", devs)
+	}
+	// The PIN outlives the browser it was chosen in: remove that one, and
+	// the PIN still signs a third browser in.
+	_, first, _ := safari.do("GET", "/api/me", nil)
+	code, _, _ = app.do("DELETE", "/api/devices/"+itoa(first["device_id"].(float64)), nil)
+	app.must(204, code, "remove the first browser")
+	third := &client{t: t, h: srv.Handler()}
+	code, _, _ = third.do("POST", "/api/login", map[string]any{"house_id": id, "pin": "246800"})
+	third.must(201, code, "the PIN after its first browser went")
+	// A device from before the PIN has none, says so, and its house has no door.
+	srv.st.Exec(context.Background(), `UPDATE devices SET pin_hash=NULL`)
+	_, me, _ = app.do("GET", "/api/me", nil)
+	if me["has_pin"] != false {
+		t.Fatalf("has_pin without a PIN: %v", me["has_pin"])
+	}
+	if doorOf(t, stranger, "Zeleni Volk") != 0 {
+		t.Fatal("a door with no PIN behind it")
 	}
 }
 
-// TestGuessingCostsSomething: wrong codes are throttled per IP and five misses
-// drop every live pairing code.
-func TestGuessingCostsSomething(t *testing.T) {
-	srv, _, _, volk := newVillage(t)
-	_, obj, _ := volk.do("POST", "/api/pair", nil)
-	pin := obj["code"].(string)
+// TestPinLock: three wrong PINs in a row lock the house, the tries left
+// told with each answer and on the gate before the first; a locked house
+// takes no PIN, the right one included, until it joins by its link again.
+// A right PIN before the lock clears the count.
+func TestPinLock(t *testing.T) {
+	srv, _, steward, _ := newVillage(t)
+	srv.tries = newLimiter() // the per-IP cap has its own test; here one address tries many times
 	guess := &client{t: t, h: srv.Handler()}
-	seen429 := false
-	for i := 0; i < 14; i++ {
-		code, _, _ := guess.do("POST", "/api/join", map[string]any{"code": "000000"})
-		if code == 429 {
-			seen429 = true
-			break
+	id := doorOf(t, guess, "Zeleni Volk")
+	left := func() float64 {
+		_, _, doors := guess.do("GET", "/api/doors", nil)
+		for _, d := range doors {
+			if d["id"] == id {
+				return d["left"].(float64)
+			}
+		}
+		return -1
+	}
+	try := func(pin string) (int, map[string]any) {
+		code, obj, _ := guess.do("POST", "/api/login", map[string]any{"house_id": id, "pin": pin})
+		return code, obj
+	}
+	if left() != 3 {
+		t.Fatalf("a fresh door: %v tries left", left())
+	}
+	code, obj := try("000000")
+	if code != 403 || obj["left"] != 2.0 {
+		t.Fatalf("first wrong PIN: %d %v", code, obj)
+	}
+	code, _ = try("123456")
+	guess.must(201, code, "the right PIN before the lock")
+	if left() != 3 {
+		t.Fatal("a right PIN did not clear the count")
+	}
+	for want := 2.0; want >= 0; want-- {
+		if code, obj := try("000000"); code != 403 || obj["left"] != want {
+			t.Fatalf("wrong PIN: %d %v, want %v left", code, obj, want)
 		}
 	}
-	if !seen429 {
-		t.Fatal("no rate limit on /api/join")
+	if code, obj := try("123456"); code != 423 || obj["left"] != 0.0 {
+		t.Fatalf("the right PIN on a locked house: %d %v", code, obj)
 	}
-	// The live code was burned by the misses before the limiter kicked in.
+	if left() != 0 {
+		t.Fatal("the gate does not show the lock")
+	}
+	_, inv, _ := steward.do("GET", fmtID("/api/houses/%d/invite", int64(id)), nil)
+	code, _, _ = guess.do("POST", "/api/join", map[string]any{"code": inv["code"], "pin": "432100"})
+	guess.must(201, code, "join by the link")
+	code, _ = try("123456")
+	guess.must(201, code, "the old PIN after the link opened the lock")
+}
+
+// TestCodeGuessingIsCapped: wrong invite codes are throttled per address.
+func TestCodeGuessingIsCapped(t *testing.T) {
+	srv, _, _, _ := newVillage(t)
+	guess := &client{t: t, h: srv.Handler()}
+	for i := 0; i < 14; i++ {
+		if code, _, _ := guess.do("POST", "/api/join", map[string]any{"code": "abcdefghjk", "pin": "123456"}); code == 429 {
+			return
+		}
+	}
+	t.Fatal("no rate limit on /api/join")
+}
+
+// TestPinChoice: a join and a bootstrap take no device without a PIN; a
+// change moves every browser of the house that carried the old PIN, and
+// leaves a housemate's own PIN alone.
+func TestPinChoice(t *testing.T) {
+	srv, _, steward, volk := newVillage(t)
+	srv.tries = newLimiter()
+	_, me, _ := volk.do("GET", "/api/me", nil)
+	_, inv, _ := steward.do("GET", fmtID("/api/houses/%d/invite", int64(me["id"].(float64))), nil)
 	fresh := &client{t: t, h: srv.Handler()}
-	if code, _, _ := fresh.do("POST", "/api/join", map[string]any{"code": pin}); code == 201 {
-		t.Fatal("live pairing code survived a guessing run")
+	code, _, _ := fresh.do("POST", "/api/join", map[string]any{"code": inv["code"]})
+	fresh.must(400, code, "join without a PIN")
+	code, _, _ = fresh.do("POST", "/api/join", map[string]any{"code": inv["code"], "pin": "12345"})
+	fresh.must(400, code, "a five-digit PIN")
+	code, _, _ = fresh.do("POST", "/api/join", map[string]any{"code": inv["code"], "pin": "999900", "device": "Ana"})
+	fresh.must(201, code, "a housemate's own PIN")
+
+	id := me["id"]
+	login := func(pin string) int {
+		code, _, _ := (&client{t: t, h: srv.Handler()}).do("POST", "/api/login", map[string]any{"house_id": id, "pin": pin})
+		return code
 	}
+	app := &client{t: t, h: srv.Handler()}
+	_, j, _ := app.do("POST", "/api/login", map[string]any{"house_id": id, "pin": "123456"})
+	app.token = j["token"].(string)
+	code, _, _ = app.do("PUT", "/api/me/pin", map[string]any{"pin": "5678"})
+	app.must(400, code, "a short PIN")
+	code, _, _ = app.do("PUT", "/api/me/pin", map[string]any{"pin": "567800"})
+	app.must(204, code, "change the PIN")
+	volk.must(403, login("123456"), "the old PIN, on the browser that chose it too")
+	volk.must(201, login("567800"), "the new PIN")
+	volk.must(201, login("999900"), "the housemate's PIN, untouched")
+}
+
+// TestInviteCodeWithSpace: a code typed off a screen carries spaces and capitals.
+func TestInviteCodeWithSpace(t *testing.T) {
+	srv, _, steward, volk := newVillage(t)
+	_, me, _ := volk.do("GET", "/api/me", nil)
+	_, inv, _ := steward.do("GET", fmtID("/api/houses/%d/invite", int64(me["id"].(float64))), nil)
+	c := inv["code"].(string)
+	phone := &client{t: t, h: srv.Handler()}
+	code, _, _ := phone.do("POST", "/api/join", map[string]any{"code": " " + c[:5] + " " + strings.ToUpper(c[5:]) + " ", "pin": "123456"})
+	phone.must(201, code, "join with a spaced code")
 }
 
 // TestQuietHours: between 21:00 and 07:00 the village is left alone. No kind
@@ -415,7 +543,7 @@ func TestLivesOnAnothersLand(t *testing.T) {
 
 	// A house marks where it lives itself — no steward, no waiting.
 	jezekC := &client{t: t, h: steward.h}
-	_, j, _ := jezekC.do("POST", "/api/join", map[string]any{"code": obj["invite"].(map[string]any)["code"], "device": "koča"})
+	_, j, _ := jezekC.do("POST", "/api/join", map[string]any{"pin": "123456", "code": obj["invite"].(map[string]any)["code"], "device": "koča"})
 	jezekC.token = j["token"].(string)
 	code, _, _ = jezekC.do("PUT", "/api/houses/"+jezek, map[string]any{"homes": []string{"2496", "3193"}})
 	jezekC.must(204, code, "a house says where it lives")
@@ -453,9 +581,9 @@ func TestQuietHoursOptOut(t *testing.T) {
 	code, _, _ := steward.do("POST", "/api/push/subscribe", map[string]any{
 		"endpoint": "https://push.example/s1", "lang": "sl", "keys": map[string]any{"p256dh": "p", "auth": "a"}})
 	steward.must(204, code, "subscribe phone 1")
-	_, pair, _ := steward.do("POST", "/api/pair", nil)
+	_, sme, _ := steward.do("GET", "/api/me", nil)
 	phone2 := &client{t: t, h: srv.Handler()}
-	_, j, _ := phone2.do("POST", "/api/join", map[string]any{"code": pair["code"].(string), "device": "night phone"})
+	_, j, _ := phone2.do("POST", "/api/login", map[string]any{"house_id": sme["id"], "pin": "123456"})
 	phone2.token = j["token"].(string)
 	code, _, _ = phone2.do("POST", "/api/push/subscribe", map[string]any{
 		"endpoint": "https://push.example/s2", "lang": "sl", "keys": map[string]any{"p256dh": "p", "auth": "a"}})
@@ -496,7 +624,7 @@ func TestHouseWithoutLand(t *testing.T) {
 	id := itoa(obj["id"].(float64))
 
 	guest := &client{t: t, h: steward.h}
-	_, j, _ := guest.do("POST", "/api/join", map[string]any{"code": obj["invite"].(map[string]any)["code"], "device": "koča"})
+	_, j, _ := guest.do("POST", "/api/join", map[string]any{"pin": "123456", "code": obj["invite"].(map[string]any)["code"], "device": "koča"})
 	guest.token = j["token"].(string)
 	code, _, _ = guest.do("PUT", "/api/houses/"+id, map[string]any{"crest": "🌱", "about": "v koči ob potoku"})
 	guest.must(204, code, "an old client still sending about")
@@ -592,7 +720,7 @@ func TestProjects(t *testing.T) {
 	// A third house cannot close it; the holder can, with a note.
 	_, o, _ := steward.do("POST", "/api/houses", map[string]any{"name": "Tretja"})
 	third := &client{t: t, h: volk.h}
-	_, j, _ := third.do("POST", "/api/join", map[string]any{"code": o["invite"].(map[string]any)["code"]})
+	_, j, _ := third.do("POST", "/api/join", map[string]any{"pin": "123456", "code": o["invite"].(map[string]any)["code"]})
 	third.token = j["token"].(string)
 	code, _, _ = third.do("PUT", "/api/tasks/"+tid, map[string]any{"state": "done"})
 	third.must(403, code, "stranger closes")
@@ -600,7 +728,7 @@ func TestProjects(t *testing.T) {
 	// in real life), and may assign — the assigned house hears.
 	_, o2, _ := steward.do("POST", "/api/houses", map[string]any{"name": "Cetrta"})
 	fourth := &client{t: t, h: volk.h}
-	_, j2, _ := fourth.do("POST", "/api/join", map[string]any{"code": o2["invite"].(map[string]any)["code"]})
+	_, j2, _ := fourth.do("POST", "/api/join", map[string]any{"pin": "123456", "code": o2["invite"].(map[string]any)["code"]})
 	fourth.token = j2["token"].(string)
 	code, _, _ = fourth.do("PUT", "/api/tasks/"+tid, map[string]any{"take": false})
 	fourth.must(403, code, "stranger clears holder")
@@ -879,16 +1007,6 @@ func TestWishOptionsAndThread(t *testing.T) {
 	steward.must(204, code, "author removes")
 }
 
-// TestPairingCodeWithSpace: the code is shown as "883 559" and pasted with it.
-func TestPairingCodeWithSpace(t *testing.T) {
-	srv, _, _, volk := newVillage(t)
-	_, obj, _ := volk.do("POST", "/api/pair", nil)
-	pin := obj["code"].(string)
-	phone := &client{t: t, h: srv.Handler()}
-	code, _, _ := phone.do("POST", "/api/join", map[string]any{"code": " " + pin[:3] + " " + pin[3:] + " "})
-	phone.must(201, code, "join with a spaced code")
-}
-
 // TestMovedTimeIsLoud: a moved date drops the answer out of the headcount,
 // tells the houses that answered, and a note-only update keeps their answer.
 func TestMovedTimeIsLoud(t *testing.T) {
@@ -963,12 +1081,12 @@ func TestCodeCommand(t *testing.T) {
 	}
 	// The printed code is usable, and the old one is not.
 	phone := &client{t: t, h: srv.Handler()}
-	if code, _, _ := phone.do("POST", "/api/join", map[string]any{"code": after["code"]}); code != 201 {
+	if code, _, _ := phone.do("POST", "/api/join", map[string]any{"pin": "123456", "code": after["code"]}); code != 201 {
 		t.Fatalf("fresh code unusable: %d", code)
 	}
 	if before != nil {
 		stale := &client{t: t, h: srv.Handler()}
-		if code, _, _ := stale.do("POST", "/api/join", map[string]any{"code": before["code"]}); code == 201 {
+		if code, _, _ := stale.do("POST", "/api/join", map[string]any{"pin": "123456", "code": before["code"]}); code == 201 {
 			t.Fatal("the old link still works")
 		}
 	}
@@ -1004,30 +1122,6 @@ func TestNextEventIsToday(t *testing.T) {
 	// project with no pictures has none rather than leaving the field out.
 	if list[0]["events"] != 2.0 || list[0]["photos"] != 0.0 {
 		t.Fatalf("tally: events=%v photos=%v", list[0]["events"], list[0]["photos"])
-	}
-}
-
-// TestExpiredPairingIsSwept: expires_at is RFC3339, so the sweep must compare
-// in that shape. A dead code of another house goes when anyone makes a new one.
-// The dead code died a minute ago, not years ago: a code lives 15 minutes, so
-// the sweep almost always compares two stamps of the same day, where the shape
-// mismatch ('T' against ' ') is the whole comparison.
-func TestExpiredPairingIsSwept(t *testing.T) {
-	srv, _, steward, volk := newVillage(t)
-	_, me, _ := volk.do("GET", "/api/me", nil)
-	dead := time.Now().UTC().Add(-time.Minute).Format(time.RFC3339)
-	if _, err := srv.st.Exec(context.Background(),
-		`INSERT INTO pairings(code, house_id, expires_at) VALUES ('000000', ?, ?)`, int64(me["id"].(float64)), dead); err != nil {
-		t.Fatal(err)
-	}
-	code, _, _ := steward.do("POST", "/api/pair", nil)
-	steward.must(201, code, "pair")
-	row, err := srv.st.One(context.Background(), `SELECT count(*) AS n FROM pairings WHERE code='000000'`)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if row["n"].(int64) != 0 {
-		t.Fatalf("expired pairing survived: %v", row)
 	}
 }
 
@@ -1281,7 +1375,7 @@ func TestMarketEdits(t *testing.T) {
 	// steward — who is also a rider — hears nothing about its own edit.
 	_, o, _ := steward.do("POST", "/api/houses", map[string]any{"name": "Tretja"})
 	third := &client{t: t, h: steward.h}
-	_, j, _ := third.do("POST", "/api/join", map[string]any{"code": o["invite"].(map[string]any)["code"]})
+	_, j, _ := third.do("POST", "/api/join", map[string]any{"pin": "123456", "code": o["invite"].(map[string]any)["code"]})
 	third.token = j["token"].(string)
 	code, _, _ = third.do("POST", "/api/push/subscribe", map[string]any{"endpoint": "https://push.example/3", "lang": "en", "keys": map[string]any{"p256dh": "p", "auth": "a"}})
 	third.must(204, code, "subscribe third")
@@ -1740,7 +1834,7 @@ func TestContacts(t *testing.T) {
 	// With nobody to own it, only a steward may take it away.
 	_, o, _ := steward.do("POST", "/api/houses", map[string]any{"name": "Sova"})
 	sova := &client{t: t, h: srv.Handler()}
-	_, j, _ := sova.do("POST", "/api/join", map[string]any{"code": o["invite"].(map[string]any)["code"]})
+	_, j, _ := sova.do("POST", "/api/join", map[string]any{"pin": "123456", "code": o["invite"].(map[string]any)["code"]})
 	sova.token = j["token"].(string)
 	code, _, _ = sova.do("PUT", "/api/contacts/"+orphan, map[string]any{"phone": "051 000 000"})
 	sova.must(204, code, "any house still corrects it")

@@ -19,6 +19,7 @@ import { Dues } from "./rooms/Dues";
 import { Changelog } from "./Changelog";
 import { Feedback } from "./Feedback";
 import { InstallBanner } from "./Install";
+import { NewPin, PinInput, PinPrompt, pinProblem } from "./Pin";
 import { Weather } from "./Weather";
 import { ahead, answersFor, When } from "./rooms/shared";
 import { FeaturesContext, useFeatures, type FeatureRow } from "./features";
@@ -180,7 +181,7 @@ type Topper = "map" | "weather" | "tavern" | "codex";
 type Foot = "" | "changelog" | "feedback";
 
 function Home({ me, houses }: { me: Me; houses: House[] }) {
-  const { t } = useT();
+  const { t, demo } = useT();
   const rooms = useRooms();
   // A switched-off room's list is a 404, so its badge is not even asked for.
   const campOn = rooms.some((r) => r.feature === "camp");
@@ -234,6 +235,8 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
   }, [t, campOn]);
   return (
     <>
+      {/* A device from before the PIN; the demo is entered by its doors and has none. */}
+      {me.has_pin === false && !demo && <PinPrompt />}
       <InstallBanner />
       <LinkLine note={linkNote} />
       <div className="topper-pick">
@@ -270,50 +273,133 @@ function Home({ me, houses }: { me: Me; houses: House[] }) {
   );
 }
 
-// Gate: join with an invite code (from the link or typed), or found the village.
+// Gate (auth.go § PINs): without a link, the houses that have a PIN — tap
+// yours, type the PIN. From a house's link, choose a PIN; the first steward
+// founds the village with the bootstrap code and a PIN the same way.
 function Gate({ onJoined }: { onJoined: () => Promise<void> }) {
-  const { t, demo } = useT();
-  const { code: urlCode } = useParams();
+  const { demo } = useT();
+  const { code } = useParams();
   const nav = useNavigate();
   const { pathname } = useLocation();
-  const [code, setCode] = useState(urlCode || "");
+  const [bootstrap, setBootstrap] = useState(false);
+  useEffect(() => { api<any>("/status").then((s) => setBootstrap(!!s.bootstrap_needed)).catch(() => {}); }, []);
+  const enter = async (r: { token: string }) => {
+    setToken(r.token);
+    await onJoined();
+    // The page stays on the address it was opened on, so a link to an
+    // entry lands on the entry once the phone is in. Only an invite
+    // address goes on to Home.
+    if (pathname.startsWith("/join/")) nav("/");
+  };
+  if (demo) return <DemoGate />;
+  if (bootstrap || code) return <ChoosePin bootstrap={bootstrap} code={code || ""} enter={enter} />;
+  return <Doors enter={enter} />;
+}
+
+// `left` is the tries before the house locks (auth.go doors): three wrong
+// PINs in a row, and only its link opens it again.
+type Door = { id: number; name: string; crest: string; color: string; left: number };
+
+function Doors({ enter }: { enter: (r: { token: string }) => Promise<void> }) {
+  const { t } = useT();
+  const { pathname } = useLocation();
+  const [doors, setDoors] = useState<Door[]>([]);
+  const [pick, setPick] = useState<Door | null>(null);
+  const [pin, setPin] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  // A failed fetch must not read as a village with no doors: that sends a
+  // member with a PIN to the steward for nothing.
+  const [unreached, setUnreached] = useState(false);
+  useEffect(() => { api<Door[]>("/doors").then(setDoors).catch(() => setUnreached(true)); }, []);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!pick) return;
+    setErr(""); setBusy(true);
+    try {
+      await enter(await api<{ token: string }>("/login", { method: "POST", body: { house_id: pick.id, pin } }));
+    } catch (ex) {
+      const s = ex instanceof ApiError ? ex.status : 0;
+      // A wrong PIN and a lock both say how many tries are left.
+      const left = ex instanceof ApiError ? ex.data?.left : undefined;
+      if (typeof left === "number") setPick({ ...pick, left });
+      setErr(s === 403 ? t("Wrong PIN.") : s === 423 ? "" : s === 429 ? t("Too many attempts. Wait a few minutes.") : t("Something went wrong"));
+      setPin("");
+    } finally { setBusy(false); }
+  };
+  const back = <button type="button" onClick={() => { setPick(null); setPin(""); setErr(""); }}>{t("Back")}</button>;
+  if (pick && pick.left <= 0) return (
+    <div className="parchment gate">
+      <h2><span className="crest" style={{ backgroundColor: pick.color }}>{pick.crest}</span> {pick.name}</h2>
+      {err && <div className="err">{err}</div>}
+      <p>🔒 {t("This house is locked after three wrong PINs. Open your house's link again and it opens; if you do not have the link, ask the steward.")}</p>
+      <div className="submit">{back}</div>
+    </div>
+  );
+  if (pick) return (
+    <div className="parchment gate">
+      <h2><span className="crest" style={{ backgroundColor: pick.color }}>{pick.crest}</span> {pick.name}</h2>
+      <form onSubmit={submit} className="inline">
+        {/* The house's name as the username, so a phone that keeps the PIN keeps it per house. */}
+        <input type="text" autoComplete="username" value={pick.name} readOnly hidden />
+        <PinInput label={t("PIN")} value={pin} onChange={setPin} autoFocus remember="current-password" />
+        {err && <div className="err">{err}</div>}
+        {/* Said before the first try, not only after a wrong one (owner, 2026-11-03). */}
+        <p className="small">{t("Tries left:")} {pick.left}. {t("After three wrong PINs the house locks, and only its link opens it again.")}</p>
+        <div className="submit">
+          {back}{" "}
+          <button className="primary" type="submit" disabled={busy}>{t("Sign in")}</button>
+        </div>
+      </form>
+    </div>
+  );
+  return (
+    <div className="parchment gate">
+      <h2>🏰 {t("Enter the village")}</h2>
+      {doors.length > 0 && <p className="small">{t("Tap your house and type your PIN.")}</p>}
+      {unreached && <div className="err">{t("The village did not answer. Try again in a moment.")}</div>}
+      {/* A member whose WhatsApp browser holds no session: inside WhatsApp the install banner above already says how to leave it, so this line speaks only where that banner is silent — iOS, whose webview is not detected. */}
+      {pathname.startsWith("/go/") && !isInApp() && <p className="small">{t("Already a member? Open this link in Safari or Chrome, where you are signed in — on an iPhone the share icon, then Open in Safari.")}</p>}
+      {/* Every door is a house; none is the one action, so none is primary. */}
+      <div className="doors">
+        {doors.map((h) => (
+          <button key={h.id} onClick={() => setPick(h)}><span className="crest" style={{ backgroundColor: h.color }}>{h.crest}</span> {h.name}</button>
+        ))}
+      </div>
+      <p className="small">{t("New here, or forgot your PIN? Open the link a steward sent your house, and choose a PIN there.")}</p>
+    </div>
+  );
+}
+
+function ChoosePin({ bootstrap, code: urlCode, enter }: { bootstrap: boolean; code: string; enter: (r: { token: string }) => Promise<void> }) {
+  const { t } = useT();
+  const [code, setCode] = useState(urlCode);
   // The gate stays mounted when the address changes under it (a phone at
   // the gate taps an invite link): the code follows the address.
   useEffect(() => { if (urlCode) setCode(urlCode); }, [urlCode]);
   const [device, setDevice] = useState("");
   const [name, setName] = useState("");
+  const [pin, setPin] = useState("");
+  const [again, setAgain] = useState("");
   const [err, setErr] = useState("");
-  const [bootstrap, setBootstrap] = useState(false);
-  useEffect(() => { api<any>("/status").then((s) => setBootstrap(!!s.bootstrap_needed)).catch(() => {}); }, []);
-
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setErr("");
+    const bad = pinProblem(pin, again, t);
+    if (bad) { setErr(bad); return; }
     try {
-      const path = bootstrap ? "/bootstrap" : "/join";
-      // The pairing code is shown as "883 559", so a paste brings spaces.
-      const r = await api<{ token: string }>(path, { method: "POST", body: { code: code.replace(/\s+/g, ""), device, name } });
-      setToken(r.token);
-      await onJoined();
-      // The page stays on the address it was opened on, so a link to an
-      // entry lands on the entry once the phone is in. Only an invite or a
-      // pairing address goes on to Home.
-      if (pathname.startsWith("/join/")) nav("/");
+      await enter(await api<{ token: string }>(bootstrap ? "/bootstrap" : "/join", { method: "POST", body: { code: code.replace(/\s+/g, ""), device, name, pin } }));
     } catch (ex) {
       const s = ex instanceof ApiError ? ex.status : 0;
-      setErr(s === 404 || s === 403 ? t("Unknown code") : s === 410 ? t("Code expired — ask the steward for a new link") : s === 429 ? t("Too many attempts. Wait a few minutes.") : t("Something went wrong"));
+      setErr(s === 404 || s === 403 ? t("Unknown code") : s === 410 ? t("Code expired — ask the steward for a new link") : s === 400 ? t("A PIN is 6 digits.") : s === 429 ? t("Too many attempts. Wait a few minutes.") : t("Something went wrong"));
     }
   };
-  if (demo) return <DemoGate />;
   return (
     <div className="parchment gate">
       <h2>🏰 {t("Enter the village")}</h2>
-      <p className="small">{bootstrap ? t("The village is empty. The first steward founds it with the bootstrap code from the server log.") : t("You need an invite link from a steward. Ask in the WhatsApp group.")}</p>
-      {/* A member whose WhatsApp browser holds no session: inside WhatsApp the install banner above already says how to leave it, so this line speaks only where that banner is silent — iOS, whose webview is not detected. */}
-      {!bootstrap && pathname.startsWith("/go/") && !isInApp() && <p className="small">{t("Already a member? Open this link in Safari or Chrome, where you are signed in — on an iPhone the share icon, then Open in Safari.")}</p>}
-      {!bootstrap && <p className="small">{t("Already signed in in your browser? Open the portal there, go to Houses and press Add another device — it gives you a 6-digit code for this one.")}</p>}
+      <p className="small">{bootstrap ? t("The village is empty. The first steward founds it with the bootstrap code from the server log.") : t("Choose a 6-digit PIN for your house. From then on you sign in on any phone or computer, and in the app on your home screen, by tapping your house and typing the PIN.")}</p>
       <form onSubmit={submit} className="inline">
-        <label>{bootstrap ? t("Bootstrap code") : t("Invite or pairing code")}<input value={code} onChange={(e) => setCode(e.target.value)} autoCapitalize="off" autoComplete="off" required /></label>
+        {bootstrap && <label>{t("Bootstrap code")}<input value={code} onChange={(e) => setCode(e.target.value)} autoCapitalize="off" autoComplete="off" required /></label>}
         {bootstrap && <label>{t("Steward house name")}<input value={name} onChange={(e) => setName(e.target.value)} /></label>}
+        <NewPin pin={pin} setPin={setPin} again={again} setAgain={setAgain} />
         <label>{t("This device")}<input value={device} onChange={(e) => setDevice(e.target.value)} placeholder={t("e.g. Ana's phone or laptop")} /></label>
         {err && <div className="err">{err}</div>}
         <div className="submit"><button className="primary" type="submit">{bootstrap ? t("Found the village") : t("Join")}</button></div>
@@ -433,7 +519,7 @@ function DemoGate() {
       <p className="small">{t("This is a demo village. Nobody lives here; pick a house and walk in as them.")} {t("Everything you change is wiped on the hour.")}</p>
       {err && <div className="err">{t("Something went wrong")}</div>}
       {/* Ten equal doors: none is the one action, so none is primary. */}
-      <div className="demo-doors">
+      <div className="doors">
         {houses.map((h) => (
           <button key={h.id} onClick={() => enter(h.id)}>
             <span className="crest" style={{ backgroundColor: h.color }}>{h.crest}</span> {h.name}{h.is_steward ? ` (${t("Steward").toLowerCase()})` : ""}

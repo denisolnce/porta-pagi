@@ -67,15 +67,15 @@ gaias-choice repo did not change; `.doco-cd.yml` did not change.
 
 ## The key
 
-| | Invite | Pairing code | MCP key |
+| | Invite | PIN | MCP key |
 | --- | --- | --- | --- |
 | Shape | 10 chars, phone-typable | 6 digits | `potok_` + 64 hex (32 random bytes), pasted, never typed |
-| Who makes it | Steward | The house, from a phone inside | The house, from a phone inside |
-| Lives | 14 days, multi-use | 15 minutes, single use | Until removed, like a phone's token |
-| Guessing | Per-IP cap on `/api/join` | Same cap, plus five misses burn every live code | Not a code: 256 bits, resolved by `requireHouse` like every device token. **The `/api/join` arithmetic is untouched** |
-| Stored as | Plain, it *is* the link | Plain, burned on use | SHA-256, like a device token |
-| Reaches | The gate, once | The gate, once | **`/api/mcp` only**; 403 everywhere else |
-| Ends | Expiry, or ♻ | Use, expiry, or the burn | The "Remove" button in Your devices, or deleting the house |
+| Who makes it | Steward | The person, on the invite's page | The house, from a phone inside |
+| Lives | 7 days, multi-use | Until every device carrying it is removed, or it is changed | Until removed, like a phone's token |
+| Guessing | Per-IP cap on `/api/join` | Same cap on `/api/login`; three wrong in a row lock the house until its link is opened | Not a code: 256 bits, resolved by `requireHouse` like every device token. **The PIN arithmetic is untouched**: a key never has a PIN |
+| Stored as | Plain, it *is* the link | SHA-256 with the house id, on the device row | SHA-256, like a device token |
+| Reaches | The gate, once per person | The gate, any number of times | **`/api/mcp` only**; 403 everywhere else |
+| Ends | Expiry, or ♻ | Removal of its devices, or a change | The "Remove" button in Your devices, or deleting the house |
 
 The `potok_` prefix is one line and buys recognisability: a human who finds
 the string in a config file knows what it opens. The hash covers the whole
@@ -90,7 +90,7 @@ second delete, and the same `agent` flag anyway.
 
 **Why the key opens only `/api/mcp`.** Without that line, a key is a full
 house login with a menu in front of it: `curl` with the same bearer reaches
-`DELETE /api/events/{id}`, `POST /api/pair`, and `DELETE /api/devices/{id}` —
+`DELETE /api/events/{id}`, `PUT /api/me/pin`, and `DELETE /api/devices/{id}` —
 the last one lets an agent in a loop remove every phone of its own house and
 lock it out until a steward rotates the invite. One check in `requireHouse`
 closes all of it: an agent device is allowed through only when the request
@@ -133,7 +133,7 @@ here so nobody adds a counter later without seeing the invariant it brushes.
 ## The tool surface
 
 Reads and writes an ordinary house has in every room, **no deletes** (done is
-a state, and an agent that deletes has no confirm), no devices, pairing or
+a state, and an agent that deletes has no confirm), no devices, PINs or
 push (a key must not mint keys), no `PUT /api/houses/{id}` (rename, crest,
 colour, the map mark: a house does that itself, once), no steward route. With
 the fence, this table is not a menu: **what is not here, a key cannot do**.
@@ -177,7 +177,7 @@ Off the surface, each with its argument:
 - **Tool photos and reading picture bytes** — a tool photo is the owner's,
   set once from the shed; picture bytes are what the app shows. An agent
   gets the picture *list* on a project (who added, when), never the bytes.
-- **Devices, pairing, push, the house's own row, every steward route** — a
+- **Devices, PINs, push, the house's own row, every steward route** — a
   key must not mint keys or lock its house out, and stewardship is a phone's
   act behind a confirm dialog.
 
@@ -228,9 +228,9 @@ cannot show it again. It acts as your house in every room it
 reaches. Remove it above, like a phone.
 ```
 
-Not `.pin`: that class is 2.1 rem with letter-spacing for six digits, and 70
-characters in it pan a 360 px phone sideways. `.mcp-key` is the same dashed
-brass frame in a wrapping monospace block with `word-break: break-all`. Copy
+`.mcp-key` is a dashed brass frame around a wrapping monospace block with
+`word-break: break-all`, because 70 characters must not pan a 360 px phone
+sideways. Copy
 the key is the one `primary` act, the address is the lesser line, built from
 `location.origin`, so dev shows the dev address. The devices list refreshes
 and the new row shows `🤖 <label>` with a tag *agent* where a phone shows 📱;
@@ -266,7 +266,7 @@ others in `later.md`:
 | Decision | Outcome (owner, 2026-09-09) |
 | --- | --- |
 | Build it at all | Built, as option A |
-| The fence: `/api/mcp` only, or a full login with a route denylist | **`/api/mcp` only.** `TestMCPFence` pins that a key cannot reach `/api/away`, `/api/devices`, `/api/pair` or any other route directly. It swings both ways: a phone's session token is answered 403 at `/api/mcp`, or a steward could paste what its browser holds into an agent and reach `ownerOrSteward` on every house's rows — the no-stewardship decision would have a side door |
+| The fence: `/api/mcp` only, or a full login with a route denylist | **`/api/mcp` only.** `TestMCPFence` pins that a key cannot reach `/api/away`, `/api/devices`, `/api/me/pin` or any other route directly. It swings both ways: a phone's session token is answered 403 at `/api/mcp`, or a steward could paste what its browser holds into an agent and reach `ownerOrSteward` on every house's rows — the no-stewardship decision would have a side door |
 | Stewardship on a key | **None for now.** "Later key might carry stewardship" — a possibility left open, not a closed question |
 | Watchtower on the surface | **On.** A key is the logged-in house; the provider is a third party the house chose. No digests, no feeds still. Said as the neighbour hears it: a neighbour's assistant may read your notice, as a neighbour's phone may — which is why the privacy note owes the village a line (`later.md`) |
 | Campground on the surface | **On.** The rule rides in the tool description. `from_who` retention stays `TBD` |
@@ -377,7 +377,7 @@ key last acted).
   event with the house's `yes`; a refused write carries the handler's words; a
   204 reads as ok; the devices list shows one agent.
 - `TestMCPFence`: the key gets 403 on `/api/me`, `/api/events`, `/api/away`,
-  `/api/camp`, `DELETE /api/devices/{id}`, `/api/pair`, `POST
+  `/api/camp`, `DELETE /api/devices/{id}`, `PUT /api/me/pin`, `POST
   /api/devices/agent`, `PUT /api/houses/{id}`, push, `DELETE /api/events`,
   `/api/export`; `GET /api/mcp` is 405; a steward's key is 403 on the steward
   routes and "not yours" on another house's project in-process; a forged
@@ -387,7 +387,7 @@ key last acted).
   JSON-RPC `-32602` `bad id` (invalid params, not `isError`: the argument
   never formed a request, so no tool ran); and `whoami` reports the request's
   `is_steward`, so a steward's key reads 0 while that house's phone reads 1.
-- `TestMCPSurface`: no tool deletes, none reaches devices, pairing, push,
+- `TestMCPSurface`: no tool deletes, none reaches devices, a PIN, push,
   `/api/me/*`, export, a house write or a steward route; every tool lands on
   a registered handler (every switch on first); the count is pinned at 51; unknown tool, unknown
   method, a batch and garbage are refused.

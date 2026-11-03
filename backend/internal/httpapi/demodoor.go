@@ -65,7 +65,7 @@ func (s *Server) demoEnter(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 429, "slow down")
 		return
 	}
-	tok, err := s.newDevice(r.Context(), row["id"].(int64), "visitor")
+	tok, err := s.newDevice(r.Context(), row["id"].(int64), "visitor", "")
 	if err != nil {
 		fail(w, err)
 		return

@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
 import { useT } from "./i18n";
 import { enablePush, isInApp, isIOS, isStandalone, pushState, type PushState } from "./push";
-import { AddPhone } from "./AddPhone";
 
 // InstallBanner: shown on the home screen until the portal runs as an installed
 // app with notifications on. Three states, one message each:
 //   in-app browser  -> open in your real browser
 //   browser         -> install (Android: one tap; iOS: Share -> Add to Home Screen)
 //   installed, off  -> enable notifications
-// `gate` renders the install half alone, in front of the code form: a villager
+// `gate` renders the install half alone, in front of the doors: a villager
 // who is not signed in on this origin never reaches the home screen, and the
-// in-app-browser warning is worth more before they type a code than after.
+// in-app-browser warning is worth more before they choose a PIN than after.
 export function InstallBanner({ gate }: { gate?: boolean }) {
   const { t, lang } = useT();
   const [dismissed, setDismissed] = useState(() => { try { return sessionStorage.getItem("potok.banner") === "1"; } catch { return false; } });
@@ -43,8 +42,8 @@ export function InstallBanner({ gate }: { gate?: boolean }) {
   }, []);
 
   if (dismissed) return null;
-  // At the gate there is no token, so neither notifications nor a pairing code
-  // can be asked for: an installed app has nothing left to say here.
+  // At the gate there is no token, so notifications cannot be asked for: an
+  // installed app has nothing left to say here.
   if (gate && standalone) return null;
   // Nothing left to ask for: installed and subscribed. Also covers the case
   // where the display-mode check fails but push clearly works.
@@ -52,8 +51,9 @@ export function InstallBanner({ gate }: { gate?: boolean }) {
   if (!gate && standalone && push !== "off") return null;
   const dismiss = () => { setDismissed(true); try { sessionStorage.setItem("potok.banner", "1"); } catch { /* ignore */ } };
 
-  // "Take a code with you" needs a session to make one.
-  const signin = gate ? null : <Signin />;
+  // The installed icon starts signed out on iOS; at the gate the doors say
+  // what to do, inside the portal this line does.
+  const signin = gate ? null : <div className="small" style={{ marginTop: ".4rem" }}>{t("The installed icon starts signed out: there, tap your house and type your PIN.")}</div>;
   let body: React.ReactNode;
   if (!standalone && isInApp()) {
     body = <><strong>{t("You are inside WhatsApp's browser.")}</strong> {t("Open this page in Chrome or Safari (menu ⋮ → open in browser), then add it to your home screen. Otherwise the device forgets you.")}</>;
@@ -70,18 +70,6 @@ export function InstallBanner({ gate }: { gate?: boolean }) {
     <div className="card banner">
       <div className="body">{body}</div>
       <button className="ghost dismiss" aria-label={t("Dismiss")} onClick={dismiss}>✕</button>
-    </div>
-  );
-}
-
-// The installed app starts with empty storage on iOS, so hand the villager a
-// code before they walk away from the signed-in browser tab.
-function Signin() {
-  const { t } = useT();
-  return (
-    <div style={{ marginTop: ".4rem" }}>
-      <span className="small">{t("The installed icon starts signed out. Take a code with you:")} </span>
-      <AddPhone compact />
     </div>
   );
 }

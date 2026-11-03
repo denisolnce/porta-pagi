@@ -19,8 +19,10 @@ export function authHeaders(): Record<string, string> {
   return tok ? { Authorization: "Bearer " + tok } : {};
 }
 
+// `data` is the whole answer, for the one refusal that says more than its
+// words: a house kept waiting by wrong PINs says until when (auth.go login).
 export class ApiError extends Error {
-  constructor(public status: number, message: string) { super(message); }
+  constructor(public status: number, message: string, public data?: any) { super(message); }
 }
 
 export async function api<T = any>(path: string, opts: { method?: string; body?: any } = {}): Promise<T> {
@@ -35,16 +37,16 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   const text = await res.text();
   let data: any = null;
   try { data = text ? JSON.parse(text) : null; } catch { data = null; }
-  if (res.status === 401 && path !== "/me" && !path.startsWith("/join") && !path.startsWith("/bootstrap") && !path.startsWith("/demo/")) {
+  if (res.status === 401 && path !== "/me" && !path.startsWith("/join") && !path.startsWith("/login") && !path.startsWith("/bootstrap") && !path.startsWith("/demo/")) {
     // The session is dead — a phone a steward removed, or the demo's hourly
     // reset. Fall to the gate instead of to a page of errors. /me is the
     // call that asks whether there is a session at all: App answers its
     // 401 with the gate, and a reload here would ask again forever.
     setToken(null); location.reload();
   }
-  if (!res.ok) throw new ApiError(res.status, (data && data.error) || res.statusText);
+  if (!res.ok) throw new ApiError(res.status, (data && data.error) || res.statusText, data);
   return data as T;
 }
 
 export type House = { id: number; name: string; crest: string; color: string; kind: "house" | "common"; is_steward: number; parcels: string[]; homes: string[] };
-export type Me = { id: number; name: string; crest: string; color: string; kind: string; is_steward: number; device_id: number };
+export type Me = { id: number; name: string; crest: string; color: string; kind: string; is_steward: number; device_id: number; has_pin?: boolean };

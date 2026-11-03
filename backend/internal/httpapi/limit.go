@@ -9,8 +9,9 @@ import (
 )
 
 // A village-sized rate limiter: a map in memory, cleared by a restart. It
-// exists so a six-digit pairing code cannot be guessed by a script, not to
-// survive a serious attacker.
+// exists so a code or a PIN cannot be guessed by a script from one address,
+// not to survive a serious attacker; the lock per house (auth.go § PINs) is
+// what holds against many.
 type limiter struct {
 	mu   sync.Mutex
 	hits map[string][]time.Time
@@ -34,15 +35,6 @@ func (l *limiter) allow(key string, max int, window time.Duration) bool {
 	l.hits[key] = append(kept, now)
 	return len(kept) < max
 }
-
-// counter counts wrong codes across the village since the last reset.
-type counter struct {
-	mu sync.Mutex
-	n  int
-}
-
-func (c *counter) count(by int) int { c.mu.Lock(); defer c.mu.Unlock(); c.n += by; return c.n }
-func (c *counter) reset()           { c.mu.Lock(); defer c.mu.Unlock(); c.n = 0 }
 
 // clientIP prefers the address Caddy forwards, since the backend only ever
 // sees the proxy otherwise.

@@ -4,14 +4,14 @@ import { useT } from "../i18n";
 import { VillageMap } from "../map/VillageMap";
 import { Crest } from "./shared";
 import { Notifications } from "./Notifications";
-import { AddPhone } from "../AddPhone";
+import { SetPin } from "../Pin";
 
 // Houses: everyone sees the list and manages their own house + devices.
 // Stewards also create houses, hand out invite links and assign parcels.
 // What a steward does for the village as a whole — its switches, the
 // village-wide mutes, the export — is on the settings page behind ⚙️.
 export function Houses({ me, houses, refresh, logout }: { me: Me; houses: House[]; refresh: () => Promise<void>; logout: () => void }) {
-  const { t } = useT();
+  const { t, demo } = useT();
   const steward = me.is_steward === 1;
   const [nh, setNh] = useState({ name: "", crest: "🏠", color: "#b5651d", kind: "house" });
   const [nc, setNc] = useState({ name: "", crest: "🌳", color: "#7a8f5a" });
@@ -31,6 +31,8 @@ export function Houses({ me, houses, refresh, logout }: { me: Me; houses: House[
   const [myColor, setMyColor] = useState(me.color);
   const [copied, setCopied] = useState<number | null>(null);
   const [newOpen, setNewOpen] = useState(false);
+  const [pinOpen, setPinOpen] = useState(false);
+  const [pinSaved, setPinSaved] = useState(false);
   const [createErr, setCreateErr] = useState("");
   // An MCP key: a device row an agent holds (mcp.go). The portal keeps its
   // hash and cannot show it twice, so the answer stays on screen until the
@@ -65,10 +67,11 @@ export function Houses({ me, houses, refresh, logout }: { me: Me; houses: House[
   }, [houses, steward]);
 
   const inviteLink = (code: string) => `${location.origin}${location.pathname}#/join/${code}`;
-  // The whole message, ready to paste: the link plus the two things a villager
-  // gets wrong — opening it inside WhatsApp, and not installing it.
+  // The whole message, ready to paste: the link, the PIN it asks for, and the
+  // two things a villager gets wrong — opening it inside WhatsApp, and not
+  // installing it.
   const inviteMessage = (h: House, code: string) =>
-    `${t("Hello")} ${h.name}! ${t("This is the village portal:")}\n${inviteLink(code)}\n\n${t("Open the link in Chrome or Safari, not inside WhatsApp, then add the portal to your home screen and allow notifications. Everyone in the house can open the same link.")}`;
+    `${t("Hello")} ${h.name}! ${t("This is the village portal:")}\n${inviteLink(code)}\n\n${t("Open the link in Chrome or Safari, not inside WhatsApp, and choose a PIN. Then add the portal to your home screen and allow notifications; there you tap your house and type the PIN. Everyone in the house opens the same link once, within 7 days, and chooses their own PIN.")}`;
   const copyMessage = (h: House, code: string) => { navigator.clipboard?.writeText(inviteMessage(h, code)); setCopied(-h.id); setTimeout(() => setCopied(null), 1800); };
   const create = async (e: React.FormEvent) => {
     e.preventDefault(); setCreateErr("");
@@ -146,7 +149,7 @@ export function Houses({ me, houses, refresh, logout }: { me: Me; houses: House[
           </div>
         ))}
         {steward && (<>
-          <p className="small">{t("Send the message to the house in WhatsApp. The same link works for every device in that house, until it expires. A house that lost its session gets a new link with ♻.")}</p>
+          <p className="small">{t("Send the message to the house in WhatsApp. Everyone in the house opens the link once and chooses a PIN, and signs in with the house and the PIN from then on. The link works for 7 days; for someone who forgot their PIN, send it again, or a new one with ♻.")}</p>
           <p><button onClick={() => setNewOpen(!newOpen)}>+ {t("New house")}</button></p>
           {newOpen && <form className="inline" onSubmit={create}>
             <div className="row">
@@ -214,9 +217,14 @@ export function Houses({ me, houses, refresh, logout }: { me: Me; houses: House[
         </form>
         <Notifications />
         <h3>{t("Your devices")}</h3>
-        <p><AddPhone /></p>
+        {/* The demo is entered by its doors, never by a PIN. */}
+        {!demo && <p>
+          <button className="lesser" onClick={() => { setPinOpen(!pinOpen); setPinSaved(false); }}>🔑 {me.has_pin ? t("Change PIN") : t("Choose a PIN")}</button>
+          {pinSaved && <span className="small"> {t("PIN saved.")}</span>}
+        </p>}
+        {!demo && pinOpen && <SetPin has={!!me.has_pin} onSaved={() => { setPinOpen(false); setPinSaved(true); refresh(); }} />}
         {devices.map((d) => (
-          <div key={d.id} className="card"><div className="head"><span>{d.agent === 1 ? "🤖" : "📱"} {d.label || "—"}{d.id === me.device_id ? ` (${t("This device")})` : ""}</span>{d.agent === 1 && <span className="tag">{t("agent")}</span>}<span className="when">{d.last_seen?.slice(0, 16)}</span></div>
+          <div key={d.id} className="card"><div className="head"><span>{d.agent === 1 ? "🤖" : "📱"} {d.label || "—"}{d.pin === 1 && !demo ? <span title={t("Signs in with a PIN")}> 🔑</span> : null}{d.id === me.device_id ? ` (${t("This device")})` : ""}</span>{d.agent === 1 && <span className="tag">{t("agent")}</span>}<span className="when">{d.last_seen?.slice(0, 16)}</span></div>
             {d.id !== me.device_id && <div className="actions"><button className="ghost" onClick={() => api(`/devices/${d.id}`, { method: "DELETE" }).then(() => api<any[]>("/devices").then(setDevices))}>{t("Remove")}</button></div>}
           </div>
         ))}
@@ -231,7 +239,6 @@ export function Houses({ me, houses, refresh, logout }: { me: Me; houses: House[
           <div className="submit"><button className="primary" type="submit">{t("Create key")}</button></div>
         </form>}
         {key && <div>
-          {/* Not .pin: 70 characters at 2.1 rem with letter-spacing pan a phone sideways. */}
           <div className="mcp-key">{key}</div>
           <div style={{ display: "flex", gap: ".5rem", justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap" }}>
             <span className="small" style={{ wordBreak: "break-all" }}>{mcpURL}</span>

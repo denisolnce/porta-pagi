@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/denisolnce/porta-pagi/backend/internal/config"
@@ -28,8 +29,8 @@ type Server struct {
 	send Sender           // nil until first use; tests inject a fake
 	now  func() time.Time // swapped in tests so "today"/"tomorrow" are deterministic
 
-	tries  *limiter // per-IP cap on code guessing
-	misses *counter // village-wide wrong-code counter, burns live pairing codes
+	tries *limiter   // per-IP cap on code and PIN guessing
+	pinMu sync.Mutex // one PIN login at a time (auth.go)
 
 	// the feedback email (feedback.go); nil = Resend, tests inject a fake
 	mail func(context.Context, mailer.Message) error
@@ -40,7 +41,7 @@ type Server struct {
 }
 
 func New(st *store.Store, cfg config.Config) *Server {
-	s := &Server{st: st, cfg: cfg, mux: http.NewServeMux(), now: time.Now, tries: newLimiter(), misses: &counter{}}
+	s := &Server{st: st, cfg: cfg, mux: http.NewServeMux(), now: time.Now, tries: newLimiter()}
 	s.routes()
 	if demoRoutes != nil {
 		demoRoutes(s)
@@ -70,7 +71,10 @@ func (s *Server) routes() {
 	m.HandleFunc("GET /api/weather", s.requireHouse(s.weather))
 	m.HandleFunc("POST /api/bootstrap", s.bootstrap)
 	m.HandleFunc("POST /api/join", s.join)
-	m.HandleFunc("POST /api/pair", s.requireHouse(s.createPairing))
+	// The gate without a link: the houses that have a PIN, and a PIN (auth.go).
+	m.HandleFunc("GET /api/doors", s.doors)
+	m.HandleFunc("POST /api/login", s.login)
+	m.HandleFunc("PUT /api/me/pin", s.requireHouse(s.putPin))
 
 	m.HandleFunc("GET /api/me", s.requireHouse(s.me))
 	m.HandleFunc("DELETE /api/session", s.logout)
@@ -374,6 +378,10 @@ func (s *Server) bootstrap(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 403, "wrong code")
 		return
 	}
+	if !pinShape.MatchString(str(m, "pin")) {
+		writeErr(w, 400, "a PIN is 6 digits")
+		return
+	}
 	name := str(m, "name")
 	if name == "" {
 		name = "Oskrbnik"
@@ -383,7 +391,7 @@ func (s *Server) bootstrap(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	tok, err := s.newDevice(r.Context(), id, str(m, "device"))
+	tok, err := s.newDevice(r.Context(), id, str(m, "device"), pinHash(id, str(m, "pin")))
 	if err != nil {
 		fail(w, err)
 		return
@@ -391,10 +399,11 @@ func (s *Server) bootstrap(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 201, map[string]any{"token": tok, "house_id": id})
 }
 
-// join turns an invite code into a device token. The code stays valid until
-// it expires so every member of the house can use the same link.
+// join turns a house's invite code into a device token, and the PIN the
+// person chose into that device's way back in (auth.go § PINs). The code
+// stays valid until it expires so every member of the house can use the
+// same link, each with a PIN of their own.
 func (s *Server) join(w http.ResponseWriter, r *http.Request) {
-	// A pairing code is only six digits, so guessing has to cost something.
 	if !s.tries.allow(clientIP(r), 12, 10*time.Minute) {
 		writeErr(w, http.StatusTooManyRequests, "too many attempts, wait a few minutes")
 		return
@@ -404,23 +413,14 @@ func (s *Server) join(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, "bad json")
 		return
 	}
-	// The pairing code is displayed as "883 559", so a paste carries a space.
+	// A code typed off a screen may carry spaces or capitals.
 	code := strings.ToLower(strings.Join(strings.Fields(str(m, "code")), ""))
-	// A code is either a steward's invite (a house joins) or a house's own
-	// pairing code (one more phone of a house already inside).
-	inv, err := s.st.One(r.Context(), `SELECT house_id, expires_at, 'invite' AS src FROM invites WHERE code=?
-		UNION ALL SELECT house_id, expires_at, 'pairing' FROM pairings WHERE code=? AND used_at IS NULL`, code, code)
+	inv, err := s.st.One(r.Context(), `SELECT house_id, expires_at FROM invites WHERE code=?`, code)
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	if inv == nil {
-		// A wrong six-digit guess also spends the live pairing code's budget:
-		// five misses anywhere in the village and every live code is dropped.
-		if s.misses.count(1) >= 5 {
-			s.st.Exec(r.Context(), `DELETE FROM pairings WHERE used_at IS NULL`)
-			s.misses.reset()
-		}
 		writeErr(w, 404, "unknown code")
 		return
 	}
@@ -428,21 +428,23 @@ func (s *Server) join(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 410, "code expired")
 		return
 	}
-	if inv["src"] == "pairing" {
-		// Single use: burn it before minting the device.
-		res, err := s.st.Exec(r.Context(), `UPDATE pairings SET used_at=datetime('now') WHERE code=? AND used_at IS NULL`, code)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		_ = res
+	pin := str(m, "pin")
+	if !pinShape.MatchString(pin) {
+		writeErr(w, 400, "a PIN is 6 digits")
+		return
 	}
-	tok, err := s.newDevice(r.Context(), inv["house_id"].(int64), str(m, "device"))
+	houseID := inv["house_id"].(int64)
+	// The link is the way back into a house locked by wrong PINs.
+	if _, err := s.st.Exec(r.Context(), `DELETE FROM pin_tries WHERE house_id=?`, houseID); err != nil {
+		fail(w, err)
+		return
+	}
+	tok, err := s.newDevice(r.Context(), houseID, str(m, "device"), pinHash(houseID, pin))
 	if err != nil {
 		fail(w, err)
 		return
 	}
-	writeJSON(w, 201, map[string]any{"token": tok, "house_id": inv["house_id"]})
+	writeJSON(w, 201, map[string]any{"token": tok, "house_id": houseID})
 }
 
 func (s *Server) me(w http.ResponseWriter, r *http.Request) {
@@ -473,14 +475,18 @@ func (s *Server) me(w http.ResponseWriter, r *http.Request) {
 	}
 	// The label typed when this phone joined ("Ana's phone") is the best guess
 	// at who is holding it, so the board can pre-fill the name.
-	if d, _ := s.st.One(r.Context(), `SELECT label FROM devices WHERE id=?`, h.DeviceID); d != nil {
+	if d, _ := s.st.One(r.Context(), `SELECT label, pin_hash FROM devices WHERE id=?`, h.DeviceID); d != nil {
 		row["device_label"] = d["label"]
+		// A device from before the PIN has none, and Home asks it to choose one.
+		row["has_pin"] = d["pin_hash"] != nil
 	}
 	writeJSON(w, 200, row)
 }
 
 func (s *Server) listDevices(w http.ResponseWriter, r *http.Request) {
-	rows, err := s.st.Rows(r.Context(), `SELECT id, label, agent, created_at, last_seen FROM devices WHERE house_id=? ORDER BY last_seen DESC`, houseFrom(r).ID)
+	// `pin` marks the rows a PIN signs in by, so a house can see which to
+	// remove when one of its people forgot theirs (auth.go § PINs).
+	rows, err := s.st.Rows(r.Context(), `SELECT id, label, agent, pin_hash IS NOT NULL AS pin, created_at, last_seen FROM devices WHERE house_id=? ORDER BY last_seen DESC`, houseFrom(r).ID)
 	if err != nil {
 		fail(w, err)
 		return
@@ -1612,28 +1618,6 @@ func (s *Server) updateTool(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(204)
-}
-
-// ---- pairing -------------------------------------------------------------
-
-// createPairing hands the caller a six-digit code so one more phone of the
-// same house can log in. Only one live code per house.
-func (s *Server) createPairing(w http.ResponseWriter, r *http.Request) {
-	h := houseFrom(r)
-	// expires_at is RFC3339 ("...T19:44:00Z"); datetime('now') is "... 19:44:00",
-	// so the sweep never matched — same instant, different shape. strftime writes
-	// UTC now in the shape the column holds.
-	if _, err := s.st.Exec(r.Context(), `DELETE FROM pairings WHERE house_id=? OR expires_at < strftime('%Y-%m-%dT%H:%M:%SZ', 'now')`, h.ID); err != nil {
-		fail(w, err)
-		return
-	}
-	code := pairingCode()
-	exp := time.Now().UTC().Add(15 * time.Minute).Format(time.RFC3339)
-	if _, err := s.st.Exec(r.Context(), `INSERT INTO pairings(code, house_id, expires_at) VALUES (?,?,?)`, code, h.ID, exp); err != nil {
-		fail(w, err)
-		return
-	}
-	writeJSON(w, 201, map[string]any{"code": code, "expires_at": exp})
 }
 
 func itoa64(n int64) string { return strconv.FormatInt(n, 10) }

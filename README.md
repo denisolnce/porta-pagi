@@ -20,8 +20,9 @@ for a village that had it before switches), a Dues ledger (who paid what the
 village asked) and a Duty roster (turns at the chores, with counts) — all
 three off by default — and switches off the sky in the calendar, which is on
 by default. One shared login per house, handed
-out as an invite link; a house adds its own further phones with a six-digit
-pairing code. Installs to the home screen and sends notifications.
+out as an invite link: whoever opens it chooses a PIN, and from then on
+signs in on any phone or computer by tapping their house and typing it.
+Installs to the home screen and sends notifications.
 
 Built by and for one collective in the Slovenian karst; the reasons behind
 every room are in `CLAUDE.md`, and the village that built it runs it from its
@@ -61,7 +62,7 @@ One container, one volume. Pull `ghcr.io/denisolnce/porta-pagi:<tag>`,
 mount a data directory at `/data`, put a TLS proxy in front, and set the
 environment below. The first steward's bootstrap code is printed to the
 container log on first boot; `docker exec <container> /server code "<house>"`
-prints a fresh invite link for a house when nobody is logged in.
+prints a fresh invite link for a house when nobody can sign in.
 
 The binary carries no village. Four variables name one, have no default, and
 the process refuses to start without them: `VILLAGE_NAME` (the tab title, the
