@@ -1298,7 +1298,8 @@ so rule 5 at the top is the only fence there. The reviewer edits nothing.
   `news/news.json` only on a yes, in the change's commit or a commit of its
   own. A no, or no answer, is no note. A subagent never writes one: its
   brief says so. The owner declined two the same day — the session cookie
-  and the shareable links — so the bar is his, not the assistant's guess
+  and the shareable links — and on 2026-11-15 even a new Market tab, the
+  wishlist, so the bar is his, not the assistant's guess
   of "would a villager notice"; and **a small fix never gets one** — an
   arrow moved, a word changed, a line that fits better (owner's rule
   2026-10-08: "these kinds of small fixes should never end up in portal
