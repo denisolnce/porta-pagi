@@ -620,7 +620,13 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   buyer's** (owner, 2026-11-15: "just remove history"). Nothing else showed the
   asker its bought ask, so the API now sends it to the buyer alone, the
   assistant's reading: the asker learns who bought it from the push and from
-  the buyer, and a house with the kind muted is not told. **Whether it was paid back is the buyer's own
+  the buyer. **This breaks § Quiet hours' "everything waits in the app" for
+  the asker**: a purchase marked between 21:00 and 07:00 rings no phone that
+  did not ask for nights, and the app no longer shows it, so the asker is not
+  told; the same for a house with no phone subscribed or the kind muted. The
+  push's tap opens the open asks, where the bought one is gone. Put to the
+  owner 2026-11-15, with the fix offered: the asker's own bought ask, "bought
+  by ‹house›", on its page. **Whether it was paid back is the buyer's own
   note** (`repaid_at`): only the buyer is sent it, only the buyer sets it, a
   steward included, the export leaves it out, and it carries no amount and is
   never summed, pushed or counted on Home. This is the one who-owes-whom the portal

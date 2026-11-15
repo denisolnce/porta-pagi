@@ -250,8 +250,13 @@ Decisions, each with the option rejected:
   asker too, the assistant's reading of his words. The asker learns who
   bought it from the push, and from the buyer. *Rejected: a month of bought asks at the foot, small* — the
   owner's first ask, cut once he saw it.
-  The cost, paid knowingly: an asker with the kind muted sees its ask vanish
-  and is not told by whom. The buyer keeps an unpaid ask as long as it is
+  The cost, not yet the owner's choice: the asker is told only by a push, and
+  quiet hours drop a push rather than hold it, so a purchase marked between
+  21:00 and 07:00 — when people order online — vanishes from the asker's list
+  unannounced, and the same for a house with no phone subscribed or the kind
+  muted; the push's tap opens the open asks, where it is gone. The fix
+  offered to the owner: the asker sees its own bought ask, "bought by ‹house›",
+  and nobody else does. The buyer keeps an unpaid ask as long as it is
   unpaid, and a paid one a month after the tick; ↩ on its own line takes the
   purchase back.
 - **A house that leaves takes its open asks with it, and leaves its bought
