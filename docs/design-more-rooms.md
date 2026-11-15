@@ -199,7 +199,7 @@ take the whole tile row down), a thread per due, a push.
 
 ### The Market's wishlist
 
-Built 2026-11-15, the Market's fourth tab, no switch (`030_buys.sql`,
+Built 2026-11-15, the Market's fourth tab, no switch (`032_buys.sql`, `033_buys_no_price.sql`,
 `buys.go`, `rooms/Market.tsx`). **The villager job: "can somebody put this
 in their Amazon cart for me"** — the owner kept doing it by hand for
 neighbours, and the ask, who did it and who still owes him for what lived in
@@ -207,8 +207,8 @@ WhatsApp and his head.
 
 **The owner's line on money (2026-11-15):** the portal still shows nobody who
 owes whom. This list is the one place that knows, and it is **the buyer's
-own**: "nobody will see who owes what". Every house sees an ask and who bought
-it; whether it was paid back reaches the buyer's page and agent only.
+own**: "nobody will see who owes what". Every house sees an open ask; who
+bought it and whether it was paid back reach the buyer's page and agent only.
 
 Decisions, each with the option rejected:
 
@@ -223,11 +223,15 @@ Decisions, each with the option rejected:
   calls the Market's `buys`, so neither table, kind nor tool is ambiguous,
   and `list_buys` tells a model it is not `list_wishes`. The cost, paid
   knowingly: one word for two things, told apart by room and icon.
-- **A link, a few words, or both; the most the asker would pay is its own
-  words** (`max_price`, text). It is the asker's limit, never the price paid,
-  so nothing can add it up. A link must be http or https: the page puts it in
-  an `href`. *Rejected: reading the price or the title off the shop* — a third
-  party fetched for every ask, and Amazon refuses scrapers anyway.
+- **One field, a few words or a link** (owner, 2026-11-15: "just one input,
+  what or link, that's it"). A bare address is sent as the link, anything
+  else as the words, and an address inside the words is drawn clickable. A
+  link must be http or https: the page puts it in an `href`. No number is
+  stored at all. *Rejected: a field for the most the asker would pay* — the
+  owner's first ask, cut once he saw the form; a limit fits in the words
+  (migration `033` drops the column). *Rejected: reading the price or the
+  title off the shop* — a third party fetched for every ask, and Amazon
+  refuses scrapers anyway.
 - **Any house but the asker marks it bought; the asker hears who** (push kind
   `buys`, "Market wishlist" in the list, the asker's phones only). Only the
   buyer takes it back, and the asker hears that too, or it would wait for a
@@ -240,20 +244,29 @@ Decisions, each with the option rejected:
   dues rule: whoever holds the money knows it arrived.
 - **A bought ask cannot be deleted** (409), by the asker or a steward: that
   would wipe the buyer's note. An open one goes like any row.
-- **The history is a month, small, at the foot**, for every house the same;
-  the buyer keeps an unpaid ask past it, and a paid one a month after the tick.
+- **No history: once bought, an ask leaves every list but the buyer's**
+  (owner, 2026-11-15: "just remove history"). The history was the only place
+  the asker saw its bought ask, so `GET /api/buys` stops sending it to the
+  asker too, the assistant's reading of his words. The asker learns who
+  bought it from the push, and from the buyer. *Rejected: a month of bought asks at the foot, small* — the
+  owner's first ask, cut once he saw it.
+  The cost, paid knowingly: an asker with the kind muted sees its ask vanish
+  and is not told by whom. The buyer keeps an unpaid ask as long as it is
+  unpaid, and a paid one a month after the tick; ↩ on its own line takes the
+  purchase back.
 - **A house that leaves takes its open asks with it, and leaves its bought
   ones on the buyer's list without a name** (`SET NULL`, and a trigger that
   deletes only the open ones). Deleting a house forgives nothing, as with dues.
   An ask the buyer takes back after its house left is deleted, not reopened:
   nobody asks for it any more.
 - **On the agent surface: `list_buys`, `create_buy`, `update_buy`**, no
-  delete. `list_buys` carries the buyer's own `repaid_at` and nobody else's;
-  the description tells the model to keep it in the conversation.
-
+  delete. `list_buys` lists a bought ask to its buyer only, with its
+  `repaid_at`; the description tells the model to keep it in the conversation.
 - **The export leaves the ticks out** (the assistant's reading of the owner's
   "nobody will see who owes what", 2026-11-15): a steward's JSON carries the
-  asks and who bought them, never who paid back. The nightly backup holds
+  asks and who bought them, never who paid back. Who bought what is in it,
+  though the page no longer shows it: the exit path keeps the village's
+  record, and only the ticks are a house's private note. The nightly backup holds
   them, as it holds everything; whoever has the server has the village.
 
 Not built, until a village asks: editing an ask (delete and add again), a

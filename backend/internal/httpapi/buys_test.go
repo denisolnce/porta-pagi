@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 )
@@ -16,11 +17,11 @@ func TestBuys(t *testing.T) {
 	_, j, _ := breza.do("POST", "/api/join", map[string]any{"pin": "654321", "code": o["invite"].(map[string]any)["code"]})
 	breza.token = j["token"].(string)
 
-	for _, bad := range []map[string]any{{}, {"link": "javascript:alert(1)"}, {"link": "amzn.eu/d/x"}, {"text": "x", "max_price": "nekaj manj kot trideset evrov, ne več"}} {
+	for _, bad := range []map[string]any{{}, {"link": "javascript:alert(1)"}, {"link": "amzn.eu/d/x"}, {"text": strings.Repeat("ž", 2001)}} {
 		code, _, _ := volk.do("POST", "/api/buys", bad)
 		volk.must(400, code, "bad ask")
 	}
-	code, obj, _ := volk.do("POST", "/api/buys", map[string]any{"link": "https://amzn.eu/d/abc12", "max_price": "15 €"})
+	code, obj, _ := volk.do("POST", "/api/buys", map[string]any{"link": "https://amzn.eu/d/abc12"})
 	volk.must(201, code, "ask")
 	id := int64(obj["id"].(float64))
 	path := "/api/buys/" + itoa64(id)
@@ -89,9 +90,10 @@ func TestBuys(t *testing.T) {
 	if r := row(steward); r["repaid_at"] == nil {
 		t.Fatalf("the buyer reads its note: %v", r)
 	}
+	// Bought, the ask leaves every list but the buyer's, the asker's too.
 	for _, c := range []*client{volk, breza} {
-		if r := row(c); r == nil || r["repaid_at"] != nil || r["bought_by_name"] != "S" {
-			t.Fatalf("another house reads who bought it and not the note: %v", r)
+		if r := row(c); r != nil {
+			t.Fatalf("another house reads a bought ask: %v", r)
 		}
 	}
 
@@ -102,13 +104,11 @@ func TestBuys(t *testing.T) {
 		t.Fatalf("taken back: %v", r)
 	}
 
-	// The window: a month for everyone; the buyer keeps an unpaid ask past it.
+	// The buyer keeps an unpaid ask as long as it is unpaid, a ticked one a
+	// month after the tick.
 	steward.do("PUT", path, map[string]any{"state": "bought"})
 	start := srv.now()
 	srv.now = func() time.Time { return start.AddDate(0, 0, 31) }
-	if row(volk) != nil {
-		t.Fatal("a month-old bought ask still in the history")
-	}
 	if row(steward) == nil {
 		t.Fatal("an unpaid ask left the buyer's list")
 	}

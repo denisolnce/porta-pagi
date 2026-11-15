@@ -8,25 +8,25 @@ import (
 
 // The Market's wishlist (owner's ask 2026-11-15; buys in the code, because
 // the Shed's wishlist of tools already has wishes). A house asks the
-// village to buy a thing for it — mostly a link to an online shop — with the
-// most it would pay, in its own words. Any other house marks it bought, and
-// the asker hears who. Who bought it is an acknowledgment and every house
-// reads it. Whether it was paid back is the buyer's own note: repaid_at is
-// read and written by the buyer alone, never summed, never pushed.
+// village to buy a thing for it — one field, a few words or a link to an
+// online shop. Any other house marks it bought, and the asker hears who; the
+// ask then leaves every list but the buyer's (owner, 2026-11-15: no history).
+// Whether it was paid back is the buyer's own note: repaid_at is read and
+// written by the buyer alone, never summed, never pushed.
 
-// buyWindow: days a bought ask stays in the history every house reads.
+// buyWindow: days a ticked ask stays on the buyer's list after the tick.
 const buyWindow = 30
 
 func (s *Server) listBuys(w http.ResponseWriter, r *http.Request) {
 	me := houseFrom(r).ID
 	cut := s.now().UTC().AddDate(0, 0, -buyWindow).Format("2006-01-02 15:04:05")
-	// The buyer's own unpaid asks stay listed for it past the window: a debt
-	// does not expire. repaid_at goes to the buyer and to nobody else.
-	rows, err := s.st.Rows(r.Context(), `SELECT x.id, x.house_id, x.text, x.link, x.max_price, x.bought_by, x.bought_at, x.created_at,
-		CASE WHEN x.bought_by = ? THEN x.repaid_at END AS repaid_at,`+houseJoin+`, b.name AS bought_by_name
-		FROM buys x LEFT JOIN houses h ON h.id=x.house_id LEFT JOIN houses b ON b.id=x.bought_by
-		WHERE x.bought_at IS NULL OR x.bought_at >= ? OR (x.bought_by = ? AND (x.repaid_at IS NULL OR x.repaid_at >= ?))
-		ORDER BY x.created_at DESC LIMIT 500`, me, cut, me, cut)
+	// Open asks, and what this house bought: unpaid for as long as it is
+	// unpaid (a debt does not expire), ticked for a month after the tick.
+	// A bought ask reaches its buyer and nobody else, not even the asker.
+	rows, err := s.st.Rows(r.Context(), `SELECT x.id, x.house_id, x.text, x.link, x.bought_by, x.bought_at, x.repaid_at, x.created_at,`+houseJoin+`
+		FROM buys x LEFT JOIN houses h ON h.id=x.house_id
+		WHERE x.bought_at IS NULL OR (x.bought_by = ? AND (x.repaid_at IS NULL OR x.repaid_at >= ?))
+		ORDER BY x.created_at DESC LIMIT 500`, me, cut)
 	if err != nil {
 		fail(w, err)
 		return
@@ -56,7 +56,7 @@ func (s *Server) createBuy(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, "bad json")
 		return
 	}
-	text, link, max := strings.TrimSpace(str(m, "text")), strings.TrimSpace(str(m, "link")), strings.TrimSpace(str(m, "max_price"))
+	text, link := strings.TrimSpace(str(m, "text")), strings.TrimSpace(str(m, "link"))
 	switch {
 	case text == "" && link == "":
 		writeErr(w, 400, "a link or a few words")
@@ -64,22 +64,18 @@ func (s *Server) createBuy(w http.ResponseWriter, r *http.Request) {
 	case link != "" && (len(link) > 2000 || !webLink(link)):
 		writeErr(w, 400, "link must be an http or https address")
 		return
-	case len([]rune(text)) > 300 || len([]rune(max)) > 30:
+	case len([]rune(text)) > 2000: // words with a pasted address in them
 		writeErr(w, 400, "too long")
 		return
 	}
 	h := houseFrom(r)
-	id, err := s.st.Exec(r.Context(), `INSERT INTO buys(house_id, text, link, max_price) VALUES (?,?,?,?)`, h.ID, text, link, max)
+	id, err := s.st.Exec(r.Context(), `INSERT INTO buys(house_id, text, link) VALUES (?,?,?)`, h.ID, text, link)
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	s.notify("buys", h.ID, func(lang string) Payload {
-		body := snippet(buyLabel(text, link), 120)
-		if max != "" {
-			body += " · " + tr(lang, "up to") + " " + max
-		}
-		return Payload{Title: "🛍 " + h.Name + tr(lang, " asks someone to buy"), Body: body, URL: "#/market?at=buys"}
+		return Payload{Title: "🛍 " + h.Name + tr(lang, " asks someone to buy"), Body: snippet(buyLabel(text, link), 140), URL: "#/market?at=buys"}
 	})
 	writeJSON(w, 201, map[string]any{"id": id})
 }

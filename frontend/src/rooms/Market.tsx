@@ -4,7 +4,7 @@ import { api, type House, type Me } from "../api";
 import { useT } from "../i18n";
 import { Crest, Empty, When, canEdit, useList } from "./shared";
 import { DatePicker } from "../DatePicker";
-import { LinkLine, Share, madeOf, useLanding } from "../links";
+import { LinkLine, Linkify, Share, madeOf, useLanding } from "../links";
 
 // A run is a trip or an order: one house, a cut-off, the needs that join it.
 // Only the words differ — a trip drives to a place and leaves, an order is
@@ -30,7 +30,7 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
   // A buy-for-me push links to ?at=buys, also when the room is already open.
   useEffect(() => { if (params.get("at") === "buys") setTab("buys"); }, [params]);
   const needs = useList("/needs"), offers = useList("/offers"), runs = useList("/runs"), buys = useList("/buys");
-  const [buy, setBuy] = useState({ link: "", text: "", max_price: "" });
+  const [buy, setBuy] = useState("");
   const [text, setText] = useState("");
   const [tag, setTag] = useState("giveaway");
   const [run, setRun] = useState({ kind: "trip", destination: "", cutoff_at: "", notes: "" });
@@ -47,23 +47,19 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
     if (tab === "needs") { if (!text.trim()) return; await api("/needs", { method: "POST", body: { text, run_id: runId ? Number(runId) : undefined } }); setText(""); needs.reload(); }
     if (tab === "offers") { if (!text.trim()) return; await api("/offers", { method: "POST", body: { text, tag } }); setText(""); offers.reload(); }
     if (tab === "runs") { await api("/runs", { method: "POST", body: run }); setRun({ kind: run.kind, destination: "", cutoff_at: "", notes: "" }); runs.reload(); }
-    if (tab === "buys") { if (!buy.link.trim() && !buy.text.trim()) return; await api("/buys", { method: "POST", body: buy }); setBuy({ link: "", text: "", max_price: "" }); buys.reload(); }
+    // One field: a bare address is the link, anything else the words (a link
+    // inside them is drawn clickable by Linkify).
+    if (tab === "buys") { const v = buy.trim(); if (!v) return; await api("/buys", { method: "POST", body: /^https?:\/\/\S+$/.test(v) ? { link: v } : { text: v } }); setBuy(""); buys.reload(); }
   };
-  // The Market's wishlist: open asks on cards; what this house bought for others, which
-  // only this house is sent (repaid_at), as a list it ticks off; and what was
-  // bought in the last month, small, at the foot.
+  // The Market's wishlist: open asks on cards, and what this house bought for
+  // others, which only this house is sent (repaid_at), as a list it ticks off.
   const putBuy = (id: number, body: any) => api(`/buys/${id}`, { method: "PUT", body }).then(buys.reload);
   const nameOr = (name?: string) => name || t("a house that has left");
   const buyWhat = (x: any) => x.link
     ? <a href={x.link} target="_blank" rel="noreferrer noopener" className="buy-link">{x.text || shortLink(x.link)}</a>
-    : x.text;
+    : <Linkify text={x.text} />;
   const asks = buys.items.filter((x) => !x.bought_at);
-  const bought = buys.items.filter((x) => x.bought_at).sort((a, b) => b.bought_at.localeCompare(a.bought_at));
-  const owed = bought.filter((x) => x.bought_by === me.id).sort((a, b) => Number(!!a.repaid_at) - Number(!!b.repaid_at));
-  // The backend also sends the buyer its unpaid asks past the month; the
-  // history every house reads stays the month (buyWindow in buys.go).
-  const monthAgo = new Date(Date.now() - 30 * 864e5).toISOString().replace("T", " ").slice(0, 19);
-  const history = bought.filter((x) => x.bought_at >= monthAgo);
+  const owed = buys.items.filter((x) => x.bought_at && x.bought_by === me.id).sort((a, b) => Number(!!a.repaid_at) - Number(!!b.repaid_at) || b.bought_at.localeCompare(a.bought_at));
   // The two-way choice a run is made with; the fields after it take its words.
   const kindSelect = (kind: string, set: (k: string) => void) => (
     <label>{t("Kind")}<select value={kind} onChange={(e) => set(e.target.value)}>{(["trip", "order"] as const).map((k) => <option key={k} value={k}>{RUN[k].icon} {t(k)}</option>)}</select></label>
@@ -146,11 +142,7 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
           </div>
         )}
         {tab === "buys" && (<>
-          <div className="row">
-            <label style={{ gridColumn: "span 2" }}>{t("Link")}<input type="url" inputMode="url" value={buy.link} onChange={(e) => setBuy({ ...buy, link: e.target.value })} placeholder="https://…" maxLength={2000} /></label>
-            <label>{t("Up to")}<input value={buy.max_price} onChange={(e) => setBuy({ ...buy, max_price: e.target.value })} placeholder={t("optional")} maxLength={30} /></label>
-          </div>
-          <label>{t("What")}<input value={buy.text} onChange={(e) => setBuy({ ...buy, text: e.target.value })} placeholder={t("What it is, in a few words")} maxLength={300} /></label>
+          <label>{t("What or link")}<input value={buy} onChange={(e) => setBuy(e.target.value)} placeholder={t("a few words, or paste the shop's link")} maxLength={2000} /></label>
         </>)}
         <div className="submit"><button className="primary" type="submit">{tab === "runs" ? t(runOf(run.kind).post) : tab === "buys" ? "＋ " + t("Add") : t("Post")}</button></div>
       </form>
@@ -160,7 +152,7 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
         {asks.length ? asks.map((x) => (
           <div key={x.id} className="card" data-entry={"buy-" + x.id}>
             <div className="head"><Crest crest={x.house_crest} color={x.house_color} /><span className="who">{x.house_name}</span><When iso={x.created_at} /></div>
-            <div className="body">{buyWhat(x)}{x.max_price && <span className="small"> · {t("up to")} {x.max_price}</span>}</div>
+            <div className="body">{buyWhat(x)}</div>
             <div className="actions">
               {x.house_id !== me.id && <button className="primary" onClick={() => putBuy(x.id, { state: "bought" })}>✓ {t("I bought it")}</button>}
               {canEdit(me, x) && <button className="ghost" onClick={() => confirm("?") && api(`/buys/${x.id}`, { method: "DELETE" }).then(buys.reload)}>🗑</button>}
@@ -171,22 +163,15 @@ export function Market({ me, houses }: { me: Me; houses: House[] }) {
           <div className="owed">
             <h3>🧾 {t("Bought for others")} <span className="sub">{t("only your house sees this list")}</span></h3>
             {owed.map((x) => (
-              <label key={x.id} className={"kind owed-line" + (x.repaid_at ? " repaid" : "")}>
-                <input type="checkbox" checked={!!x.repaid_at} onChange={(e) => putBuy(x.id, { repaid: e.target.checked })} />
-                <span>{nameOr(x.house_name)}: {x.text || shortLink(x.link)} · <When iso={x.bought_at} /></span>
-              </label>
-            ))}
-            <div className="small muted">{t("Tick what was paid back.")}</div>
-          </div>
-        )}
-        {history.length > 0 && (
-          <div className="buys-past small">
-            <h3>{t("Bought")}</h3>
-            {history.map((x) => (
-              <div key={x.id}>• {nameOr(x.house_name)}: {buyWhat(x)} — {t("bought by")} {nameOr(x.bought_by_name)} · <When iso={x.bought_at} />
-                {x.bought_by === me.id && <button className="ghost" title={t("Not bought after all")} aria-label={t("Not bought after all")} onClick={() => confirm(t("Not bought after all") + "?") && putBuy(x.id, { state: "open" })}>↩</button>}
+              <div key={x.id} className={"owed-line" + (x.repaid_at ? " repaid" : "")}>
+                <label className="kind">
+                  <input type="checkbox" checked={!!x.repaid_at} onChange={(e) => putBuy(x.id, { repaid: e.target.checked })} />
+                  <span>{nameOr(x.house_name)}: {buyWhat(x)} · <When iso={x.bought_at} /></span>
+                </label>
+                <button className="ghost" title={t("Not bought after all")} aria-label={t("Not bought after all")} onClick={() => confirm(t("Not bought after all") + "?") && putBuy(x.id, { state: "open" })}>↩</button>
               </div>
             ))}
+            <div className="small muted">{t("Tick what was paid back.")}</div>
           </div>
         )}
       </>)}

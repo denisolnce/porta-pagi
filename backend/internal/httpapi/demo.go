@@ -118,7 +118,7 @@ type demoSeed struct {
 	// come yet leaves the ask open, or unpaid.
 	Buys []struct {
 		demoWhen
-		House, Text, Link, Max, BoughtBy string
+		House, Text, Link, BoughtBy string
 		Bought, Repaid                   *int
 	}
 	Away []struct {
@@ -736,7 +736,7 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 				}
 			}
 		}
-		if _, err := tx.Exec(ctx, `INSERT INTO buys(house_id, text, link, max_price, bought_by, bought_at, repaid_at, created_at) VALUES (?,?,?,?,?,?,?,?)`, id(b.House), b.Text, b.Link, b.Max, by, at, repaid, s); err != nil {
+		if _, err := tx.Exec(ctx, `INSERT INTO buys(house_id, text, link, bought_by, bought_at, repaid_at, created_at) VALUES (?,?,?,?,?,?,?)`, id(b.House), b.Text, b.Link, by, at, repaid, s); err != nil {
 			return nil, err
 		}
 		counts["buys"]++

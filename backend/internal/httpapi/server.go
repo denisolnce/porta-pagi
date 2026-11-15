@@ -1440,7 +1440,7 @@ func (s *Server) export(w http.ResponseWriter, r *http.Request) {
 		case "site_files":
 			cols = "name, content_type, updated_at"
 		case "buys": // paid back is the buyer's own note, and nobody else sees who owes whom (owner, 2026-11-15)
-			cols = "id, house_id, text, link, max_price, bought_by, bought_at, created_at"
+			cols = "id, house_id, text, link, bought_by, bought_at, created_at"
 		}
 		rows, err := s.st.Rows(r.Context(), `SELECT `+cols+` FROM `+t)
 		if err != nil {

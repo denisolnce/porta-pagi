@@ -607,28 +607,32 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   total never drops under money already in the box; a house that has paid
   cannot be dropped from a due until it is marked unpaid. `list_dues` and
   `mark_due` are its agent tools, gone with the switch.
-- **The Market's wishlist: who bought it is shown, who still owes is the buyer's alone**
+- **The Market's wishlist: who still owes is the buyer's alone**
   (owner's decision 2026-11-15, the Market's fourth tab, no switch; `buys.go`,
   design and options refused in `docs/design-more-rooms.md` § The Market's
   wishlist; `buys` in the code). A
-  house asks the village to buy a thing for it — a link, a few words, or both,
-  and the most it would pay in its own words (`max_price`, text, the asker's
-  limit and never the price paid). Any house but the asker marks it bought,
-  the asker hears who, and hears again if the buyer takes it back; every
-  house reads who bought it — an acknowledgment, like "taken by". **Whether
-  it was paid back is the buyer's own note** (`repaid_at`): `GET /api/buys`
-  sends it to the buyer only, only the buyer sets it, a steward included, the
-  export leaves it out, and it carries no amount and is never summed, pushed
-  or counted on Home. This is the one who-owes-whom the portal
+  house asks the village to buy a thing for it in **one field, a few words or
+  a link** (owner, 2026-11-15: "just one input, what or link"; the page sends
+  a bare address as `link`, anything else as `text`, and draws a link inside
+  the words clickable). No price: migration `033` dropped the field. Any
+  house but the asker marks it bought, the asker hears who, and hears again
+  if the buyer takes it back. **Once bought, the ask leaves every list but the
+  buyer's** (owner, 2026-11-15: "just remove history"). Nothing else showed the
+  asker its bought ask, so the API now sends it to the buyer alone, the
+  assistant's reading: the asker learns who bought it from the push and from
+  the buyer, and a house with the kind muted is not told. **Whether it was paid back is the buyer's own
+  note** (`repaid_at`): only the buyer is sent it, only the buyer sets it, a
+  steward included, the export leaves it out, and it carries no amount and is
+  never summed, pushed or counted on Home. This is the one who-owes-whom the portal
   keeps, and the owner kept it because nobody else sees it; do not show it to
   the asker or add a total without a decision written here. A link is http or
   https only, because it lands in an `href`. **A bought ask cannot be deleted**
   (409): that wipes the buyer's note. A house that leaves takes its open asks
   with it (a trigger in `032_buys.sql`) and leaves its bought ones on the
   buyer's list without a name: deleting a house forgives nothing, and one the
-  buyer takes back goes rather than reopen. The history every house reads is
-  a month; the buyer keeps an unpaid ask past it. The nightly backup holds
-  the ticks, as it holds everything.
+  buyer takes back goes rather than reopen. The buyer keeps an unpaid ask
+  as long as it is unpaid, a ticked one a month after the tick. The nightly
+  backup holds the ticks, as it holds everything.
 - **The phone book keeps a number, not a file on a person.** Contacts is a
   name, a phone, a note and a type. **Any house writes one down and any house
   corrects it** — the same provisional footing as editing an event — and the

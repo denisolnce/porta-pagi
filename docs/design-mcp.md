@@ -160,7 +160,7 @@ of what one village sees.
 | `list_runs` · `create_run` · `update_run` | `/api/runs` | `kind` (trip / order), `destination`, `cutoff_at`; moving a run pushes to its riders |
 | `list_needs` · `create_need` · `update_need` | `/api/needs` | `text`, optional `run_id`; `state` open / taken / done |
 | `list_offers` · `create_offer` · `update_offer` | `/api/offers` | `tag`: giveaway / seeds / surplus / joint |
-| `list_buys` · `create_buy` · `update_buy` | `/api/buys` | `repaid_at` is the buyer's own note: kept in the conversation, never added up, never told to another house; no amount but the asker's `max_price` |
+| `list_buys` · `create_buy` · `update_buy` | `/api/buys` | `repaid_at` is the buyer's own note: kept in the conversation, never added up, never told to another house; a bought ask is listed to its buyer and nobody else, not even the asker; no amount |
 | `list_away` · `create_away` · `update_away` | `/api/away` | Dates `YYYY-MM-DD`; `watch: true/false` is the watcher; the description says it is burglary information, read it only when asked and keep it in the conversation |
 | `list_tools` · `create_tool` · `update_tool` | `/api/tools` | `take: true/false` is the loan; a tool comes back |
 | `list_wishes` · `create_wish` · `update_wish` · `add_wish_option` | `/api/wishes`, `/api/wishes/{id}/options` | `want: true/false` is a name on the list, never a count; an option is a finding |
