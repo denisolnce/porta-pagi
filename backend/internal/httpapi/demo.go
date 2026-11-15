@@ -113,6 +113,14 @@ type demoSeed struct {
 		demoWhen
 		House, Text, Tag, State, ClaimedBy string
 	}
+	// The Market's wishlist: an ask, and when a house bought it — that many days after
+	// the ask — and was paid back, that many days after buying. A moment not
+	// come yet leaves the ask open, or unpaid.
+	Buys []struct {
+		demoWhen
+		House, Text, Link, Max, BoughtBy string
+		Bought, Repaid                   *int
+	}
 	Away []struct {
 		House, Notes, Watcher string
 		From, To              int
@@ -710,6 +718,28 @@ func seedDemo(ctx context.Context, tx *store.Store, now time.Time) (map[string]i
 			return nil, err
 		}
 		counts["offers"]++
+	}
+	for _, b := range seed.Buys {
+		day := dayOf(b.demoWhen)
+		s, ok := written(day, orDefault(b.Time, "20:10"))
+		if !ok {
+			continue
+		}
+		var by, at, repaid any
+		if b.Bought != nil {
+			if t, ok := written(day+*b.Bought, "21:30"); ok {
+				by, at = id(b.BoughtBy), t
+				if b.Repaid != nil {
+					if t, ok := written(day+*b.Bought+*b.Repaid, "18:40"); ok {
+						repaid = t
+					}
+				}
+			}
+		}
+		if _, err := tx.Exec(ctx, `INSERT INTO buys(house_id, text, link, max_price, bought_by, bought_at, repaid_at, created_at) VALUES (?,?,?,?,?,?,?,?)`, id(b.House), b.Text, b.Link, b.Max, by, at, repaid, s); err != nil {
+			return nil, err
+		}
+		counts["buys"]++
 	}
 	for _, a := range seed.Away {
 		from, to := span(a.From, a.To, a.OnFrom, a.OnTo, a.Ahead)

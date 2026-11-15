@@ -1612,6 +1612,69 @@
       "tag": "surplus"
     }
   ],
+  "buys": [
+    {
+      "day": -3,
+      "house": "barraca",
+      "text": "strimmer line, 2.4 mm, the round one. mine snapped on the first bramble",
+      "link": "https://www.amazon.es/s?k=hilo+desbrozadora+2.4+mm",
+      "max": "15 €",
+      "time": "20:15"
+    },
+    {
+      "day": -1,
+      "house": "oliveiras",
+      "link": "https://www.amazon.es/s?k=termómetro+máximas+mínimas",
+      "time": "09:40"
+    },
+    {
+      "day": -5,
+      "house": "horta",
+      "text": "pilhas recarregáveis AA, oito, para a lanterna do galinheiro",
+      "max": "20 €",
+      "time": "21:05"
+    },
+    {
+      "day": -6,
+      "house": "nova",
+      "text": "a folding grafting knife, mine is lost somewhere in the orchard",
+      "link": "https://www.amazon.es/s?k=navaja+injertar",
+      "max": "30 €",
+      "boughtBy": "oliveiras",
+      "bought": 1,
+      "time": "19:20"
+    },
+    {
+      "day": -9,
+      "house": "amarela",
+      "text": "extensão eléctrica de 25 m para o barracão / 25 m extension cable for the barn",
+      "link": "https://www.amazon.es/s?k=alargador+25+m",
+      "max": "12 €",
+      "boughtBy": "nova",
+      "bought": 1,
+      "time": "22:10"
+    },
+    {
+      "day": -20,
+      "house": "pedra",
+      "text": "luvas de soldar, tamanho 10",
+      "link": "https://www.amazon.es/s?k=guantes+soldar",
+      "boughtBy": "nova",
+      "bought": 2,
+      "repaid": 4,
+      "time": "18:30"
+    },
+    {
+      "day": -45,
+      "house": "moinho",
+      "text": "a cover for our old e-reader, the 6 inch one",
+      "link": "https://www.amazon.es/s?k=funda+ereader+6+pulgadas",
+      "max": "15 €",
+      "boughtBy": "nova",
+      "bought": 1,
+      "time": "20:50"
+    }
+  ],
   "away": [
     {
       "house": "ribeira",

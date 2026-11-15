@@ -67,6 +67,11 @@ func TestNotificationBanners(t *testing.T) {
 			map[string]any{"text": "paradižnik, semena", "tag": "seeds"},
 			[2]string{"🌱 House Zeleni Volk deli semena", "paradižnik, semena"},
 			[2]string{"🌱 House Zeleni Volk shares seeds", "paradižnik, semena"}},
+		// A bare link reads without its scheme; the price is the asker's words.
+		{"buy", "POST", "/api/buys",
+			map[string]any{"link": "https://amzn.eu/d/4kX2pQ", "max_price": "15 €"},
+			[2]string{"🛍 House Zeleni Volk prosi za nakup", "amzn.eu/d/4kX2pQ · do 15 €"},
+			[2]string{"🛍 House Zeleni Volk asks someone to buy", "amzn.eu/d/4kX2pQ · up to 15 €"}},
 		{"post", "POST", "/api/posts",
 			map[string]any{"body": "wasap zvečer", "author": "Ana"},
 			[2]string{"🍺 Ana · House Zeleni Volk v gostilni", "wasap zvečer"},

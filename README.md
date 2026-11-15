@@ -127,8 +127,8 @@ Other clients, `.mcp.json` shape:
 ```
 
 What the agent can do: read and write in every room — board, calendar and
-answers, threads, shop runs and needs, give-aways, the Watchtower, the shed
-and its wishlist, projects, tasks and a picture on a project, the campground,
+answers, threads, shop runs and needs, give-aways, the Market's wishlist
+(its own paid-back ticks only), the Watchtower, the shed and its wishlist, projects, tasks and a picture on a project, the campground,
 the codex, the weather, the almanac (to read and talk about, unless the village switched the sky off), and — where the village switched them on — the
 campground, the dues ledger and the duty roster. What it cannot: delete anything, mint keys or touch
 devices, edit the house itself, or do a steward's work. **The key opens

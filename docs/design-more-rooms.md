@@ -197,6 +197,69 @@ Not built, each until a village asks: a Home badge for a house that has not
 paid (Home fetches every room at once, and a switched-off room's 404 would
 take the whole tile row down), a thread per due, a push.
 
+### The Market's wishlist
+
+Built 2026-11-15, the Market's fourth tab, no switch (`030_buys.sql`,
+`buys.go`, `rooms/Market.tsx`). **The villager job: "can somebody put this
+in their Amazon cart for me"** — the owner kept doing it by hand for
+neighbours, and the ask, who did it and who still owes him for what lived in
+WhatsApp and his head.
+
+**The owner's line on money (2026-11-15):** the portal still shows nobody who
+owes whom. This list is the one place that knows, and it is **the buyer's
+own**: "nobody will see who owes what". Every house sees an ask and who bought
+it; whether it was paid back reaches the buyer's page and agent only.
+
+Decisions, each with the option rejected:
+
+- **Its own tab, not a need with a link.** A need is "from the shop", rides a
+  run and leaves the list a week after done; an ask is a link, money laid out
+  by a neighbour, and a debt that does not expire in a week.
+  *Rejected: a link field on needs* — the done-week window would drop the
+  buyer's note, and "taken" would start to mean "paid for".
+- **The name is "Wishlist"** (owner, 2026-11-15, over the assistant's "Buy
+  for me"), so the village has two: ✨ the Shed's, tools the village lacks,
+  and 🛍 the Market's, things one house asks a neighbour to buy. The code
+  calls the Market's `buys`, so neither table, kind nor tool is ambiguous,
+  and `list_buys` tells a model it is not `list_wishes`. The cost, paid
+  knowingly: one word for two things, told apart by room and icon.
+- **A link, a few words, or both; the most the asker would pay is its own
+  words** (`max_price`, text). It is the asker's limit, never the price paid,
+  so nothing can add it up. A link must be http or https: the page puts it in
+  an `href`. *Rejected: reading the price or the title off the shop* — a third
+  party fetched for every ask, and Amazon refuses scrapers anyway.
+- **Any house but the asker marks it bought; the asker hears who** (push kind
+  `buys`, "Market wishlist" in the list, the asker's phones only). Only the
+  buyer takes it back, and the asker hears that too, or it would wait for a
+  parcel that is not coming.
+- **Paid back is a tick on the buyer's own list, read and set by the buyer
+  alone** — not the asker, not a steward. The list carries no amount and no
+  sum: what, for whom, when. *Rejected: amounts on the list* — the owner's
+  first wish, but a number per row is a ledger and a sum is one line away;
+  the buyer has the shop's receipt. *Rejected: the asker marks it paid* — the
+  dues rule: whoever holds the money knows it arrived.
+- **A bought ask cannot be deleted** (409), by the asker or a steward: that
+  would wipe the buyer's note. An open one goes like any row.
+- **The history is a month, small, at the foot**, for every house the same;
+  the buyer keeps an unpaid ask past it, and a paid one a month after the tick.
+- **A house that leaves takes its open asks with it, and leaves its bought
+  ones on the buyer's list without a name** (`SET NULL`, and a trigger that
+  deletes only the open ones). Deleting a house forgives nothing, as with dues.
+  An ask the buyer takes back after its house left is deleted, not reopened:
+  nobody asks for it any more.
+- **On the agent surface: `list_buys`, `create_buy`, `update_buy`**, no
+  delete. `list_buys` carries the buyer's own `repaid_at` and nobody else's;
+  the description tells the model to keep it in the conversation.
+
+- **The export leaves the ticks out** (the assistant's reading of the owner's
+  "nobody will see who owes what", 2026-11-15): a steward's JSON carries the
+  asks and who bought them, never who paid back. The nightly backup holds
+  them, as it holds everything; whoever has the server has the village.
+
+Not built, until a village asks: editing an ask (delete and add again), a
+"what I owe" list for the asker, a 🔗 Share link and a thread per ask, a Home
+count.
+
 ## What changes elsewhere when this is built
 
 The village's context file (in its deploy repo) gets one line per room. CLAUDE.md gets the eighth kind, the campground invariant and the `nav: false` note. `i18n.tsx` gets Slovenian labels: `TBD`, ask a Slovenian-speaking house ("Projekti" and "Kamp" are guesses). `README.md` gets the new routes. The export gets three tables. Old notification links do not change.

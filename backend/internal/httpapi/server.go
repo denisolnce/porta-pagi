@@ -151,6 +151,10 @@ func (s *Server) routes() {
 	m.HandleFunc("POST /api/offers", s.requireHouse(s.createOffer))
 	m.HandleFunc("PUT /api/offers/{id}", s.requireHouse(s.updateOffer))
 	m.HandleFunc("DELETE /api/offers/{id}", s.requireHouse(s.deleteRow("offers")))
+	m.HandleFunc("GET /api/buys", s.requireHouse(s.listBuys))
+	m.HandleFunc("POST /api/buys", s.requireHouse(s.createBuy))
+	m.HandleFunc("PUT /api/buys/{id}", s.requireHouse(s.updateBuy))
+	m.HandleFunc("DELETE /api/buys/{id}", s.requireHouse(s.deleteBuy))
 	// Watchtower
 	m.HandleFunc("GET /api/away", s.requireHouse(s.listAway))
 	m.HandleFunc("POST /api/away", s.requireHouse(s.createAway))
@@ -1424,7 +1428,7 @@ func (s *Server) updateAway(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) export(w http.ResponseWriter, r *http.Request) {
 	out := map[string]any{"exported_at": time.Now().UTC().Format(time.RFC3339)}
-	for _, t := range []string{"houses", "house_parcels", "house_homes", "posts", "events", "event_signups", "almanac", "runs", "needs", "offers", "away", "tools", "wishes", "wish_wants", "wish_options", "comments", "projects", "project_tasks", "project_photos", "camp_takings", "dues", "dues_owed", "codex_sections", "codex_texts", "contacts", "roster_duties", "roster_turns", "map_files", "site_files", "features"} {
+	for _, t := range []string{"houses", "house_parcels", "house_homes", "posts", "events", "event_signups", "almanac", "runs", "needs", "offers", "buys", "away", "tools", "wishes", "wish_wants", "wish_options", "comments", "projects", "project_tasks", "project_photos", "camp_takings", "dues", "dues_owed", "codex_sections", "codex_texts", "contacts", "roster_duties", "roster_turns", "map_files", "site_files", "features"} {
 		cols := "*"
 		switch t { // photos are bytes, not text — they stay in the SQLite backup
 		case "tools":
@@ -1435,6 +1439,8 @@ func (s *Server) export(w http.ResponseWriter, r *http.Request) {
 			cols = "name, CAST(bytes AS TEXT) AS bytes, source, snapshot, updated_at"
 		case "site_files":
 			cols = "name, content_type, updated_at"
+		case "buys": // paid back is the buyer's own note, and nobody else sees who owes whom (owner, 2026-11-15)
+			cols = "id, house_id, text, link, max_price, bought_by, bought_at, created_at"
 		}
 		rows, err := s.st.Rows(r.Context(), `SELECT `+cols+` FROM `+t)
 		if err != nil {

@@ -219,7 +219,8 @@ func demoShowsEverything(t *testing.T, now time.Time) {
 	runCut := now.AddDate(0, 0, -1).Format("2006-01-02T15:04")
 	week := now.AddDate(0, 0, -7).UTC().Format("2006-01-02 15:04:05")
 	awayCut := now.AddDate(0, 0, -3).Format("2006-01-02")
-	for _, table := range []string{"posts", "comments", "needs", "offers", "wishes", "wish_options", "camp_takings", "contacts", "project_tasks", "events", "event_signups", "away", "projects", "runs"} {
+	month := now.AddDate(0, 0, -buyWindow).UTC().Format("2006-01-02 15:04:05")
+	for _, table := range []string{"posts", "comments", "needs", "offers", "wishes", "wish_options", "camp_takings", "contacts", "project_tasks", "events", "event_signups", "away", "projects", "runs", "buys"} {
 		col := "created_at"
 		if table == "event_signups" {
 			col = "answered_at"
@@ -287,6 +288,13 @@ func demoShowsEverything(t *testing.T, now time.Time) {
 		"a birthday with the hour of birth":                  `SELECT count(*) AS v FROM events WHERE kind='birthday' AND length(starts_at) > 10`,
 		"a birthday talked about":                            `SELECT count(*) AS v FROM events e WHERE kind='birthday' AND EXISTS (SELECT 1 FROM comments c WHERE c.subject='event' AND c.subject_id=e.id)`,
 		"the sky listed":                                     `SELECT count(*) AS v FROM almanac WHERE starts_at >= '` + since60 + `'`,
+		"an ask to buy with a link":                          `SELECT count(*) AS v FROM buys WHERE bought_at IS NULL AND link != '' AND max_price != ''`,
+		"an ask to buy with a bare link":                     `SELECT count(*) AS v FROM buys WHERE bought_at IS NULL AND link != '' AND text = ''`,
+		"an ask to buy in words alone":                       `SELECT count(*) AS v FROM buys WHERE bought_at IS NULL AND link = ''`,
+		"an ask bought this month, not paid back":            `SELECT count(*) AS v FROM buys WHERE bought_at >= '` + month + `' AND repaid_at IS NULL`,
+		"an ask paid back this month":                        `SELECT count(*) AS v FROM buys WHERE repaid_at >= '` + month + `'`,
+		"an ask unpaid past the month":                       `SELECT count(*) AS v FROM buys WHERE bought_at < '` + month + `' AND repaid_at IS NULL`,
+		"two houses that bought":                             `SELECT count(DISTINCT bought_by) - 1 AS v FROM buys WHERE bought_at >= '` + month + `'`,
 	} {
 		if v := value(t, st, q); v == "0" || v == "" {
 			t.Errorf("nothing shows %s", what)

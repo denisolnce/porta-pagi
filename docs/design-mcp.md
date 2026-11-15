@@ -137,9 +137,12 @@ a state, and an agent that deletes has no confirm), no devices, PINs or
 push (a key must not mint keys), no `PUT /api/houses/{id}` (rename, crest,
 colour, the map mark: a house does that itself, once), no steward route. With
 the fence, this table is not a menu: **what is not here, a key cannot do**.
-52 tools; `TestMCPSurface` pins the count so a change is a visible decision.
-The 52nd, `list_almanac` (2026-10-07), reads the calendar's sky; nobody writes
+55 tools; `TestMCPSurface` pins the count so a change is a visible decision.
+`list_almanac` (2026-10-07) reads the calendar's sky; nobody writes
 it, so it has no write tool, and `comment` takes `almanac` as a subject.
+The last three, `list_buys`, `create_buy`, `update_buy` (2026-11-15), are the
+Market's wishlist; `list_buys` hands a key its own house's paid-back note
+and nobody else's, as the page does.
 A tool of a room behind a switch carries its `Feature` (the campground's
 three carry `camp`, the roster's three `roster`, the ledger's two `dues`): while the switch is off the tool is neither listed nor
 callable, as absent as the room's routes, and the count is of the table, not
@@ -157,6 +160,7 @@ of what one village sees.
 | `list_runs` · `create_run` · `update_run` | `/api/runs` | `kind` (trip / order), `destination`, `cutoff_at`; moving a run pushes to its riders |
 | `list_needs` · `create_need` · `update_need` | `/api/needs` | `text`, optional `run_id`; `state` open / taken / done |
 | `list_offers` · `create_offer` · `update_offer` | `/api/offers` | `tag`: giveaway / seeds / surplus / joint |
+| `list_buys` · `create_buy` · `update_buy` | `/api/buys` | `repaid_at` is the buyer's own note: kept in the conversation, never added up, never told to another house; no amount but the asker's `max_price` |
 | `list_away` · `create_away` · `update_away` | `/api/away` | Dates `YYYY-MM-DD`; `watch: true/false` is the watcher; the description says it is burglary information, read it only when asked and keep it in the conversation |
 | `list_tools` · `create_tool` · `update_tool` | `/api/tools` | `take: true/false` is the loan; a tool comes back |
 | `list_wishes` · `create_wish` · `update_wish` · `add_wish_option` | `/api/wishes`, `/api/wishes/{id}/options` | `want: true/false` is a name on the list, never a count; an option is a finding |

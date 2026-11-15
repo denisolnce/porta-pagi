@@ -607,6 +607,28 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   total never drops under money already in the box; a house that has paid
   cannot be dropped from a due until it is marked unpaid. `list_dues` and
   `mark_due` are its agent tools, gone with the switch.
+- **The Market's wishlist: who bought it is shown, who still owes is the buyer's alone**
+  (owner's decision 2026-11-15, the Market's fourth tab, no switch; `buys.go`,
+  design and options refused in `docs/design-more-rooms.md` § The Market's
+  wishlist; `buys` in the code). A
+  house asks the village to buy a thing for it — a link, a few words, or both,
+  and the most it would pay in its own words (`max_price`, text, the asker's
+  limit and never the price paid). Any house but the asker marks it bought,
+  the asker hears who, and hears again if the buyer takes it back; every
+  house reads who bought it — an acknowledgment, like "taken by". **Whether
+  it was paid back is the buyer's own note** (`repaid_at`): `GET /api/buys`
+  sends it to the buyer only, only the buyer sets it, a steward included, the
+  export leaves it out, and it carries no amount and is never summed, pushed
+  or counted on Home. This is the one who-owes-whom the portal
+  keeps, and the owner kept it because nobody else sees it; do not show it to
+  the asker or add a total without a decision written here. A link is http or
+  https only, because it lands in an `href`. **A bought ask cannot be deleted**
+  (409): that wipes the buyer's note. A house that leaves takes its open asks
+  with it (a trigger in `032_buys.sql`) and leaves its bought ones on the
+  buyer's list without a name: deleting a house forgives nothing, and one the
+  buyer takes back goes rather than reopen. The history every house reads is
+  a month; the buyer keeps an unpaid ask past it. The nightly backup holds
+  the ticks, as it holds everything.
 - **The phone book keeps a number, not a file on a person.** Contacts is a
   name, a phone, a note and a type. **Any house writes one down and any house
   corrects it** — the same provisional footing as editing an event — and the
@@ -675,7 +697,8 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
 - **Done is a state, never a deletion.** Finished projects and closed tasks
   stay readable with their closing notes. Nothing archives itself.
 - **Exit is designed.** `GET /api/export` (steward, the 📦 button on the
-  settings page) dumps everything as JSON, a switched-off room's rows too;
+  settings page) dumps everything as JSON, a switched-off room's rows too,
+  except a wishlist buyer's paid-back ticks (§ The Market's wishlist);
   `VACUUM INTO` backups land nightly in `${DATA_DIR}/backups/`. Keep both working.
 - **No secrets in this repo, and none needed.** The first steward code is
   generated on first boot and printed to the container log. The VAPID key pair
@@ -728,7 +751,10 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   and when, because the house is coming back the same day and the whole point
   is to answer it; an order says who orders and until when, and nobody
   leaves home for it. A **birthday** names the person and the day, and only
-  the day: it says nothing about a house being empty. A **Portal News** note
+  the day: it says nothing about a house being empty. A **wishlist** ask
+  names the asking house and the thing, and its bought and taken-back
+  banners the buying house, to the asker alone: nobody leaves home for an
+  online order, and no banner says who owes whom. A **Portal News** note
   names no house and no person. Classify a new kind
   against that line; do not guess.
   The one other exception is the optional author name on a tavern post, which
@@ -798,7 +824,7 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   keeps the hash and cannot show it again. **A key opens `/api/mcp` and
   nothing else**: `requireHouse` answers 403 to an agent device on every other
   route unless the request carries the `viaMCP` context mark the dispatcher
-  sets — so the tool table in `mcp.go` is the whole surface (52 tools in the
+  sets — so the tool table in `mcp.go` is the whole surface (55 tools in the
   table whatever the switches, pinned by `TestMCPSurface`: reads and writes in every room, a project picture in,
   **no deletes**, no devices, PIN, push, house row or steward route), and
   the raw REST API is closed to a key on purpose. **And the door takes a key
@@ -1044,7 +1070,11 @@ picker fixed"), no backticks: the Telegram deploy ping prints it.
   around it may be named — a town, its fire brigade, its health centre, its
   post office — because a village in the Alentejo has them and an evaluator
   should see a real phone book; a private business or a person never is,
-  not even a first name with a town after it. The words are
+  not even a first name with a town after it. The one exception is the
+  online shop a whole country orders from: an order run orders from
+  Amazon.es and the wishlist links to its search pages, because the room is
+  built around that link and a link must open something (the owner's ask
+  for the wishlist, 2026-11-15). The words are
   the writing job: **a bilingual village, the way one in the Alentejo is** —
   six Portuguese houses writing pt-PT (one never in English), a Scottish, a
   German and a French house writing English, and a mixed Dutch-Portuguese
@@ -1146,6 +1176,7 @@ backend/internal/httpapi/birthdays.go a birthday's write and its morning ring; r
 backend/internal/httpapi/ical.go      the calendar as a feed: a house's secret link and the RFC 5545 it serves, events and work parties only
 backend/internal/httpapi/news.go      Portal News: news/news.json embedded, the list route, the once-per-roll ring; frontend src/Changelog.tsx is its tab
 backend/internal/httpapi/dues.go   the dues ledger, behind its switch: five routes, the amount parser, the one total besides the roster's
+backend/internal/httpapi/buys.go   the Market's wishlist: four routes, the http(s) link check, the buyer-only paid-back note
 backend/internal/httpapi/mcp.go    the door for agents: the tool table (the whole surface), the JSON-RPC endpoint, the in-process
                     dispatcher and the key route; the fence that keeps a key on /api/mcp is in auth.go
 backend/internal/httpapi/shed.go   tool photo routes, wishlist; photos.go = how a photo is read and served (≤2 MB, auth) + project pictures; remind.go = return nudges

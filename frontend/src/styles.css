@@ -286,6 +286,16 @@ details.parchment[open] > summary { border-bottom: 2px solid var(--parch3); padd
 /* A finished thing fades: a closed task, a done project, a handed camp row, an
    event that is over. One value, so the rooms agree with each other. */
 .card.faded { opacity: .7; }
+/* The Market's wishlist: the buyer's own list, ticked off as it is paid back,
+   then the month's bought asks, small and fainter, at the foot. */
+.buy-link { overflow-wrap: anywhere; }
+.owed h3, .buys-past h3 { margin: 1rem 0 .3rem; color: var(--ink2); }
+.owed h3 .sub { font-family: Alegreya, serif; font-size: .9rem; color: var(--ink3); font-style: italic; }
+.owed-line { align-items: baseline; padding: .15rem 0; }
+.owed-line.repaid span { text-decoration: line-through; color: var(--ink3); }
+.buys-past { opacity: .7; }
+.buys-past h3 { font-size: 1rem; }
+.buys-past .ghost { padding: 0 .35rem; margin-left: .3rem; }
 /* A link to one entry landed here (links.tsx): the frame says "this one" for
    a moment, on a phone where the scroll alone is not obvious. A link in a
    post or a comment breaks anywhere, or a long address pans the page. */

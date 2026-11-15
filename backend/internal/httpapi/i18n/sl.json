@@ -662,5 +662,22 @@
   "The link is your house's: whoever has it sees the village's events, so keep it among you. Away notices and birthdays are never in it.": "Povezava je vaše hiše: kdor jo ima, vidi dogodke vasi, zato naj ostane med vami. Odsotnosti in rojstnih dni v njej nikoli ni.",
   "The old link stops working in every calendar that has it, and each of them has to add the new one. Make a new link?": "Stara povezava preneha delovati v vseh koledarjih, ki jo imajo, in vsak mora dodati novo. Naredim novo povezavo?",
   "Google Calendar adds it only on a computer: Settings, Add calendar, From URL, and paste the link. It then shows on your phone too.": "Google Koledar ga doda le na računalniku: Nastavitve, Dodaj koledar, Iz URL-ja, in prilepite povezavo. Potem se pokaže tudi na telefonu.",
-  "Google updates it every few hours, and it then shows on your phone too.": "Google ga posodobi na nekaj ur, potem pa se pokaže tudi na telefonu."
+  "Google updates it every few hours, and it then shows on your phone too.": "Google ga posodobi na nekaj ur, potem pa se pokaže tudi na telefonu.",
+  "Link": "Povezava",
+  "Up to": "Največ",
+  "up to": "do",
+  "optional": "neobvezno",
+  "What": "Kaj",
+  "What it is, in a few words": "Kaj je to, v nekaj besedah",
+  "I bought it": "Kupljeno",
+  "Bought for others": "Kupljeno za druge",
+  "only your house sees this list": "ta seznam vidi samo vaša hiša",
+  "Tick what was paid back.": "Odkljukajte, kar je že poplačano.",
+  "Bought": "Že kupljeno",
+  "bought by": "kupila hiša",
+  "Not bought after all": "Vendarle ni kupljeno",
+  " asks someone to buy": " prosi za nakup",
+  " bought this for you": " vam to kupi",
+  " did not buy it after all": " tega vendarle ne kupi",
+  "Market wishlist": "Seznam želja na tržnici"
 }

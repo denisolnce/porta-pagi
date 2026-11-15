@@ -275,7 +275,7 @@ func TestMCPSurface(t *testing.T) {
 			t.Fatalf("tool missing from the table: %s", name)
 		}
 	}
-	if len(mcpTools) != 52 {
+	if len(mcpTools) != 55 {
 		t.Fatalf("the surface moved: %d tools — a visible decision, update this pin and docs/design-mcp.md", len(mcpTools))
 	}
 	// Unknown tool, unknown method, a batch, garbage.
